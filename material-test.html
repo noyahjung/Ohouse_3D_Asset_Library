@@ -2,7 +2,8 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8" />
-<title>Material Test — Frosted Palette</title>
+<title>[OHOUSE] Material Test — Frosted Palette</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='28' fill='%2300B26B'/%3E%3C/svg%3E" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <style>
   html, body { margin: 0; height: 100%; background: #fff; font-family: -apple-system, system-ui, sans-serif; }
@@ -88,6 +89,12 @@
   .asset-chip.active { background: #fff; color: #111; }
 
   #hint { position: fixed; bottom: 12px; left: 14px; font-size: 11px; color: #888; z-index: 10; }
+  #projectBadge {
+    position: fixed; bottom: 12px; right: 14px; z-index: 10;
+    background: #00B26B; color: #fff; font-size: 10px; letter-spacing: .12em;
+    padding: 5px 10px; border-radius: 6px; font-weight: 700;
+    box-shadow: 0 2px 6px rgba(0,0,0,.15);
+  }
 </style>
 </head>
 <body>
@@ -127,6 +134,7 @@
 </div>
 
 <div id="hint">드래그로 회전 · 휠로 줌 · 우클릭 드래그로 팬</div>
+<div id="projectBadge">OHOUSE · ASSET LIBRARY</div>
 
 <script type="importmap">
 {
