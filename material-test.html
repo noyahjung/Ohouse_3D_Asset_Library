@@ -123,6 +123,7 @@
   <div class="label">Asset</div>
   <button class="asset-chip active" data-asset="box">이사 박스</button>
   <button class="asset-chip" data-asset="purifier">정수기</button>
+  <button class="asset-chip" id="exportPng" style="margin-top:14px;background:#0099FF;color:#fff;">PNG 출력</button>
 </div>
 
 <div id="hint">드래그로 회전 · 휠로 줌 · 우클릭 드래그로 팬</div>
@@ -557,6 +558,52 @@ document.getElementById('resetPreset').addEventListener('click', () => {
   }
   mat.needsUpdate = true;
   renderControls(matKey, type);
+});
+
+// ── PNG 출력 (1080x1080, alpha, 오브젝트만) ────────────────
+document.getElementById('exportPng').addEventListener('click', () => {
+  const SIZE = 1080;
+  const exportRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+  exportRenderer.setPixelRatio(1);
+  exportRenderer.setSize(SIZE, SIZE);
+  exportRenderer.toneMapping = renderer.toneMapping;
+  exportRenderer.toneMappingExposure = renderer.toneMappingExposure;
+  exportRenderer.outputColorSpace = renderer.outputColorSpace;
+  exportRenderer.setClearColor(0x000000, 0);
+
+  // Square-aspect ortho camera mirroring the current view.
+  const exportCamera = new THREE.OrthographicCamera(
+    -frustumSize / 2, frustumSize / 2,
+     frustumSize / 2, -frustumSize / 2,
+     camera.near, camera.far,
+  );
+  exportCamera.position.copy(camera.position);
+  exportCamera.quaternion.copy(camera.quaternion);
+  exportCamera.zoom = camera.zoom;
+  exportCamera.updateProjectionMatrix();
+
+  const prevBg = scene.background;
+  const shadowVisible = shadow.visible;
+  scene.background = null;
+  shadow.visible = false;
+
+  exportRenderer.render(scene, exportCamera);
+
+  scene.background = prevBg;
+  shadow.visible = shadowVisible;
+
+  exportRenderer.domElement.toBlob((blob) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    a.href = url;
+    a.download = `asset_${ts}.png`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    exportRenderer.dispose();
+  }, 'image/png');
 });
 
 window.addEventListener('resize', () => {
