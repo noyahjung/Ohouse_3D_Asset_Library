@@ -1,0 +1,580 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<title>Material Test — Frosted Palette</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  html, body { margin: 0; height: 100%; background: #fff; font-family: -apple-system, system-ui, sans-serif; }
+  #app { position: fixed; inset: 0; }
+
+  #palette {
+    position: fixed; top: 14px; left: 14px; z-index: 10;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .chip {
+    display: flex; align-items: stretch;
+    background: rgba(20,20,20,.78); color: #eee;
+    border-radius: 10px; overflow: hidden;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+  }
+  .chip .swatch {
+    display: flex; align-items: center; gap: 9px;
+    padding: 9px 14px 9px 12px;
+    background: transparent; color: #eee; border: 0; cursor: pointer;
+    font-size: 12px; letter-spacing: .02em;
+    min-width: 140px; text-align: left;
+  }
+  .chip .swatch:hover { background: rgba(255,255,255,.06); }
+  .chip.active .swatch { background: rgba(255,255,255,.12); }
+  .chip .dot {
+    width: 14px; height: 14px; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,.2);
+    background: linear-gradient(180deg, var(--top), var(--bot));
+    flex: 0 0 auto;
+  }
+  .chip .gear {
+    display: flex; align-items: center; justify-content: center;
+    width: 36px; background: transparent; color: #bbb; border: 0;
+    border-left: 1px solid rgba(255,255,255,.08);
+    cursor: pointer; font-size: 14px;
+  }
+  .chip .gear:hover { background: rgba(255,255,255,.06); color: #fff; }
+  .chip.settings-open .gear { background: rgba(255,255,255,.14); color: #fff; }
+  /* Built-in chips: no variant selection, only a gear. */
+  .chip.builtin .swatch { cursor: default; opacity: .85; }
+  .chip.builtin .swatch:hover { background: transparent; }
+  .chip .dot.chrome { background: linear-gradient(180deg, #f5f5f7, #9ea2a8); }
+  .chip .dot.glass  { background: linear-gradient(180deg, #ffffff, #d6eaff); }
+  .palette-label {
+    font-size: 10px; letter-spacing: .08em; color: #777;
+    text-transform: uppercase; padding: 6px 0 0 4px;
+  }
+
+  #settings {
+    position: fixed; top: 14px; left: 240px; z-index: 10;
+    background: rgba(20,20,20,.82); color: #eee;
+    padding: 12px 14px; border-radius: 10px;
+    font-size: 12px; line-height: 1.55;
+    backdrop-filter: blur(8px); min-width: 240px;
+  }
+  #settings[hidden] { display: none; }
+  #settings h1 { font-size: 11px; margin: 0 0 8px; letter-spacing: .06em; opacity: .75; text-transform: uppercase; }
+  #settings label { display: flex; justify-content: space-between; gap: 10px; margin: 4px 0; }
+  #settings input[type=range] { width: 130px; }
+  #settings .val { opacity: .7; min-width: 36px; text-align: right; font-variant-numeric: tabular-nums; }
+  #settings .row { display: flex; gap: 8px; margin-top: 8px; }
+  #settings button { flex: 1; background: #2a2a2a; color: #eee; border: 1px solid #3a3a3a; border-radius: 6px; padding: 6px 8px; cursor: pointer; font-size: 11px; }
+  #settings button:hover { background: #333; }
+
+  #assets {
+    position: fixed; top: 14px; right: 14px; z-index: 10;
+    display: flex; flex-direction: column; gap: 8px; align-items: flex-end;
+  }
+  #assets .label {
+    font-size: 10px; letter-spacing: .08em; color: #777;
+    text-transform: uppercase; padding-right: 4px;
+  }
+  .asset-chip {
+    min-width: 140px; text-align: left;
+    background: rgba(20,20,20,.78); color: #eee;
+    border: 0; border-radius: 10px; padding: 9px 14px;
+    cursor: pointer; font-size: 12px; letter-spacing: .02em;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+  }
+  .asset-chip:hover { background: rgba(40,40,40,.85); }
+  .asset-chip.active { background: #fff; color: #111; }
+
+  #hint { position: fixed; bottom: 12px; left: 14px; font-size: 11px; color: #888; z-index: 10; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<div id="palette">
+  <div class="palette-label">Body</div>
+  <div class="chip active" data-mat="frostedBlue" data-mat-type="frosted" style="--top:#EBEFFF; --bot:#0099FF;">
+    <button class="swatch"><span class="dot"></span> Frosted Blue</button>
+    <button class="gear" title="Settings">⚙</button>
+  </div>
+  <div class="chip" data-mat="frostedGreen" data-mat-type="frosted" style="--top:#EDFFF4; --bot:#00B26B;">
+    <button class="swatch"><span class="dot"></span> Frosted Green</button>
+    <button class="gear" title="Settings">⚙</button>
+  </div>
+  <div class="palette-label">Built-in</div>
+  <div class="chip builtin" data-mat="glass" data-mat-type="glass">
+    <button class="swatch"><span class="dot glass"></span> Glass</button>
+    <button class="gear" title="Settings">⚙</button>
+  </div>
+</div>
+
+<div id="settings" hidden>
+  <h1 id="settingsTitle">Frosted Blue</h1>
+  <div id="controls"></div>
+  <div class="row">
+    <button id="toggleBg">BG</button>
+    <button id="resetPreset">Reset</button>
+  </div>
+</div>
+
+<div id="assets">
+  <div class="label">Asset</div>
+  <button class="asset-chip active" data-asset="box">이사 박스</button>
+  <button class="asset-chip" data-asset="purifier">정수기</button>
+</div>
+
+<div id="hint">드래그로 회전 · 휠로 줌 · 우클릭 드래그로 팬</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { EXRLoader } from 'three/addons/loaders/EXRLoader.js';
+import {
+  FROSTED_PRESET,
+  FROSTED_VARIANTS,
+  createFrosted,
+  createLuminanceWhite,
+  createGlass,
+  createChrome,
+  makeVerticalGradient,
+  remapUVsToWorldY,
+} from './materials.js';
+
+const app = document.getElementById('app');
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+app.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const bgColors = ['#ffffff', '#f0f0f0', '#1a1a1a'];
+let bgIdx = 0;
+scene.background = new THREE.Color(bgColors[bgIdx]);
+
+const pmrem = new THREE.PMREMGenerator(renderer);
+// Temporary environment until the HDR loads so the scene isn't flat-black.
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.02).texture;
+scene.environmentIntensity = 1.0;
+
+// Load the Botanical Gardens HDR and promote it to the primary environment.
+new EXRLoader().load('Botanical_Gardens_2.exr', (hdr) => {
+  hdr.mapping = THREE.EquirectangularReflectionMapping;
+  const envTex = pmrem.fromEquirectangular(hdr).texture;
+  hdr.dispose();
+  // Previous room env → dispose to reclaim GPU memory.
+  scene.environment?.dispose?.();
+  scene.environment = envTex;
+  // Chrome gets the same HDR directly — crisp natural reflections.
+  chromeMat.envMap = envTex;
+  chromeMat.needsUpdate = true;
+}, undefined, (err) => console.error('HDR load failed', err));
+
+
+let frustumSize = 400;
+const aspect = window.innerWidth / window.innerHeight;
+const camera = new THREE.OrthographicCamera(
+  -frustumSize * aspect / 2,  frustumSize * aspect / 2,
+   frustumSize / 2,          -frustumSize / 2,
+  -5000, 5000,
+);
+camera.position.set(400, 320, 480);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.target.set(0, 0, 0);
+
+// ── Material registry: instantiate each variant once, keep their
+// per-variant state so toggling doesn't reset tuning.
+const materials = {
+  frostedBlue:  createFrosted('frostedBlue'),
+  frostedGreen: createFrosted('frostedGreen'),
+};
+// Built-in material chips — not exposed in the palette UI.
+const tapeMat   = createLuminanceWhite();
+const glassMat  = createGlass();
+const chromeMat = createChrome();
+
+// Track which body meshes receive the frosted material (so we can swap).
+let bodyMeshes = [];
+let activeVariantId = 'frostedBlue';
+
+// ── Asset registry ────────────────────────────────────────
+// Per-asset rules: which meshes are luminance-white accents vs the
+// frosted body. Names from the gltf files are matched case-insensitive.
+// materialFor(name, parentName) returns one of:
+//   'body'      → active frosted variant (swappable via palette)
+//   'luminance' → flat white accents (no lighting)
+//   'glass'     → built-in frosted glass
+//   'chrome'    → built-in chrome metal
+const ASSETS = {
+  box: {
+    url: 'box.gltf',
+    label: '이사 박스',
+    rootName: 'newbox_blue_moving',
+    materialFor(name) {
+      return /ribbon/i.test(name) ? 'luminance' : 'body';
+    },
+  },
+  purifier: {
+    url: 'waterpurifier.gltf',
+    label: '정수기',
+    rootName: 'water purifier',
+    materialFor(name, parentName) {
+      const n = (name || '').toLowerCase();
+      const pn = (parentName || '').toLowerCase();
+      // Water-drop logo on the front face → flat white emblem.
+      if (/^logo$/.test(n) || /^logo$/.test(pn)) return 'luminance';
+      // Spout cylinder (lives under "Subdivision Surface" group) → chrome.
+      if (/cylinder/.test(n) || /cylinder/.test(pn)) return 'chrome';
+      // Cup vessel → glass.
+      if (/^cup$/.test(n) || /^cup$/.test(pn)) return 'glass';
+      return 'body';
+    },
+  },
+};
+
+// ── Load model ─────────────────────────────────────────────
+const group = new THREE.Group();
+scene.add(group);
+let currentRoot = null;
+
+const loader = new GLTFLoader();
+
+function loadAsset(assetId) {
+  const asset = ASSETS[assetId];
+  if (!asset) return;
+
+  loader.load(asset.url, (gltf) => {
+    // Clear previous asset
+    if (currentRoot) {
+      group.remove(currentRoot);
+      currentRoot.traverse((o) => { if (o.isMesh) o.geometry?.dispose(); });
+    }
+    bodyMeshes = [];
+
+    // Pick the requested subtree if the file contains multiple assets.
+    let root = gltf.scene;
+    if (asset.rootName) {
+      const match = root.getObjectByName(asset.rootName);
+      if (match) {
+        match.parent?.remove(match);
+        root = match;
+      }
+    }
+    currentRoot = root;
+    root.updateMatrixWorld(true);
+
+    // Pass 1: compute vertical bounds of body meshes only, to drive
+    // the frosted gradient consistently across the asset.
+    const bodyBox = new THREE.Box3();
+    root.traverse((obj) => {
+      if (!obj.isMesh) return;
+      const kind = asset.materialFor(obj.name, obj.parent?.name);
+      if (kind === 'body') bodyBox.expandByObject(obj);
+    });
+    const yMin = bodyBox.min.y, yMax = bodyBox.max.y;
+
+    root.traverse((obj) => {
+      if (!obj.isMesh) return;
+      const kind = asset.materialFor(obj.name, obj.parent?.name);
+      obj.castShadow = true;
+      obj.receiveShadow = true;
+      switch (kind) {
+        case 'luminance': obj.material = tapeMat;   break;
+        case 'glass':     obj.material = glassMat;  break;
+        case 'chrome':    obj.material = chromeMat; break;
+        case 'body':
+        default:
+          obj.material = materials[activeVariantId];
+          remapUVsToWorldY(obj, yMin, yMax);
+          bodyMeshes.push(obj);
+      }
+    });
+
+    const bbox = new THREE.Box3().setFromObject(root);
+    const size = bbox.getSize(new THREE.Vector3());
+    const center = bbox.getCenter(new THREE.Vector3());
+    root.position.sub(center);
+    group.add(root);
+
+    // Frame camera for this asset
+    const maxDim = Math.max(size.x, size.y, size.z);
+    const dist = maxDim * 2.0;
+    camera.position.set(dist * 0.85, dist * 0.7, dist);
+    frustumSize = maxDim * 1.6;
+    const a = window.innerWidth / window.innerHeight;
+    camera.left   = -frustumSize * a / 2;
+    camera.right  =  frustumSize * a / 2;
+    camera.top    =  frustumSize / 2;
+    camera.bottom = -frustumSize / 2;
+    camera.near   = -maxDim * 10;
+    camera.far    =  maxDim * 10;
+    camera.zoom = 1;
+    camera.updateProjectionMatrix();
+    controls.target.set(0, 0, 0);
+    controls.update();
+
+    shadow.position.y = -size.y / 2 - 1;
+    shadow.scale.setScalar(maxDim / 2);
+  }, undefined, (err) => {
+    console.error('GLTF load error', err);
+    const d = document.createElement('div');
+    d.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#300;color:#fbb;padding:16px 20px;border-radius:8px;font-family:monospace;';
+    d.textContent = `${asset.url} 로드 실패 — 로컬 서버를 통해 열어주세요.`;
+    document.body.appendChild(d);
+  });
+}
+
+loadAsset('box');
+
+// ── Ground shadow ──────────────────────────────────────────
+const shadow = new THREE.Mesh(
+  new THREE.PlaneGeometry(6, 6),
+  new THREE.MeshBasicMaterial({
+    transparent: true,
+    opacity: 0.35,
+    map: (() => {
+      const s = 256, cv = document.createElement('canvas'); cv.width = cv.height = s;
+      const cx = cv.getContext('2d');
+      const grad = cx.createRadialGradient(s/2, s/2, 10, s/2, s/2, s/2);
+      grad.addColorStop(0, 'rgba(0,0,0,0.55)');
+      grad.addColorStop(1, 'rgba(0,0,0,0)');
+      cx.fillStyle = grad; cx.fillRect(0,0,s,s);
+      const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; return t;
+    })(),
+    depthWrite: false,
+  })
+);
+shadow.rotation.x = -Math.PI / 2;
+shadow.position.y = -1.02;
+scene.add(shadow);
+
+// ── Lights ─────────────────────────────────────────────────
+scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+const key = new THREE.DirectionalLight(0xffffff, 1.8);
+key.position.set(3, 5, 4); scene.add(key);
+const fill = new THREE.DirectionalLight(0xdceaff, 0.75);
+fill.position.set(-4, 2, -3); scene.add(fill);
+const rim = new THREE.DirectionalLight(0xffffff, 0.4);
+rim.position.set(0, 3, -5); scene.add(rim);
+
+// ── Palette UI ─────────────────────────────────────────────
+const chips = document.querySelectorAll('.chip');
+const settingsPanel = document.getElementById('settings');
+const settingsTitle = document.getElementById('settingsTitle');
+const controlsEl    = document.getElementById('controls');
+
+// Dynamic control schemas, one per material type. Each entry maps a
+// slider to a property on the material (or a custom apply fn).
+const CONTROL_SCHEMAS = {
+  frosted: [
+    { key: 'transmission',        label: 'Transmission',    min: 0, max: 1,     step: 0.01 },
+    { key: 'roughness',           label: 'Roughness',       min: 0, max: 1,     step: 0.01 },
+    { key: 'thickness',           label: 'Thickness',       min: 0, max: 4,     step: 0.01 },
+    { key: 'ior',                 label: 'IOR',             min: 1, max: 2.333, step: 0.01 },
+    { key: 'clearcoat',           label: 'Clearcoat',       min: 0, max: 1,     step: 0.01 },
+    { key: 'clearcoatRoughness',  label: 'Coat Roughness',  min: 0, max: 1,     step: 0.01 },
+    { key: 'attenuationDistance', label: 'Attenuation',     min: 0.2, max: 8,   step: 0.01 },
+    { key: 'gradientStrength',    label: 'Gradient Strength', min: 0, max: 1,   step: 0.01, custom: true },
+  ],
+  glass: [
+    { key: 'opacity',            label: 'Opacity',        min: 0, max: 1, step: 0.01 },
+    { key: 'roughness',          label: 'Roughness',      min: 0, max: 1, step: 0.01 },
+    { key: 'clearcoat',          label: 'Clearcoat',      min: 0, max: 1, step: 0.01 },
+    { key: 'clearcoatRoughness', label: 'Coat Roughness', min: 0, max: 1, step: 0.01 },
+    { key: 'envMapIntensity',    label: 'Env Intensity',  min: 0, max: 3, step: 0.01 },
+  ],
+  chrome: [
+    { key: 'roughness',           label: 'Roughness',       min: 0, max: 1,     step: 0.01 },
+    { key: 'metalness',           label: 'Metalness',       min: 0, max: 1,     step: 0.01 },
+    { key: 'envMapIntensity',     label: 'Env Intensity',   min: 0, max: 5,     step: 0.01 },
+    { key: 'emissiveIntensity',   label: 'Emissive',        min: 0, max: 1,     step: 0.01 },
+  ],
+};
+
+// Registry of all editable materials (including frosted variants + built-ins)
+const editableMaterials = {
+  frostedBlue:  materials.frostedBlue,
+  frostedGreen: materials.frostedGreen,
+  glass:        glassMat,
+  chrome:       chromeMat,
+};
+
+// Per-key state snapshots (so frosted variant switches preserve tuning,
+// and Reset can restore built-ins to their factory values)
+const INITIAL_STATE = {
+  frostedBlue:  { ...FROSTED_PRESET },
+  frostedGreen: { ...FROSTED_PRESET },
+  glass:        snapshotMaterial(glassMat,  CONTROL_SCHEMAS.glass),
+  chrome:       snapshotMaterial(chromeMat, CONTROL_SCHEMAS.chrome),
+};
+const state = {
+  frostedBlue:  { ...INITIAL_STATE.frostedBlue },
+  frostedGreen: { ...INITIAL_STATE.frostedGreen },
+  glass:        { ...INITIAL_STATE.glass },
+  chrome:       { ...INITIAL_STATE.chrome },
+};
+
+function snapshotMaterial(mat, schema) {
+  const out = {};
+  for (const c of schema) out[c.key] = mat[c.key];
+  return out;
+}
+
+function setActiveMaterial(id) {
+  activeVariantId = id;
+  const mat = materials[id];
+  for (const mesh of bodyMeshes) mesh.material = mat;
+  chips.forEach(c => c.classList.toggle('active', c.dataset.mat === id));
+}
+
+let openMatKey = null;
+function openSettingsFor(matKey, matType) {
+  openMatKey = matKey;
+  const labelMap = {
+    frostedBlue:  'Frosted Blue',
+    frostedGreen: 'Frosted Green',
+    glass:        'Glass (Built-in)',
+    chrome:       'Chrome (Built-in)',
+  };
+  settingsTitle.textContent = labelMap[matKey] || matKey;
+  renderControls(matKey, matType);
+  chips.forEach(c => c.classList.toggle('settings-open', c.dataset.mat === matKey));
+  settingsPanel.hidden = false;
+}
+function closeSettings() {
+  openMatKey = null;
+  chips.forEach(c => c.classList.remove('settings-open'));
+  settingsPanel.hidden = true;
+}
+
+function renderControls(matKey, matType) {
+  const schema = CONTROL_SCHEMAS[matType];
+  const mat = editableMaterials[matKey];
+  const s = state[matKey];
+  controlsEl.innerHTML = '';
+  for (const c of schema) {
+    const row = document.createElement('label');
+    const valueText = document.createElement('span');
+    valueText.className = 'val';
+    const current = s[c.key] ?? mat[c.key];
+    valueText.textContent = (+current).toFixed(2);
+    const input = document.createElement('input');
+    input.type = 'range';
+    input.min = c.min; input.max = c.max; input.step = c.step;
+    input.value = current;
+    input.addEventListener('input', () => {
+      const v = parseFloat(input.value);
+      valueText.textContent = v.toFixed(2);
+      s[c.key] = v;
+      if (c.custom && c.key === 'gradientStrength') {
+        const variant = FROSTED_VARIANTS[matKey];
+        const t = makeVerticalGradient(variant.top, variant.bottom, v);
+        if (mat.map) mat.map.dispose();
+        mat.map = t;
+        mat.needsUpdate = true;
+      } else {
+        mat[c.key] = v;
+        mat.needsUpdate = true;
+      }
+    });
+    row.append(document.createTextNode(c.label + ' '), input, valueText);
+    controlsEl.appendChild(row);
+  }
+}
+
+// Chip events
+chips.forEach(chip => {
+  const id = chip.dataset.mat;
+  const type = chip.dataset.matType;
+  const isBuiltin = chip.classList.contains('builtin');
+  chip.querySelector('.swatch').addEventListener('click', () => {
+    if (isBuiltin) return; // built-in chips don't swap the body material
+    setActiveMaterial(id);
+    if (!settingsPanel.hidden && openMatKey && type === 'frosted') openSettingsFor(id, type);
+  });
+  chip.querySelector('.gear').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpenForThis = !settingsPanel.hidden && openMatKey === id;
+    if (isOpenForThis) {
+      closeSettings();
+    } else {
+      if (!isBuiltin) setActiveMaterial(id);
+      openSettingsFor(id, type);
+    }
+  });
+});
+
+// Asset switcher
+document.querySelectorAll('.asset-chip').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.asset-chip').forEach(b => b.classList.toggle('active', b === btn));
+    loadAsset(btn.dataset.asset);
+  });
+});
+
+document.getElementById('toggleBg').addEventListener('click', () => {
+  bgIdx = (bgIdx + 1) % bgColors.length;
+  scene.background = new THREE.Color(bgColors[bgIdx]);
+});
+document.getElementById('resetPreset').addEventListener('click', () => {
+  if (!openMatKey) return;
+  const matKey = openMatKey;
+  const mat = editableMaterials[matKey];
+  state[matKey] = { ...INITIAL_STATE[matKey] };
+  const s = state[matKey];
+  const type = mat.userData.paletteId?.startsWith('frosted') ? 'frosted'
+             : mat.userData.paletteId === 'glass'   ? 'glass'
+             : mat.userData.paletteId === 'chrome'  ? 'chrome'
+             : 'frosted';
+  for (const c of CONTROL_SCHEMAS[type]) {
+    if (c.custom && c.key === 'gradientStrength') {
+      const variant = FROSTED_VARIANTS[matKey];
+      const t = makeVerticalGradient(variant.top, variant.bottom, s.gradientStrength);
+      if (mat.map) mat.map.dispose();
+      mat.map = t;
+    } else {
+      mat[c.key] = s[c.key];
+    }
+  }
+  mat.needsUpdate = true;
+  renderControls(matKey, type);
+});
+
+window.addEventListener('resize', () => {
+  const a = window.innerWidth / window.innerHeight;
+  camera.left   = -frustumSize * a / 2;
+  camera.right  =  frustumSize * a / 2;
+  camera.top    =  frustumSize / 2;
+  camera.bottom = -frustumSize / 2;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+function tick() {
+  controls.update();
+  renderer.render(scene, camera);
+  requestAnimationFrame(tick);
+}
+tick();
+</script>
+</body>
+</html>
