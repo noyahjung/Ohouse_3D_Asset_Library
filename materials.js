@@ -10,7 +10,7 @@ import * as THREE from 'three';
 export const COLORS = {
   // Frosted Blue — top (cool white) → bottom (saturated blue)
   frostedBlueTop:    '#EBEFFF',
-  frostedBlueBottom: '#0099FF',
+  frostedBlueBottom: '#00a1ff',
 
   // Frosted Green — mirrored curve with a fresh mint→green
   frostedGreenTop:    '#EDFFF4',

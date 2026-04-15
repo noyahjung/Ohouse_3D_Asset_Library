@@ -4,96 +4,177 @@
 <meta charset="utf-8" />
 <title>[OHOUSE] Material Test — Frosted Palette</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='28' fill='%2300B26B'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <style>
-  html, body { margin: 0; height: 100%; background: #fff; font-family: -apple-system, system-ui, sans-serif; }
+  :root {
+    --accent: #00a1ff;
+    --bg: #0a0a0b;
+    --card: #141417;
+    --card-hover: #1c1c21;
+    --card-active: #222228;
+    --border: rgba(255,255,255,.06);
+    --text: #f4f4f5;
+    --text-dim: #a1a1aa;
+    --text-mute: #71717a;
+  }
+  html, body {
+    margin: 0; height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    font-feature-settings: 'cv11', 'ss01';
+    -webkit-font-smoothing: antialiased;
+  }
   #app { position: fixed; inset: 0; }
 
-  #palette {
-    position: fixed; top: 14px; left: 14px; z-index: 10;
-    display: flex; flex-direction: column; gap: 8px;
+  /* ── Shared card shell ───────────────────────────────── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    backdrop-filter: blur(8px);
   }
+  .section-label {
+    font-size: 10px; letter-spacing: .12em; color: var(--text-mute);
+    text-transform: uppercase; font-weight: 500;
+    padding: 0 4px 6px;
+  }
+
+  /* ── Left column: palette ───────────────────────────── */
+  #palette {
+    position: fixed; top: 18px; left: 18px; z-index: 10;
+    display: flex; flex-direction: column; gap: 14px;
+    width: 200px;
+  }
+  .palette-group { display: flex; flex-direction: column; gap: 4px; }
+
   .chip {
     display: flex; align-items: stretch;
-    background: rgba(20,20,20,.78); color: #eee;
+    background: var(--card);
+    border: 1px solid var(--border);
     border-radius: 10px; overflow: hidden;
-    backdrop-filter: blur(8px);
-    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    transition: background .15s, border-color .15s;
   }
+  .chip:hover { background: var(--card-hover); }
+  .chip.active { background: var(--card-active); border-color: rgba(0,161,255,.3); }
+  .chip.active .swatch { color: var(--text); }
   .chip .swatch {
-    display: flex; align-items: center; gap: 9px;
-    padding: 9px 14px 9px 12px;
-    background: transparent; color: #eee; border: 0; cursor: pointer;
-    font-size: 12px; letter-spacing: .02em;
-    min-width: 140px; text-align: left;
+    flex: 1;
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    background: transparent; color: var(--text-dim); border: 0; cursor: pointer;
+    font-size: 12px; font-weight: 500; letter-spacing: .01em;
+    text-align: left; font-family: inherit;
   }
-  .chip .swatch:hover { background: rgba(255,255,255,.06); }
-  .chip.active .swatch { background: rgba(255,255,255,.12); }
+  .chip.active .swatch::before {
+    content: ''; width: 3px; align-self: stretch; margin: -10px 0 -10px -12px;
+    background: var(--accent); border-radius: 2px 0 0 2px;
+  }
   .chip .dot {
     width: 14px; height: 14px; border-radius: 50%;
-    border: 1px solid rgba(255,255,255,.2);
+    border: 1px solid rgba(255,255,255,.12);
     background: linear-gradient(180deg, var(--top), var(--bot));
     flex: 0 0 auto;
   }
   .chip .gear {
     display: flex; align-items: center; justify-content: center;
-    width: 36px; background: transparent; color: #bbb; border: 0;
-    border-left: 1px solid rgba(255,255,255,.08);
-    cursor: pointer; font-size: 14px;
+    width: 34px; background: transparent; color: var(--text-mute); border: 0;
+    border-left: 1px solid var(--border);
+    cursor: pointer; font-size: 13px; transition: color .15s, background .15s;
   }
-  .chip .gear:hover { background: rgba(255,255,255,.06); color: #fff; }
-  .chip.settings-open .gear { background: rgba(255,255,255,.14); color: #fff; }
-  /* Built-in chips: no variant selection, only a gear. */
-  .chip.builtin .swatch { cursor: default; opacity: .85; }
-  .chip.builtin .swatch:hover { background: transparent; }
+  .chip .gear:hover { background: rgba(255,255,255,.04); color: var(--text); }
+  .chip.settings-open .gear { background: rgba(0,161,255,.12); color: var(--accent); }
+  .chip.builtin .swatch { cursor: default; }
+  .chip.builtin .swatch:hover { color: var(--text-dim); }
   .chip .dot.chrome { background: linear-gradient(180deg, #f5f5f7, #9ea2a8); }
   .chip .dot.glass  { background: linear-gradient(180deg, #ffffff, #d6eaff); }
-  .palette-label {
-    font-size: 10px; letter-spacing: .08em; color: #777;
-    text-transform: uppercase; padding: 6px 0 0 4px;
-  }
 
+  /* ── Settings panel ─────────────────────────────────── */
   #settings {
-    position: fixed; top: 14px; left: 240px; z-index: 10;
-    background: rgba(20,20,20,.82); color: #eee;
-    padding: 12px 14px; border-radius: 10px;
-    font-size: 12px; line-height: 1.55;
-    backdrop-filter: blur(8px); min-width: 240px;
+    position: fixed; top: 18px; left: 234px; z-index: 10;
+    padding: 14px 16px; min-width: 260px;
+    font-size: 12px; line-height: 1.6;
+    background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    backdrop-filter: blur(8px);
   }
   #settings[hidden] { display: none; }
-  #settings h1 { font-size: 11px; margin: 0 0 8px; letter-spacing: .06em; opacity: .75; text-transform: uppercase; }
-  #settings label { display: flex; justify-content: space-between; gap: 10px; margin: 4px 0; }
-  #settings input[type=range] { width: 130px; }
-  #settings .val { opacity: .7; min-width: 36px; text-align: right; font-variant-numeric: tabular-nums; }
-  #settings .row { display: flex; gap: 8px; margin-top: 8px; }
-  #settings button { flex: 1; background: #2a2a2a; color: #eee; border: 1px solid #3a3a3a; border-radius: 6px; padding: 6px 8px; cursor: pointer; font-size: 11px; }
-  #settings button:hover { background: #333; }
-
-  #assets {
-    position: fixed; top: 14px; right: 14px; z-index: 10;
-    display: flex; flex-direction: column; gap: 8px; align-items: flex-end;
+  #settings h1 {
+    font-size: 11px; margin: 0 0 10px;
+    letter-spacing: .08em; color: var(--text-mute);
+    text-transform: uppercase; font-weight: 600;
   }
-  #assets .label {
-    font-size: 10px; letter-spacing: .08em; color: #777;
-    text-transform: uppercase; padding-right: 4px;
+  #settings label {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 10px; margin: 6px 0; color: var(--text-dim); font-size: 11px;
+  }
+  #settings input[type=range] {
+    width: 130px; accent-color: var(--accent);
+  }
+  #settings .val {
+    color: var(--text); min-width: 36px; text-align: right;
+    font-variant-numeric: tabular-nums; font-size: 11px; font-weight: 500;
+  }
+  #settings .row { display: flex; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+  #settings button {
+    flex: 1; background: transparent; color: var(--text-dim);
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 7px 10px; cursor: pointer; font-size: 11px; font-weight: 500;
+    transition: background .15s, color .15s, border-color .15s;
+    font-family: inherit;
+  }
+  #settings button:hover { background: var(--card-hover); color: var(--text); border-color: rgba(255,255,255,.12); }
+
+  /* ── Right column: assets + export ──────────────────── */
+  #assets {
+    position: fixed; top: 18px; right: 18px; z-index: 10;
+    display: flex; flex-direction: column; gap: 4px; align-items: stretch;
+    width: 180px;
   }
   .asset-chip {
-    min-width: 140px; text-align: left;
-    background: rgba(20,20,20,.78); color: #eee;
-    border: 0; border-radius: 10px; padding: 9px 14px;
-    cursor: pointer; font-size: 12px; letter-spacing: .02em;
-    backdrop-filter: blur(8px);
-    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    text-align: left;
+    background: var(--card);
+    color: var(--text-dim);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 14px;
+    cursor: pointer; font-size: 12px; font-weight: 500; letter-spacing: .01em;
+    font-family: inherit;
+    transition: background .15s, color .15s, border-color .15s;
   }
-  .asset-chip:hover { background: rgba(40,40,40,.85); }
-  .asset-chip.active { background: #fff; color: #111; }
+  .asset-chip:hover { background: var(--card-hover); color: var(--text); }
+  .asset-chip.active {
+    background: var(--card-active); color: var(--text);
+    border-color: rgba(0,161,255,.3);
+    position: relative;
+  }
+  .asset-chip.active::before {
+    content: ''; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px;
+    background: var(--accent); border-radius: 2px 0 0 2px;
+  }
 
-  #hint { position: fixed; bottom: 12px; left: 14px; font-size: 11px; color: #888; z-index: 10; }
+  #exportPng {
+    margin-top: 14px;
+    background: var(--accent); color: #fff; border-color: transparent;
+    font-weight: 600; text-align: center;
+    box-shadow: 0 4px 14px rgba(0,161,255,.28);
+  }
+  #exportPng:hover { background: #33b4ff; color: #fff; }
+  #exportPng.active { background: var(--accent); color: #fff; }
+  #exportPng.active::before { display: none; }
+
+  /* ── Footer elements ────────────────────────────────── */
+  #hint {
+    position: fixed; bottom: 14px; left: 18px; z-index: 10;
+    font-size: 11px; color: var(--text-mute); letter-spacing: .01em;
+  }
   #projectBadge {
-    position: fixed; bottom: 12px; right: 14px; z-index: 10;
-    background: #00B26B; color: #fff; font-size: 10px; letter-spacing: .12em;
-    padding: 5px 10px; border-radius: 6px; font-weight: 700;
-    box-shadow: 0 2px 6px rgba(0,0,0,.15);
+    position: fixed; bottom: 14px; right: 18px; z-index: 10;
+    background: rgba(0,178,107,.12); color: #00d084;
+    font-size: 10px; letter-spacing: .14em; font-weight: 600;
+    padding: 6px 10px; border-radius: 6px;
+    border: 1px solid rgba(0,178,107,.2);
   }
 </style>
 </head>
@@ -101,19 +182,23 @@
 <div id="app"></div>
 
 <div id="palette">
-  <div class="palette-label">Body</div>
-  <div class="chip active" data-mat="frostedBlue" data-mat-type="frosted" style="--top:#EBEFFF; --bot:#0099FF;">
-    <button class="swatch"><span class="dot"></span> Frosted Blue</button>
-    <button class="gear" title="Settings">⚙</button>
+  <div class="palette-group">
+    <div class="section-label">Body</div>
+    <div class="chip active" data-mat="frostedBlue" data-mat-type="frosted" style="--top:#EBEFFF; --bot:#00a1ff;">
+      <button class="swatch"><span class="dot"></span> Frosted Blue</button>
+      <button class="gear" title="Settings">⚙</button>
+    </div>
+    <div class="chip" data-mat="frostedGreen" data-mat-type="frosted" style="--top:#EDFFF4; --bot:#00B26B;">
+      <button class="swatch"><span class="dot"></span> Frosted Green</button>
+      <button class="gear" title="Settings">⚙</button>
+    </div>
   </div>
-  <div class="chip" data-mat="frostedGreen" data-mat-type="frosted" style="--top:#EDFFF4; --bot:#00B26B;">
-    <button class="swatch"><span class="dot"></span> Frosted Green</button>
-    <button class="gear" title="Settings">⚙</button>
-  </div>
-  <div class="palette-label">Built-in</div>
-  <div class="chip builtin" data-mat="glass" data-mat-type="glass">
-    <button class="swatch"><span class="dot glass"></span> Glass</button>
-    <button class="gear" title="Settings">⚙</button>
+  <div class="palette-group">
+    <div class="section-label">Built-in</div>
+    <div class="chip builtin" data-mat="glass" data-mat-type="glass">
+      <button class="swatch"><span class="dot glass"></span> Glass</button>
+      <button class="gear" title="Settings">⚙</button>
+    </div>
   </div>
 </div>
 
@@ -127,10 +212,11 @@
 </div>
 
 <div id="assets">
-  <div class="label">Asset</div>
+  <div class="section-label">Asset</div>
   <button class="asset-chip active" data-asset="box">이사 박스</button>
   <button class="asset-chip" data-asset="purifier">정수기</button>
-  <button class="asset-chip" id="exportPng" style="margin-top:14px;background:#0099FF;color:#fff;">PNG 출력</button>
+  <button class="asset-chip" data-asset="gift">선물상자</button>
+  <button class="asset-chip" id="exportPng">PNG 출력</button>
 </div>
 
 <div id="hint">드래그로 회전 · 휠로 줌 · 우클릭 드래그로 팬</div>
@@ -174,7 +260,7 @@ renderer.outputColorSpace = THREE.SRGBColorSpace;
 app.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
-const bgColors = ['#ffffff', '#f0f0f0', '#1a1a1a'];
+const bgColors = ['#0a0a0b', '#ffffff', '#f0f0f0'];
 let bgIdx = 0;
 scene.background = new THREE.Color(bgColors[bgIdx]);
 
@@ -243,10 +329,32 @@ const ASSETS = {
       return /ribbon/i.test(name) ? 'luminance' : 'body';
     },
   },
+  gift: {
+    url: 'gift.gltf',
+    label: '선물상자',
+    rootName: 'gift_save',
+    // Tighter framing than default so the box+ribbon reads at the same
+    // on-screen size as the 이사박스 asset (whose bbox has no tall accents).
+    frameScale: 1.8,
+    // Ribbons sit above the box, pulling the bbox center upward — when
+    // the root is centered, the box body ends up below the visual center.
+    // Shift up by 15% of asset height to land it where 이사박스 sits.
+    yOffset: 0.15,
+    materialFor(name, parentName) {
+      const n = (name || '').toLowerCase();
+      const pn = (parentName || '').toLowerCase();
+      // Ribbon parts are brand-fixed white (luminance).
+      if (/ribbon/.test(n) || /ribbon/.test(pn)) return 'luminance';
+      return 'body';
+    },
+  },
   purifier: {
     url: 'waterpurifier.gltf',
     label: '정수기',
     rootName: 'water purifier',
+    // Source file faces away from the default camera — flip so the
+    // spout/logo side faces forward on load.
+    rotationY: Math.PI,
     materialFor(name, parentName) {
       const n = (name || '').toLowerCase();
       const pn = (parentName || '').toLowerCase();
@@ -290,6 +398,7 @@ function loadAsset(assetId) {
       }
     }
     currentRoot = root;
+    if (asset.rotationY) root.rotation.y = asset.rotationY;
     root.updateMatrixWorld(true);
 
     // Pass 1: compute vertical bounds of body meshes only, to drive
@@ -350,7 +459,10 @@ function loadAsset(assetId) {
       }
       const merged = mergeGeometries(bakedGeos, false);
       for (const g of bakedGeos) g.dispose();
-      merged.computeVertexNormals();
+      // Intentionally do NOT recompute normals here — the pre-merge
+      // per-mesh computeVertexNormals() already cleaned each piece, and
+      // re-averaging across what used to be separate meshes produces
+      // visible shading breaks at those former boundaries.
       const mergedMesh = new THREE.Mesh(merged, materials[activeVariantId]);
       mergedMesh.castShadow = true;
       mergedMesh.receiveShadow = true;
@@ -363,13 +475,14 @@ function loadAsset(assetId) {
     const size = bbox.getSize(new THREE.Vector3());
     const center = bbox.getCenter(new THREE.Vector3());
     root.position.sub(center);
+    if (asset.yOffset) root.position.y += size.y * asset.yOffset;
     group.add(root);
 
     // Frame camera for this asset
     const maxDim = Math.max(size.x, size.y, size.z);
     const dist = maxDim * 2.0;
     camera.position.set(dist * 0.85, dist * 0.7, dist);
-    frustumSize = maxDim * 1.6;
+    frustumSize = maxDim * (asset.frameScale ?? 2.2);
     const a = window.innerWidth / window.innerHeight;
     camera.left   = -frustumSize * a / 2;
     camera.right  =  frustumSize * a / 2;
