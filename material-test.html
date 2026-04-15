@@ -498,7 +498,7 @@ import {
 
 const app = document.getElementById('app');
 
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, preserveDrawingBuffer: true });
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -1260,50 +1260,51 @@ document.getElementById('exportPng').addEventListener('click', () => {
   // room to breathe and doesn't get cropped at the edge.
   const SIZE_H = 1080;
   const SIZE_W = shadow.visible ? 1480 : 1080;
-  const exportRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
-  exportRenderer.setPixelRatio(1);
-  exportRenderer.setSize(SIZE_W, SIZE_H);
-  exportRenderer.toneMapping = renderer.toneMapping;
-  exportRenderer.toneMappingExposure = renderer.toneMappingExposure;
-  exportRenderer.outputColorSpace = renderer.outputColorSpace;
-  exportRenderer.shadowMap.enabled = true;
-  exportRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  exportRenderer.setClearColor(0x000000, 0);
 
-  // Ortho frustum height matches the live view; width scales with the
-  // output aspect so the object stays centered vertically and the
-  // shadow falls into the extra horizontal room.
+  // Reuse the main renderer for export — its PMREM'd HDR environment
+  // and chrome/frosted materials are bound to this specific WebGL
+  // context, so a separate renderer would render the scene without
+  // reflections (chrome goes matte, IBL lighting collapses).
+  const prevPixelRatio = renderer.getPixelRatio();
+  const prevW = renderer.domElement.width  / prevPixelRatio;
+  const prevH = renderer.domElement.height / prevPixelRatio;
+  const prevLeft   = camera.left;
+  const prevRight  = camera.right;
+  const prevTop    = camera.top;
+  const prevBottom = camera.bottom;
+  const prevBg = scene.background;
+
+  renderer.setPixelRatio(1);
+  renderer.setSize(SIZE_W, SIZE_H, false);
   const h = frustumSize;
   const w = h * (SIZE_W / SIZE_H);
-  const exportCamera = new THREE.OrthographicCamera(
-    -w / 2, w / 2,
-     h / 2, -h / 2,
-     camera.near, camera.far,
-  );
-  exportCamera.position.copy(camera.position);
-  exportCamera.quaternion.copy(camera.quaternion);
-  exportCamera.zoom = camera.zoom;
-  exportCamera.updateProjectionMatrix();
-
-  const prevBg = scene.background;
+  camera.left   = -w / 2;
+  camera.right  =  w / 2;
+  camera.top    =  h / 2;
+  camera.bottom = -h / 2;
+  camera.updateProjectionMatrix();
   scene.background = null;
+  renderer.setClearColor(0x000000, 0);
 
-  exportRenderer.render(scene, exportCamera);
+  renderer.render(scene, camera);
+  const dataUrl = renderer.domElement.toDataURL('image/png');
 
   scene.background = prevBg;
+  renderer.setPixelRatio(prevPixelRatio);
+  renderer.setSize(prevW, prevH, false);
+  camera.left   = prevLeft;
+  camera.right  = prevRight;
+  camera.top    = prevTop;
+  camera.bottom = prevBottom;
+  camera.updateProjectionMatrix();
 
-  exportRenderer.domElement.toBlob((blob) => {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-    a.href = url;
-    a.download = `asset_${ts}.png`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-    exportRenderer.dispose();
-  }, 'image/png');
+  const a = document.createElement('a');
+  const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  a.href = dataUrl;
+  a.download = `asset_${ts}.png`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
 });
 
 window.addEventListener('resize', () => {
