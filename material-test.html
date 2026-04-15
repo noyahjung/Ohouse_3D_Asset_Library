@@ -151,6 +151,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { EXRLoader } from 'three/addons/loaders/EXRLoader.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import {
   FROSTED_PRESET,
   FROSTED_VARIANTS,
@@ -301,8 +302,15 @@ function loadAsset(assetId) {
     });
     const yMin = bodyBox.min.y, yMax = bodyBox.max.y;
 
+    // Stabilization pass: recompute vertex normals on every mesh to
+    // smooth out faceted/broken normals from the C4D→glTF export, and
+    // collect body meshes so we can merge them into a single geometry
+    // (removes tiny gaps/seams between plastic panels and lets the
+    // frosted gradient read as one continuous surface).
+    const bodyToMerge = [];
     root.traverse((obj) => {
       if (!obj.isMesh) return;
+      obj.geometry.computeVertexNormals();
       const kind = asset.materialFor(obj.name, obj.parent?.name);
       obj.castShadow = true;
       obj.receiveShadow = true;
@@ -312,11 +320,44 @@ function loadAsset(assetId) {
         case 'chrome':    obj.material = chromeMat; break;
         case 'body':
         default:
-          obj.material = materials[activeVariantId];
-          remapUVsToWorldY(obj, yMin, yMax);
-          bodyMeshes.push(obj);
+          bodyToMerge.push(obj);
       }
     });
+
+    if (bodyToMerge.length === 1) {
+      // Single body mesh — skip merge, just remap UVs in place.
+      const obj = bodyToMerge[0];
+      obj.material = materials[activeVariantId];
+      remapUVsToWorldY(obj, yMin, yMax);
+      bodyMeshes.push(obj);
+    } else if (bodyToMerge.length > 1) {
+      // Bake each mesh's world transform into its position/normal,
+      // strip per-mesh attribute mismatches (keep only position+normal),
+      // then merge into a single geometry at root-local identity.
+      const bakedGeos = bodyToMerge.map((m) => {
+        const g = m.geometry.clone();
+        g.applyMatrix4(m.matrixWorld);
+        // Keep only position + normal so every input has matching attrs.
+        for (const name of Object.keys(g.attributes)) {
+          if (name !== 'position' && name !== 'normal') g.deleteAttribute(name);
+        }
+        return g;
+      });
+      // Drop the original meshes from the hierarchy before the merge.
+      for (const m of bodyToMerge) {
+        m.geometry.dispose();
+        m.parent?.remove(m);
+      }
+      const merged = mergeGeometries(bakedGeos, false);
+      for (const g of bakedGeos) g.dispose();
+      merged.computeVertexNormals();
+      const mergedMesh = new THREE.Mesh(merged, materials[activeVariantId]);
+      mergedMesh.castShadow = true;
+      mergedMesh.receiveShadow = true;
+      remapUVsToWorldY(mergedMesh, yMin, yMax);
+      root.add(mergedMesh);
+      bodyMeshes.push(mergedMesh);
+    }
 
     const bbox = new THREE.Box3().setFromObject(root);
     const size = bbox.getSize(new THREE.Vector3());
