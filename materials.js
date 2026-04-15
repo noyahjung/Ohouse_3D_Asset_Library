@@ -14,10 +14,33 @@ export const COLORS = {
 
   // Frosted Green — mirrored curve with a fresh mint→green
   frostedGreenTop:    '#EDFFF4',
-  frostedGreenBottom: '#00B26B',
+  frostedGreenBottom: '#19BD86',
+
+  // Frosted Orange — warm peach → saturated orange
+  frostedOrangeTop:    '#FFF4EC',
+  frostedOrangeBottom: '#FF752C',
+
+  // Coral Red — pale rose → coral red
+  frostedRedTop:    '#FFEFEF',
+  frostedRedBottom: '#FF4747',
+
+  // Violet — pale lilac → vibrant violet
+  frostedVioletTop:    '#F7EFFD',
+  frostedVioletBottom: '#C475F5',
+
+  // Dark Blue — pale sky → deep navy blue
+  frostedDarkBlueTop:    '#E8EEFB',
+  frostedDarkBlueBottom: '#2C65CF',
+
+  // Candy Pink — pale blush → sweet pink
+  frostedPinkTop:    '#FFF0F4',
+  frostedPinkBottom: '#FF6E92',
 
   // Pure luminance white — unaffected by scene lighting
   luminanceWhite:    '#FFFFFF',
+
+  // Ribbon accent — flat luminance tint for accent parts (e.g. gift ribbon)
+  ribbonGray:        '#A1CCFD',
 };
 
 // ── Frozen preset: the tuned physical parameters shared by every
@@ -38,16 +61,113 @@ export const FROSTED_PRESET = Object.freeze({
 
 // ── Variant registry — maps a palette id to its gradient stops.
 // Add new frosted variants here; `createFrosted(id)` picks them up.
+// `preset` lets a variant override any FROSTED_PRESET value without
+// touching the shared baseline (used by other variants).
 export const FROSTED_VARIANTS = {
   frostedBlue: {
-    label:  'Frosted Blue',
+    label:  'Genuine Blue',
     top:    COLORS.frostedBlueTop,
     bottom: COLORS.frostedBlueBottom,
+    preset: {
+      transmission:        0.50,
+      roughness:           0.60,
+      thickness:           2.30,
+      ior:                 1.70,
+      clearcoat:           0.39,
+      clearcoatRoughness:  0.50,
+      attenuationDistance: 4.50,
+      gradientStrength:    0.85,
+    },
   },
   frostedGreen: {
-    label:  'Frosted Green',
+    label:  'Jade Green',
     top:    COLORS.frostedGreenTop,
     bottom: COLORS.frostedGreenBottom,
+    preset: {
+      transmission:        0.50,
+      roughness:           0.60,
+      thickness:           2.30,
+      ior:                 1.70,
+      clearcoat:           0.39,
+      clearcoatRoughness:  0.50,
+      attenuationDistance: 4.50,
+      gradientStrength:    0.85,
+    },
+  },
+  frostedOrange: {
+    label:  'Mango Orange',
+    top:    COLORS.frostedOrangeTop,
+    bottom: COLORS.frostedOrangeBottom,
+    preset: {
+      transmission:        0.50,
+      roughness:           0.60,
+      thickness:           2.30,
+      ior:                 1.70,
+      clearcoat:           0.39,
+      clearcoatRoughness:  0.50,
+      attenuationDistance: 4.50,
+      gradientStrength:    0.85,
+    },
+  },
+  frostedRed: {
+    label:  'Coral Red',
+    top:    COLORS.frostedRedTop,
+    bottom: COLORS.frostedRedBottom,
+    preset: {
+      transmission:        0.50,
+      roughness:           0.60,
+      thickness:           2.30,
+      ior:                 1.70,
+      clearcoat:           0.39,
+      clearcoatRoughness:  0.50,
+      attenuationDistance: 4.50,
+      gradientStrength:    0.85,
+    },
+  },
+  frostedViolet: {
+    label:  'Violet',
+    top:    COLORS.frostedVioletTop,
+    bottom: COLORS.frostedVioletBottom,
+    preset: {
+      transmission:        0.50,
+      roughness:           0.60,
+      thickness:           2.30,
+      ior:                 1.70,
+      clearcoat:           0.39,
+      clearcoatRoughness:  0.50,
+      attenuationDistance: 4.50,
+      gradientStrength:    0.85,
+    },
+  },
+  frostedDarkBlue: {
+    label:  'Dark Blue',
+    top:    COLORS.frostedDarkBlueTop,
+    bottom: COLORS.frostedDarkBlueBottom,
+    preset: {
+      transmission:        0.50,
+      roughness:           0.60,
+      thickness:           2.30,
+      ior:                 1.70,
+      clearcoat:           0.39,
+      clearcoatRoughness:  0.50,
+      attenuationDistance: 4.50,
+      gradientStrength:    0.85,
+    },
+  },
+  frostedPink: {
+    label:  'Candy Pink',
+    top:    COLORS.frostedPinkTop,
+    bottom: COLORS.frostedPinkBottom,
+    preset: {
+      transmission:        0.50,
+      roughness:           0.60,
+      thickness:           2.30,
+      ior:                 1.70,
+      clearcoat:           0.39,
+      clearcoatRoughness:  0.50,
+      attenuationDistance: 4.50,
+      gradientStrength:    0.85,
+    },
   },
 };
 
@@ -80,7 +200,7 @@ export function makeVerticalGradient(topHex, bottomHex, strength = 1.0) {
 export function createFrosted(variantId, overrides = {}) {
   const variant = FROSTED_VARIANTS[variantId];
   if (!variant) throw new Error(`Unknown frosted variant: ${variantId}`);
-  const params = { ...FROSTED_PRESET, ...overrides };
+  const params = { ...FROSTED_PRESET, ...(variant.preset || {}), ...overrides };
   const map = makeVerticalGradient(variant.top, variant.bottom, params.gradientStrength);
   const mat = new THREE.MeshPhysicalMaterial({
     color: 0xffffff,
@@ -125,6 +245,39 @@ export function createLuminanceWhite() {
   return mat;
 }
 
+// ── Harmony map — accent color paired with each body variant ─
+// The "Harmony" accent material tracks the active body variant so the
+// ribbon always reads as a tonal companion of the main color instead
+// of a fixed tint.
+export const HARMONY_BY_BODY = {
+  frostedBlue:     '#A1CCFD',
+  frostedGreen:    '#83E4C5',
+  frostedOrange:   '#FFC3A1',
+  frostedRed:      '#FFA0A3',
+  frostedViolet:   '#D7ACF9',
+  frostedDarkBlue: '#9CBCFF',
+  frostedPink:     '#FFC1D9',
+};
+
+// ── Ribbon Gray (flat luminance accent) ──────────────────────
+/**
+ * Flat gray tone for ribbon / accent parts — same shading model as
+ * createLuminanceWhite (unlit, unaffected by scene lighting) but with
+ * a softer gray tint so ribbons read as a distinct material instead
+ * of pure white.
+ */
+export function createRibbonGray() {
+  const mat = new THREE.MeshBasicMaterial({
+    color: new THREE.Color(COLORS.ribbonGray),
+    toneMapped: false,
+    polygonOffset: true,
+    polygonOffsetFactor: -2,
+    polygonOffsetUnits: -2,
+  });
+  mat.userData.paletteId = 'ribbonGray';
+  return mat;
+}
+
 // ── Glass (built-in, not in palette) ─────────────────────────
 /**
  * Light translucent glass with subtle roughness. Used for cup / water
@@ -143,10 +296,10 @@ export function createGlass() {
     metalness:           0.0,
     transparent:         true,
     opacity:             0.32,
-    clearcoat:           0.9,
-    clearcoatRoughness:  0.08,
+    clearcoat:           0.0,
+    clearcoatRoughness:  0.0,
     specularIntensity:   1.4,
-    envMapIntensity:     1.6,
+    envMapIntensity:     3.0,
     side:                THREE.DoubleSide,
     depthWrite:          false,
   });

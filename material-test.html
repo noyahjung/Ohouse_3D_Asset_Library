@@ -47,7 +47,7 @@
   #palette {
     position: fixed; top: 18px; left: 18px; z-index: 10;
     display: flex; flex-direction: column; gap: 14px;
-    width: 200px;
+    width: 230px;
   }
   .palette-group { display: flex; flex-direction: column; gap: 4px; }
 
@@ -91,10 +91,19 @@
   .chip.builtin .swatch:hover { color: var(--text-dim); }
   .chip .dot.chrome { background: linear-gradient(180deg, #f5f5f7, #9ea2a8); }
   .chip .dot.glass  { background: linear-gradient(180deg, #ffffff, #d6eaff); }
+  .chip .rec-tag {
+    align-self: center;
+    margin-right: 6px;
+    font-size: 8px; letter-spacing: .1em; font-weight: 600;
+    text-transform: uppercase; color: var(--accent);
+    background: rgba(0,161,255,.12); border: 1px solid rgba(0,161,255,.35);
+    border-radius: 3px; padding: 2px 5px; white-space: nowrap;
+    pointer-events: none;
+  }
 
   /* ── Settings panel ─────────────────────────────────── */
   #settings {
-    position: fixed; top: 18px; left: 234px; z-index: 10;
+    position: fixed; top: 18px; left: 264px; z-index: 10;
     padding: 14px 16px; min-width: 260px;
     font-size: 12px; line-height: 1.6;
     background: var(--card); border: 1px solid var(--border); border-radius: 14px;
@@ -154,6 +163,14 @@
     background: var(--accent); border-radius: 2px 0 0 2px;
   }
 
+  .back-btn {
+    margin-bottom: 10px;
+    text-align: center; font-weight: 500;
+    color: var(--text-mute);
+  }
+  .back-btn:hover { color: var(--text); }
+  .back-btn::before { display: none !important; }
+
   #exportPng {
     margin-top: 14px;
     background: var(--accent); color: #fff; border-color: transparent;
@@ -169,6 +186,182 @@
     position: fixed; bottom: 14px; left: 18px; z-index: 10;
     font-size: 11px; color: var(--text-mute); letter-spacing: .01em;
   }
+
+  /* ── Background selector ───────────────────────────── */
+  #bgSelector {
+    position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%); z-index: 10;
+    display: flex; align-items: center; gap: 10px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 999px; padding: 6px 12px 6px 14px;
+    backdrop-filter: blur(8px);
+  }
+  #bgSelector .section-label {
+    padding: 0; margin: 0;
+    font-size: 10px; letter-spacing: .12em; color: var(--text-mute);
+    font-weight: 500; text-transform: uppercase;
+  }
+  #bgSelector .bg-swatch {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,.14);
+    cursor: pointer; padding: 0; background: transparent;
+    position: relative; transition: transform .12s;
+  }
+  #bgSelector .bg-swatch:hover { transform: scale(1.1); }
+  #bgSelector .bg-swatch.active {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  /* ── View selector ─────────────────────────────────── */
+  #viewSelector {
+    position: fixed; bottom: 56px; left: 50%; transform: translateX(-50%); z-index: 10;
+    display: flex; align-items: center; gap: 6px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 999px; padding: 6px 12px 6px 14px;
+    backdrop-filter: blur(8px);
+  }
+  #viewSelector .section-label {
+    padding: 0; margin: 0;
+    font-size: 10px; letter-spacing: .12em; color: var(--text-mute);
+    font-weight: 500; text-transform: uppercase;
+  }
+  #viewSelector .view-btn {
+    min-width: 28px; height: 22px;
+    background: transparent; border: 1px solid var(--border);
+    border-radius: 5px; color: var(--text-dim);
+    font-family: inherit; font-size: 11px; font-weight: 500;
+    cursor: pointer; padding: 0 6px;
+    transition: background .15s, color .15s, border-color .15s;
+  }
+  #viewSelector .view-btn:hover { background: var(--card-hover); color: var(--text); }
+  #viewSelector .view-btn.active {
+    background: var(--accent); color: #fff; border-color: var(--accent);
+  }
+
+  #bgSelector .divider {
+    width: 1px; align-self: stretch;
+    background: var(--border); margin: 0 2px;
+  }
+  #bgSelector .toggle {
+    display: flex; align-items: center; gap: 8px;
+    background: transparent; border: 0; padding: 0;
+    cursor: pointer; font-family: inherit;
+    font-size: 10px; letter-spacing: .12em; color: var(--text-mute);
+    font-weight: 500; text-transform: uppercase;
+  }
+  #bgSelector .toggle .switch {
+    width: 28px; height: 16px; border-radius: 999px;
+    background: #3a3a40; position: relative;
+    transition: background .15s;
+  }
+  #bgSelector .toggle .switch::after {
+    content: ''; position: absolute;
+    top: 2px; left: 2px;
+    width: 12px; height: 12px; border-radius: 50%;
+    background: #d4d4d8;
+    transition: left .15s, background .15s;
+  }
+  #bgSelector .toggle.on .switch { background: var(--accent); }
+  #bgSelector .toggle.on .switch::after { left: 14px; background: #fff; }
+  #bgSelector .toggle.on { color: var(--text); }
+  /* ── Landing page ───────────────────────────────────── */
+  #landing {
+    position: fixed; inset: 0; z-index: 100;
+    background: var(--bg);
+    overflow: auto;
+    padding: 60px 40px;
+  }
+  #landing .inner { max-width: 1100px; margin: 0 auto; }
+  #landing header { text-align: center; margin-bottom: 48px; }
+  #landing h1 {
+    font-size: 28px; font-weight: 700; color: var(--text);
+    margin: 0 0 8px; letter-spacing: -.02em;
+  }
+  #landing .subtitle {
+    font-size: 13px; color: var(--text-mute); margin: 0;
+    letter-spacing: .01em;
+  }
+  #landing .loading {
+    text-align: center; color: var(--text-mute);
+    font-size: 12px; padding: 80px 0;
+    letter-spacing: .05em;
+  }
+  #landing .search {
+    max-width: 480px; margin: 0 auto 32px;
+    position: relative;
+  }
+  #landing .search input {
+    width: 100%; box-sizing: border-box;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 11px 38px 11px 38px;
+    color: var(--text); font-family: inherit;
+    font-size: 13px; letter-spacing: .01em;
+    transition: border-color .15s, background .15s;
+  }
+  #landing .search input::placeholder { color: var(--text-mute); }
+  #landing .search input:focus {
+    outline: 0; border-color: rgba(0,161,255,.4);
+    background: var(--card-hover);
+  }
+  #landing .search .icon {
+    position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+    color: var(--text-mute); pointer-events: none;
+  }
+  #landing .search .clear {
+    position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+    background: transparent; border: 0; color: var(--text-mute);
+    cursor: pointer; padding: 6px; font-size: 14px; line-height: 1;
+    border-radius: 4px;
+  }
+  #landing .search .clear:hover { color: var(--text); background: rgba(255,255,255,.06); }
+  #landing .search .clear[hidden] { display: none; }
+  #landing .empty {
+    text-align: center; color: var(--text-mute);
+    font-size: 13px; padding: 60px 0;
+  }
+  #landing .empty[hidden] { display: none; }
+  #landing .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 20px;
+  }
+  #landing .asset-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 16px;
+    cursor: pointer; font-family: inherit;
+    transition: transform .15s, border-color .15s, background .15s;
+    display: flex; flex-direction: column; gap: 14px;
+    text-align: left;
+  }
+  #landing .asset-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(0,161,255,.3);
+    background: var(--card-hover);
+  }
+  #landing .asset-card .thumb {
+    aspect-ratio: 1; border-radius: 10px;
+    background: #ffffff;
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+  #landing .asset-card .thumb img {
+    width: 100%; height: 100%; object-fit: contain;
+  }
+  #landing .asset-card .label {
+    font-size: 14px; font-weight: 600; color: var(--text);
+    letter-spacing: -.005em;
+  }
+  #landing .asset-card .rec {
+    font-size: 10px; color: var(--text-mute);
+    letter-spacing: .08em; text-transform: uppercase;
+    margin-top: -10px;
+  }
+  #landing .asset-card .rec .dot {
+    display: inline-block; width: 8px; height: 8px;
+    border-radius: 50%; vertical-align: middle;
+    margin-right: 6px; border: 1px solid rgba(255,255,255,.15);
+  }
+  #landing.hidden { display: none; }
+
   #projectBadge {
     position: fixed; bottom: 14px; right: 18px; z-index: 10;
     background: rgba(0,178,107,.12); color: #00d084;
@@ -181,45 +374,97 @@
 <body>
 <div id="app"></div>
 
+<div id="landing">
+  <div class="inner">
+    <header>
+      <h1>3D Asset Library</h1>
+      <p class="subtitle">Select an asset to customize</p>
+    </header>
+    <div class="loading">Generating previews…</div>
+    <div class="search" hidden>
+      <span class="icon">⌕</span>
+      <input id="searchInput" type="search" placeholder="Search assets" autocomplete="off" spellcheck="false" />
+      <button class="clear" id="searchClear" hidden title="Clear">✕</button>
+    </div>
+    <div class="grid" hidden></div>
+    <div class="empty" hidden>No matching assets.</div>
+  </div>
+</div>
+
 <div id="palette">
   <div class="palette-group">
     <div class="section-label">Body</div>
     <div class="chip active" data-mat="frostedBlue" data-mat-type="frosted" style="--top:#EBEFFF; --bot:#00a1ff;">
-      <button class="swatch"><span class="dot"></span> Frosted Blue</button>
+      <button class="swatch"><span class="dot"></span> Genuine Blue</button>
       <button class="gear" title="Settings">⚙</button>
     </div>
-    <div class="chip" data-mat="frostedGreen" data-mat-type="frosted" style="--top:#EDFFF4; --bot:#00B26B;">
-      <button class="swatch"><span class="dot"></span> Frosted Green</button>
+    <div class="chip" data-mat="frostedGreen" data-mat-type="frosted" style="--top:#EDFFF4; --bot:#19BD86;">
+      <button class="swatch"><span class="dot"></span> Jade Green</button>
+      <button class="gear" title="Settings">⚙</button>
+    </div>
+    <div class="chip" data-mat="frostedOrange" data-mat-type="frosted" style="--top:#FFF4EC; --bot:#FF752C;">
+      <button class="swatch"><span class="dot"></span> Mango Orange</button>
+      <button class="gear" title="Settings">⚙</button>
+    </div>
+    <div class="chip" data-mat="frostedRed" data-mat-type="frosted" style="--top:#FFEFEF; --bot:#FF4747;">
+      <button class="swatch"><span class="dot"></span> Coral Red</button>
+      <button class="gear" title="Settings">⚙</button>
+    </div>
+    <div class="chip" data-mat="frostedViolet" data-mat-type="frosted" style="--top:#F7EFFD; --bot:#C475F5;">
+      <button class="swatch"><span class="dot"></span> Violet</button>
+      <button class="gear" title="Settings">⚙</button>
+    </div>
+    <div class="chip" data-mat="frostedDarkBlue" data-mat-type="frosted" style="--top:#E8EEFB; --bot:#2C65CF;">
+      <button class="swatch"><span class="dot"></span> Dark Blue</button>
+      <button class="gear" title="Settings">⚙</button>
+    </div>
+    <div class="chip" data-mat="frostedPink" data-mat-type="frosted" style="--top:#FFF0F4; --bot:#FF6E92;">
+      <button class="swatch"><span class="dot"></span> Candy Pink</button>
       <button class="gear" title="Settings">⚙</button>
     </div>
   </div>
-  <div class="palette-group">
-    <div class="section-label">Built-in</div>
-    <div class="chip builtin" data-mat="glass" data-mat-type="glass">
-      <button class="swatch"><span class="dot glass"></span> Glass</button>
-      <button class="gear" title="Settings">⚙</button>
-    </div>
-  </div>
+  <!-- Built-in materials (Glass, Harmony) remain instantiated in JS as
+       system colors applied automatically to specific mesh kinds, but
+       are no longer surfaced in the palette UI. -->
 </div>
 
 <div id="settings" hidden>
   <h1 id="settingsTitle">Frosted Blue</h1>
   <div id="controls"></div>
   <div class="row">
-    <button id="toggleBg">BG</button>
     <button id="resetPreset">Reset</button>
   </div>
 </div>
 
 <div id="assets">
+  <button id="backToLibrary" class="asset-chip back-btn">← Library</button>
   <div class="section-label">Asset</div>
-  <button class="asset-chip active" data-asset="box">이사 박스</button>
-  <button class="asset-chip" data-asset="purifier">정수기</button>
-  <button class="asset-chip" data-asset="gift">선물상자</button>
+  <button class="asset-chip active" data-asset="box">Moving Box</button>
+  <button class="asset-chip" data-asset="purifier">Water Purifier</button>
+  <button class="asset-chip" data-asset="gift">Gift Box</button>
   <button class="asset-chip" id="exportPng">PNG 출력</button>
 </div>
 
 <div id="hint">드래그로 회전 · 휠로 줌 · 우클릭 드래그로 팬</div>
+
+<div id="viewSelector">
+  <span class="section-label">View</span>
+  <button class="view-btn active" data-view="1" title="Isometric">1</button>
+  <button class="view-btn" data-view="2" title="Slight Top-Down">2</button>
+  <button class="view-btn" data-view="3" title="Side">3</button>
+</div>
+
+<div id="bgSelector">
+  <span class="section-label">BG</span>
+  <button class="bg-swatch active" data-bg="#ffffff" style="background:#ffffff;" title="White"></button>
+  <button class="bg-swatch"        data-bg="#f5f5f5" style="background:#f5f5f5;" title="Light Gray"></button>
+  <button class="bg-swatch"        data-bg="#000000" style="background:#000000;" title="Black"></button>
+  <span class="divider"></span>
+  <button class="toggle" id="shadowToggle" title="Toggle shadow">
+    <span>Shadow</span>
+    <span class="switch"></span>
+  </button>
+</div>
 <div id="projectBadge">OHOUSE · ASSET LIBRARY</div>
 
 <script type="importmap">
@@ -241,8 +486,10 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import {
   FROSTED_PRESET,
   FROSTED_VARIANTS,
+  HARMONY_BY_BODY,
   createFrosted,
   createLuminanceWhite,
+  createRibbonGray,
   createGlass,
   createChrome,
   makeVerticalGradient,
@@ -251,18 +498,18 @@ import {
 
 const app = document.getElementById('app');
 
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, preserveDrawingBuffer: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.1;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 app.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
-const bgColors = ['#0a0a0b', '#ffffff', '#f0f0f0'];
-let bgIdx = 0;
-scene.background = new THREE.Color(bgColors[bgIdx]);
+scene.background = new THREE.Color('#ffffff');
 
 const pmrem = new THREE.PMREMGenerator(renderer);
 // Temporary environment until the HDR loads so the scene isn't flat-black.
@@ -300,13 +547,19 @@ controls.target.set(0, 0, 0);
 // ── Material registry: instantiate each variant once, keep their
 // per-variant state so toggling doesn't reset tuning.
 const materials = {
-  frostedBlue:  createFrosted('frostedBlue'),
-  frostedGreen: createFrosted('frostedGreen'),
+  frostedBlue:     createFrosted('frostedBlue'),
+  frostedGreen:    createFrosted('frostedGreen'),
+  frostedOrange:   createFrosted('frostedOrange'),
+  frostedRed:      createFrosted('frostedRed'),
+  frostedViolet:   createFrosted('frostedViolet'),
+  frostedDarkBlue: createFrosted('frostedDarkBlue'),
+  frostedPink:     createFrosted('frostedPink'),
 };
 // Built-in material chips — not exposed in the palette UI.
-const tapeMat   = createLuminanceWhite();
-const glassMat  = createGlass();
-const chromeMat = createChrome();
+const tapeMat      = createLuminanceWhite();
+const ribbonGrayMat = createRibbonGray();
+const glassMat     = createGlass();
+const chromeMat    = createChrome();
 
 // Track which body meshes receive the frosted material (so we can swap).
 let bodyMeshes = [];
@@ -323,16 +576,19 @@ let activeVariantId = 'frostedBlue';
 const ASSETS = {
   box: {
     url: 'box.gltf',
-    label: '이사 박스',
+    label: 'Moving Box',
     rootName: 'newbox_blue_moving',
+    recommended: 'frostedBlue',
     materialFor(name) {
       return /ribbon/i.test(name) ? 'luminance' : 'body';
     },
   },
   gift: {
     url: 'gift.gltf',
-    label: '선물상자',
+    label: 'Gift Box',
     rootName: 'gift_save',
+    recommended: 'frostedRed',
+    rotationY: Math.PI / 2,
     // Tighter framing than default so the box+ribbon reads at the same
     // on-screen size as the 이사박스 asset (whose bbox has no tall accents).
     frameScale: 1.8,
@@ -344,14 +600,15 @@ const ASSETS = {
       const n = (name || '').toLowerCase();
       const pn = (parentName || '').toLowerCase();
       // Ribbon parts are brand-fixed white (luminance).
-      if (/ribbon/.test(n) || /ribbon/.test(pn)) return 'luminance';
+      if (/ribbon/.test(n) || /ribbon/.test(pn)) return 'ribbonGray';
       return 'body';
     },
   },
   purifier: {
     url: 'waterpurifier.gltf',
-    label: '정수기',
+    label: 'Water Purifier',
     rootName: 'water purifier',
+    recommended: 'frostedBlue',
     // Source file faces away from the default camera — flip so the
     // spout/logo side faces forward on load.
     rotationY: Math.PI,
@@ -373,13 +630,17 @@ const ASSETS = {
 const group = new THREE.Group();
 scene.add(group);
 let currentRoot = null;
+// Tracked so the designer-preset camera views can scale their
+// orbit distance to the currently loaded asset.
+let currentMaxDim = 1;
 
 const loader = new GLTFLoader();
 
 function loadAsset(assetId) {
   const asset = ASSETS[assetId];
-  if (!asset) return;
+  if (!asset) return Promise.reject(new Error('Unknown asset: ' + assetId));
 
+  return new Promise((resolve, reject) => {
   loader.load(asset.url, (gltf) => {
     // Clear previous asset
     if (currentRoot) {
@@ -424,9 +685,10 @@ function loadAsset(assetId) {
       obj.castShadow = true;
       obj.receiveShadow = true;
       switch (kind) {
-        case 'luminance': obj.material = tapeMat;   break;
-        case 'glass':     obj.material = glassMat;  break;
-        case 'chrome':    obj.material = chromeMat; break;
+        case 'luminance':  obj.material = tapeMat;        break;
+        case 'ribbonGray': obj.material = ribbonGrayMat;  break;
+        case 'glass':      obj.material = glassMat;       break;
+        case 'chrome':     obj.material = chromeMat;      break;
         case 'body':
         default:
           bodyToMerge.push(obj);
@@ -480,8 +742,12 @@ function loadAsset(assetId) {
 
     // Frame camera for this asset
     const maxDim = Math.max(size.x, size.y, size.z);
+    currentMaxDim = maxDim;
     const dist = maxDim * 2.0;
     camera.position.set(dist * 0.85, dist * 0.7, dist);
+    // Reset the view selector to the isometric preset on every new load.
+    document.querySelectorAll('#viewSelector .view-btn')
+      .forEach(b => b.classList.toggle('active', b.dataset.view === '1'));
     frustumSize = maxDim * (asset.frameScale ?? 2.2);
     const a = window.innerWidth / window.innerHeight;
     camera.left   = -frustumSize * a / 2;
@@ -495,39 +761,241 @@ function loadAsset(assetId) {
     controls.target.set(0, 0, 0);
     controls.update();
 
-    shadow.position.y = -size.y / 2 - 1;
-    shadow.scale.setScalar(maxDim / 2);
+    // After centering + yOffset, the object's bbox center sits at
+    // world Y = size.y * yOffset, so its bottom is that minus half
+    // the height. Place the ground plane exactly at that bottom so
+    // the shadow starts right at the object's base.
+    const objectCenterY = size.y * (asset.yOffset || 0);
+    // Assets have a rounded bottom bevel, so the camera-visible bottom
+    // edge sits above the bbox's true minimum Y. Lift the ground plane
+    // a few percent of height so the shadow meets the visible edge and
+    // there's no white gap under the object.
+    const bevelComp = size.y * (asset.bevelComp ?? 0.03);
+    shadow.position.y = objectCenterY - size.y / 2 + bevelComp;
+    // Scale the ground plane to the asset so the shadow footprint
+    // always lands on it — glTF scales vary wildly between assets
+    // (meters vs centimeters), so a fixed 50×50 plane leaves large
+    // assets casting shadows into empty space.
+    shadow.scale.setScalar(maxDim);
+
+    // Retarget the shadow light at the object center and scale the
+    // orthographic shadow camera so any asset's silhouette fits.
+    shadowLight.position.copy(SHADOW_LIGHT_DIR).multiplyScalar(maxDim * 5);
+    shadowLight.position.y += objectCenterY;
+    shadowLight.target.position.set(0, objectCenterY, 0);
+    shadowLight.target.updateMatrixWorld();
+    const shadowExtent = maxDim * 3;
+    shadowLight.shadow.camera.left   = -shadowExtent;
+    shadowLight.shadow.camera.right  =  shadowExtent;
+    shadowLight.shadow.camera.top    =  shadowExtent;
+    shadowLight.shadow.camera.bottom = -shadowExtent;
+    shadowLight.shadow.camera.near   = 0.1;
+    shadowLight.shadow.camera.far    = maxDim * 20;
+    shadowLight.shadow.camera.updateProjectionMatrix();
+
+    // Update the radial-fade uniforms so the shadow is fully opaque
+    // near the object's ground footprint and smoothly fades to zero as
+    // the shadow extends outward.
+    shadowFadeUniforms.uObjectCenter.value.set(0, shadow.position.y, 0);
+    shadowFadeUniforms.uFadeInner.value = maxDim * 0.7;
+    shadowFadeUniforms.uFadeOuter.value = maxDim * 1.5;
+
+    // Each asset ships with a recommended body color — apply it so the
+    // asset loads in its "designer-approved" look, and surface that pick
+    // to the user by pinning a small Recommended tag on the chip.
+    if (asset.recommended && materials[asset.recommended]) {
+      setActiveMaterial(asset.recommended);
+      document.querySelectorAll('.chip .rec-tag').forEach(el => el.remove());
+      const recChip = document.querySelector(`.chip[data-mat="${asset.recommended}"]`);
+      if (recChip) {
+        const tag = document.createElement('span');
+        tag.className = 'rec-tag';
+        tag.textContent = 'Recommended';
+        const gear = recChip.querySelector('.gear');
+        if (gear) recChip.insertBefore(tag, gear);
+        else recChip.appendChild(tag);
+      }
+    }
+    resolve();
   }, undefined, (err) => {
     console.error('GLTF load error', err);
     const d = document.createElement('div');
     d.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#300;color:#fbb;padding:16px 20px;border-radius:8px;font-family:monospace;';
     d.textContent = `${asset.url} 로드 실패 — 로컬 서버를 통해 열어주세요.`;
     document.body.appendChild(d);
+    reject(err);
+  });
   });
 }
 
-loadAsset('box');
+// ── Landing page: thumbnail grid ───────────────────────────
+// Sequentially load each asset in its recommended color + View 1
+// framing, capture the canvas to a data URL, and assemble a click-
+// able card grid. Clicking a card hides the landing overlay and
+// shows the main customizer with the selected asset loaded.
+async function buildLanding() {
+  const landing = document.getElementById('landing');
+  const loading = landing.querySelector('.loading');
+  const grid = landing.querySelector('.grid');
+  const thumbs = {};
+  // Thumbnails render without the ground shadow so each card reads as
+  // a clean isolated object on white.
+  const prevShadowVisible = shadow.visible;
+  const prevShadowCast = shadowLight.castShadow;
+  shadow.visible = false;
+  shadowLight.castShadow = false;
+  for (const id of Object.keys(ASSETS)) {
+    await loadAsset(id);
+    // Apply View 3 (45° side, no top) for the thumbnail capture so
+    // the card silhouette reads cleanly without the iso top-down hint.
+    const v = VIEW_DIRS['3'];
+    const d = currentMaxDim * 2.0;
+    camera.position.set(v[0] * d, v[1] * d, v[2] * d);
+    camera.zoom = 1;
+    camera.updateProjectionMatrix();
+    controls.target.set(0, 0, 0);
+    controls.update();
+    // One frame for controls/shadow updates to settle before capture.
+    await new Promise((r) => requestAnimationFrame(r));
+    renderer.render(scene, camera);
+    // Center-crop the wide viewport canvas to a square so the thumb
+    // frames the object tightly instead of showing blank side margins.
+    const srcCanvas = renderer.domElement;
+    const sz = Math.min(srcCanvas.width, srcCanvas.height);
+    const sx = (srcCanvas.width - sz) / 2;
+    const sy = (srcCanvas.height - sz) / 2;
+    const crop = document.createElement('canvas');
+    crop.width = crop.height = 500;
+    crop.getContext('2d').drawImage(srcCanvas, sx, sy, sz, sz, 0, 0, 500, 500);
+    thumbs[id] = crop.toDataURL('image/png');
+  }
+  shadow.visible = prevShadowVisible;
+  shadowLight.castShadow = prevShadowCast;
+  grid.innerHTML = '';
+  for (const [id, asset] of Object.entries(ASSETS)) {
+    const card = document.createElement('button');
+    card.className = 'asset-card';
+    card.dataset.asset = id;
+    card.innerHTML = `
+      <div class="thumb"><img src="${thumbs[id]}" alt="${asset.label}" /></div>
+      <div class="label">${asset.label}</div>
+    `;
+    card.addEventListener('click', () => selectAsset(id));
+    grid.appendChild(card);
+  }
+  loading.hidden = true;
+  landing.querySelector('.search').hidden = false;
+  grid.hidden = false;
+
+  // Live search filter — case-insensitive substring match on label.
+  // The empty-state message replaces the grid when no card matches.
+  const searchInput = document.getElementById('searchInput');
+  const searchClear = document.getElementById('searchClear');
+  const emptyMsg = landing.querySelector('.empty');
+  function applyFilter() {
+    const q = searchInput.value.trim().toLowerCase();
+    searchClear.hidden = q.length === 0;
+    let visible = 0;
+    grid.querySelectorAll('.asset-card').forEach(card => {
+      const label = (card.querySelector('.label')?.textContent || '').toLowerCase();
+      const match = !q || label.includes(q);
+      card.style.display = match ? '' : 'none';
+      if (match) visible++;
+    });
+    emptyMsg.hidden = visible > 0;
+  }
+  searchInput.addEventListener('input', applyFilter);
+  searchClear.addEventListener('click', () => {
+    searchInput.value = '';
+    applyFilter();
+    searchInput.focus();
+  });
+}
+
+// Hide the landing, sync the right-side asset chip state, load the
+// chosen asset into the customizer.
+function selectAsset(id) {
+  document.getElementById('landing').classList.add('hidden');
+  document.querySelectorAll('.asset-chip').forEach(b => {
+    if (b.id !== 'exportPng' && b.id !== 'backToLibrary') {
+      b.classList.toggle('active', b.dataset.asset === id);
+    }
+  });
+  loadAsset(id);
+}
+
+// Re-open the landing overlay so the user can switch back to the
+// asset grid from within the customizer.
+document.getElementById('backToLibrary').addEventListener('click', () => {
+  document.getElementById('landing').classList.remove('hidden');
+});
 
 // ── Ground shadow ──────────────────────────────────────────
-const shadow = new THREE.Mesh(
-  new THREE.PlaneGeometry(6, 6),
-  new THREE.MeshBasicMaterial({
-    transparent: true,
-    opacity: 0.35,
-    map: (() => {
-      const s = 256, cv = document.createElement('canvas'); cv.width = cv.height = s;
-      const cx = cv.getContext('2d');
-      const grad = cx.createRadialGradient(s/2, s/2, 10, s/2, s/2, s/2);
-      grad.addColorStop(0, 'rgba(0,0,0,0.55)');
-      grad.addColorStop(1, 'rgba(0,0,0,0)');
-      cx.fillStyle = grad; cx.fillRect(0,0,s,s);
-      const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; return t;
-    })(),
-    depthWrite: false,
-  })
-);
+// Dedicated shadow-caster light: intensity 0 so it contributes no
+// illumination to the assets (their lighting stays untouched), but it
+// still renders a shadow map that the ShadowMaterial plane below
+// reads to produce a tinted, object-silhouette drop shadow.
+const shadowLight = new THREE.DirectionalLight(0xffffff, 0);
+shadowLight.castShadow = true;
+// Lower-angled light → longer drop shadow. Ratio of horizontal to
+// vertical components controls the stretch: the larger the horizontal,
+// the longer the shadow extends from the object's base.
+const SHADOW_LIGHT_DIR = new THREE.Vector3(-2.5, 5, 2).normalize();
+shadowLight.position.copy(SHADOW_LIGHT_DIR).multiplyScalar(10);
+shadowLight.shadow.mapSize.set(2048, 2048);
+shadowLight.shadow.radius = 10;
+shadowLight.shadow.blurSamples = 25;
+shadowLight.shadow.bias = -0.0005;
+scene.add(shadowLight);
+scene.add(shadowLight.target);
+
+// Ground plane — only visible where a shadow is cast. The color tracks
+// the active body variant's bottom-gradient color so the drop shadow
+// picks up the dominant body tint. Opacity 0.5 gives the "near object"
+// intensity; PCF softness + blurSamples spread it out into a natural
+// fade toward the edge.
+const shadowMat = new THREE.ShadowMaterial({
+  color: new THREE.Color(FROSTED_VARIANTS.frostedBlue.bottom),
+  transparent: true,
+  opacity: 0.15,
+});
+// Shared uniform refs so we can update fade params per-asset after
+// the shader has been compiled lazily on first use.
+const shadowFadeUniforms = {
+  uObjectCenter: { value: new THREE.Vector3() },
+  uFadeInner:    { value: 1 },
+  uFadeOuter:    { value: 2 },
+};
+shadowMat.onBeforeCompile = (shader) => {
+  Object.assign(shader.uniforms, shadowFadeUniforms);
+  shader.vertexShader = shader.vertexShader
+    .replace('void main() {', 'varying vec3 vShadowWorldPos;\nvoid main() {')
+    .replace(
+      '#include <project_vertex>',
+      '#include <project_vertex>\nvShadowWorldPos = (modelMatrix * vec4(position, 1.0)).xyz;'
+    );
+  shader.fragmentShader = shader.fragmentShader
+    .replace(
+      'uniform float opacity;',
+      `uniform float opacity;
+       uniform vec3 uObjectCenter;
+       uniform float uFadeInner;
+       uniform float uFadeOuter;
+       varying vec3 vShadowWorldPos;`
+    )
+    .replace(
+      'gl_FragColor = vec4( color, opacity * ( 1.0 - getShadowMask() ) );',
+      `float shadowDist = distance(vShadowWorldPos.xz, uObjectCenter.xz);
+       float radialFade = 1.0 - smoothstep(uFadeInner, uFadeOuter, shadowDist);
+       gl_FragColor = vec4( color, opacity * radialFade * ( 1.0 - getShadowMask() ) );`
+    );
+};
+const shadow = new THREE.Mesh(new THREE.PlaneGeometry(50, 50), shadowMat);
 shadow.rotation.x = -Math.PI / 2;
-shadow.position.y = -1.02;
+shadow.receiveShadow = true;
+// Default to shadow-off; user can toggle on via the bottom UI.
+shadow.visible = false;
+shadowLight.castShadow = false;
 scene.add(shadow);
 
 // ── Lights ─────────────────────────────────────────────────
@@ -575,25 +1043,40 @@ const CONTROL_SCHEMAS = {
 
 // Registry of all editable materials (including frosted variants + built-ins)
 const editableMaterials = {
-  frostedBlue:  materials.frostedBlue,
-  frostedGreen: materials.frostedGreen,
-  glass:        glassMat,
-  chrome:       chromeMat,
+  frostedBlue:     materials.frostedBlue,
+  frostedGreen:    materials.frostedGreen,
+  frostedOrange:   materials.frostedOrange,
+  frostedRed:      materials.frostedRed,
+  frostedViolet:   materials.frostedViolet,
+  frostedDarkBlue: materials.frostedDarkBlue,
+  frostedPink:     materials.frostedPink,
+  glass:           glassMat,
+  chrome:          chromeMat,
 };
 
 // Per-key state snapshots (so frosted variant switches preserve tuning,
 // and Reset can restore built-ins to their factory values)
 const INITIAL_STATE = {
-  frostedBlue:  { ...FROSTED_PRESET },
-  frostedGreen: { ...FROSTED_PRESET },
-  glass:        snapshotMaterial(glassMat,  CONTROL_SCHEMAS.glass),
-  chrome:       snapshotMaterial(chromeMat, CONTROL_SCHEMAS.chrome),
+  frostedBlue:     { ...FROSTED_PRESET, ...(FROSTED_VARIANTS.frostedBlue.preset     || {}) },
+  frostedGreen:    { ...FROSTED_PRESET, ...(FROSTED_VARIANTS.frostedGreen.preset    || {}) },
+  frostedOrange:   { ...FROSTED_PRESET, ...(FROSTED_VARIANTS.frostedOrange.preset   || {}) },
+  frostedRed:      { ...FROSTED_PRESET, ...(FROSTED_VARIANTS.frostedRed.preset      || {}) },
+  frostedViolet:   { ...FROSTED_PRESET, ...(FROSTED_VARIANTS.frostedViolet.preset   || {}) },
+  frostedDarkBlue: { ...FROSTED_PRESET, ...(FROSTED_VARIANTS.frostedDarkBlue.preset || {}) },
+  frostedPink:     { ...FROSTED_PRESET, ...(FROSTED_VARIANTS.frostedPink.preset     || {}) },
+  glass:           snapshotMaterial(glassMat,  CONTROL_SCHEMAS.glass),
+  chrome:          snapshotMaterial(chromeMat, CONTROL_SCHEMAS.chrome),
 };
 const state = {
-  frostedBlue:  { ...INITIAL_STATE.frostedBlue },
-  frostedGreen: { ...INITIAL_STATE.frostedGreen },
-  glass:        { ...INITIAL_STATE.glass },
-  chrome:       { ...INITIAL_STATE.chrome },
+  frostedBlue:     { ...INITIAL_STATE.frostedBlue },
+  frostedGreen:    { ...INITIAL_STATE.frostedGreen },
+  frostedOrange:   { ...INITIAL_STATE.frostedOrange },
+  frostedRed:      { ...INITIAL_STATE.frostedRed },
+  frostedViolet:   { ...INITIAL_STATE.frostedViolet },
+  frostedDarkBlue: { ...INITIAL_STATE.frostedDarkBlue },
+  frostedPink:     { ...INITIAL_STATE.frostedPink },
+  glass:           { ...INITIAL_STATE.glass },
+  chrome:          { ...INITIAL_STATE.chrome },
 };
 
 function snapshotMaterial(mat, schema) {
@@ -607,16 +1090,32 @@ function setActiveMaterial(id) {
   const mat = materials[id];
   for (const mesh of bodyMeshes) mesh.material = mat;
   chips.forEach(c => c.classList.toggle('active', c.dataset.mat === id));
+  // Retint the ground shadow to the new variant's bottom color.
+  shadowMat.color.set(FROSTED_VARIANTS[id].bottom);
+  // Sync the Harmony accent (ribbon) to the paired companion color
+  // and reflect it on the palette swatch so the chip previews the
+  // current accent without opening the asset.
+  const harmony = HARMONY_BY_BODY[id];
+  if (harmony) {
+    ribbonGrayMat.color.set(harmony);
+    const harmonyDot = document.querySelector('.chip[data-mat="ribbonGray"] .dot');
+    if (harmonyDot) harmonyDot.style.background = harmony;
+  }
 }
 
 let openMatKey = null;
 function openSettingsFor(matKey, matType) {
   openMatKey = matKey;
   const labelMap = {
-    frostedBlue:  'Frosted Blue',
-    frostedGreen: 'Frosted Green',
-    glass:        'Glass (Built-in)',
-    chrome:       'Chrome (Built-in)',
+    frostedBlue:     'Genuine Blue',
+    frostedGreen:    'Jade Green',
+    frostedOrange:   'Mango Orange',
+    frostedRed:      'Coral Red',
+    frostedViolet:   'Violet',
+    frostedDarkBlue: 'Dark Blue',
+    frostedPink:     'Candy Pink',
+    glass:           'Glass (Built-in)',
+    chrome:          'Chrome (Built-in)',
   };
   settingsTitle.textContent = labelMap[matKey] || matKey;
   renderControls(matKey, matType);
@@ -674,7 +1173,7 @@ chips.forEach(chip => {
     setActiveMaterial(id);
     if (!settingsPanel.hidden && openMatKey && type === 'frosted') openSettingsFor(id, type);
   });
-  chip.querySelector('.gear').addEventListener('click', (e) => {
+  chip.querySelector('.gear')?.addEventListener('click', (e) => {
     e.stopPropagation();
     const isOpenForThis = !settingsPanel.hidden && openMatKey === id;
     if (isOpenForThis) {
@@ -694,9 +1193,42 @@ document.querySelectorAll('.asset-chip').forEach(btn => {
   });
 });
 
-document.getElementById('toggleBg').addEventListener('click', () => {
-  bgIdx = (bgIdx + 1) % bgColors.length;
-  scene.background = new THREE.Color(bgColors[bgIdx]);
+document.querySelectorAll('#bgSelector .bg-swatch').forEach(btn => {
+  btn.addEventListener('click', () => {
+    scene.background = new THREE.Color(btn.dataset.bg);
+    document.querySelectorAll('#bgSelector .bg-swatch')
+      .forEach(b => b.classList.toggle('active', b === btn));
+  });
+});
+
+document.getElementById('shadowToggle').addEventListener('click', (e) => {
+  const btn = e.currentTarget;
+  const on = btn.classList.toggle('on');
+  shadow.visible = on;
+  shadowLight.castShadow = on;
+});
+
+// ── Designer-preset camera views ───────────────────────────
+// Direction vectors (scaled by the asset's framing distance) for
+// three quick camera presets designers can hand off to users.
+const VIEW_DIRS = {
+  '1': [0.85, 0.70, 1.00],   // Isometric — default iso angle
+  '2': [0.85, 0.40, 1.00],   // Slight top-down — gentle overhead, front-heavy
+  '3': [1.00, 0.00, 1.00],   // Side — 45° around vertical, no top
+};
+document.querySelectorAll('#viewSelector .view-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const v = VIEW_DIRS[btn.dataset.view];
+    if (!v) return;
+    const d = currentMaxDim * 2.0;
+    camera.position.set(v[0] * d, v[1] * d, v[2] * d);
+    camera.zoom = 1;
+    camera.updateProjectionMatrix();
+    controls.target.set(0, 0, 0);
+    controls.update();
+    document.querySelectorAll('#viewSelector .view-btn')
+      .forEach(b => b.classList.toggle('active', b === btn));
+  });
 });
 document.getElementById('resetPreset').addEventListener('click', () => {
   if (!openMatKey) return;
@@ -724,19 +1256,28 @@ document.getElementById('resetPreset').addEventListener('click', () => {
 
 // ── PNG 출력 (1080x1080, alpha, 오브젝트만) ────────────────
 document.getElementById('exportPng').addEventListener('click', () => {
-  const SIZE = 1080;
+  // When the shadow is on, widen the canvas so the drop shadow has
+  // room to breathe and doesn't get cropped at the edge.
+  const SIZE_H = 1080;
+  const SIZE_W = shadow.visible ? 1480 : 1080;
   const exportRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
   exportRenderer.setPixelRatio(1);
-  exportRenderer.setSize(SIZE, SIZE);
+  exportRenderer.setSize(SIZE_W, SIZE_H);
   exportRenderer.toneMapping = renderer.toneMapping;
   exportRenderer.toneMappingExposure = renderer.toneMappingExposure;
   exportRenderer.outputColorSpace = renderer.outputColorSpace;
+  exportRenderer.shadowMap.enabled = true;
+  exportRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
   exportRenderer.setClearColor(0x000000, 0);
 
-  // Square-aspect ortho camera mirroring the current view.
+  // Ortho frustum height matches the live view; width scales with the
+  // output aspect so the object stays centered vertically and the
+  // shadow falls into the extra horizontal room.
+  const h = frustumSize;
+  const w = h * (SIZE_W / SIZE_H);
   const exportCamera = new THREE.OrthographicCamera(
-    -frustumSize / 2, frustumSize / 2,
-     frustumSize / 2, -frustumSize / 2,
+    -w / 2, w / 2,
+     h / 2, -h / 2,
      camera.near, camera.far,
   );
   exportCamera.position.copy(camera.position);
@@ -745,14 +1286,11 @@ document.getElementById('exportPng').addEventListener('click', () => {
   exportCamera.updateProjectionMatrix();
 
   const prevBg = scene.background;
-  const shadowVisible = shadow.visible;
   scene.background = null;
-  shadow.visible = false;
 
   exportRenderer.render(scene, exportCamera);
 
   scene.background = prevBg;
-  shadow.visible = shadowVisible;
 
   exportRenderer.domElement.toBlob((blob) => {
     const url = URL.createObjectURL(blob);
@@ -784,6 +1322,10 @@ function tick() {
   requestAnimationFrame(tick);
 }
 tick();
+
+// Now that all materials, lights, and shadow plane are defined, kick
+// off thumbnail generation and reveal the landing page once it's done.
+buildLanding();
 </script>
 </body>
 </html>
