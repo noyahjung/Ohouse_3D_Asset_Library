@@ -838,17 +838,10 @@ async function buildLanding() {
   const loading = landing.querySelector('.loading');
   const grid = landing.querySelector('.grid');
   const thumbs = {};
-  // Thumbnails render without the ground shadow so each card reads as
-  // a clean isolated object on white.
-  const prevShadowVisible = shadow.visible;
-  const prevShadowCast = shadowLight.castShadow;
-  shadow.visible = false;
-  shadowLight.castShadow = false;
   for (const id of Object.keys(ASSETS)) {
     await loadAsset(id);
-    // Apply View 3 (45° side, no top) for the thumbnail capture so
-    // the card silhouette reads cleanly without the iso top-down hint.
-    const v = VIEW_DIRS['3'];
+    // Apply View 1 for the thumbnail capture.
+    const v = VIEW_DIRS['1'];
     const d = currentMaxDim * 2.0;
     camera.position.set(v[0] * d, v[1] * d, v[2] * d);
     camera.zoom = 1;
@@ -869,8 +862,6 @@ async function buildLanding() {
     crop.getContext('2d').drawImage(srcCanvas, sx, sy, sz, sz, 0, 0, 500, 500);
     thumbs[id] = crop.toDataURL('image/png');
   }
-  shadow.visible = prevShadowVisible;
-  shadowLight.castShadow = prevShadowCast;
   grid.innerHTML = '';
   for (const [id, asset] of Object.entries(ASSETS)) {
     const card = document.createElement('button');
