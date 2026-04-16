@@ -6,26 +6,35 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='28' fill='%2300B26B'/%3E%3C/svg%3E" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <style>
   :root {
-    --accent: #00a1ff;
-    --bg: #0a0a0b;
-    --card: #141417;
-    --card-hover: #1c1c21;
-    --card-active: #222228;
-    --border: rgba(255,255,255,.06);
-    --text: #f4f4f5;
-    --text-dim: #a1a1aa;
-    --text-mute: #71717a;
+    --accent: #6366f1;
+    --accent-light: rgba(99,102,241,.1);
+    --bg: #f0f2f5;
+    --card: #ffffff;
+    --card-hover: #f8f9fb;
+    --card-active: #f0f2f5;
+    --border: #e2e8f0;
+    --border-light: #f1f5f9;
+    --text: #1e293b;
+    --text-dim: #64748b;
+    --text-mute: #94a3b8;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.05);
+    --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,.08);
+    --radius: 8px;
+    --radius-sm: 5px;
+    --font: 'Pretendard', 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    --transition: .2s cubic-bezier(.4,0,.2,1);
   }
   html, body {
     margin: 0; height: 100%;
     background: var(--bg);
     color: var(--text);
-    font-family: 'Inter', -apple-system, system-ui, sans-serif;
-    font-feature-settings: 'cv11', 'ss01';
+    font-family: var(--font);
     -webkit-font-smoothing: antialiased;
   }
   #app { position: fixed; inset: 0; }
@@ -33,9 +42,9 @@
   /* ── Shared card shell ───────────────────────────────── */
   .card {
     background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    backdrop-filter: blur(8px);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
   }
   .section-label {
     font-size: 10px; letter-spacing: .12em; color: var(--text-mute);
@@ -55,11 +64,12 @@
     display: flex; align-items: stretch;
     background: var(--card);
     border: 1px solid var(--border);
-    border-radius: 10px; overflow: hidden;
-    transition: background .15s, border-color .15s;
+    border-radius: var(--radius-sm); overflow: hidden;
+    transition: background var(--transition), border-color var(--transition);
+    box-shadow: var(--shadow-sm);
   }
   .chip:hover { background: var(--card-hover); }
-  .chip.active { background: var(--card-active); border-color: rgba(0,161,255,.3); }
+  .chip.active { background: var(--accent-light); border-color: rgba(99,102,241,.3); }
   .chip.active .swatch { color: var(--text); }
   .chip .swatch {
     flex: 1;
@@ -75,7 +85,7 @@
   }
   .chip .dot {
     width: 14px; height: 14px; border-radius: 50%;
-    border: 1px solid rgba(255,255,255,.12);
+    border: 1px solid rgba(0,0,0,.1);
     background: linear-gradient(180deg, var(--top), var(--bot));
     flex: 0 0 auto;
   }
@@ -83,20 +93,20 @@
     display: flex; align-items: center; justify-content: center;
     width: 34px; background: transparent; color: var(--text-mute); border: 0;
     border-left: 1px solid var(--border);
-    cursor: pointer; font-size: 13px; transition: color .15s, background .15s;
+    cursor: pointer; font-size: 13px; transition: color var(--transition), background var(--transition);
   }
-  .chip .gear:hover { background: rgba(255,255,255,.04); color: var(--text); }
-  .chip.settings-open .gear { background: rgba(0,161,255,.12); color: var(--accent); }
+  .chip .gear:hover { background: rgba(0,0,0,.03); color: var(--text); }
+  .chip.settings-open .gear { background: var(--accent-light); color: var(--accent); }
   .chip.builtin .swatch { cursor: default; }
   .chip.builtin .swatch:hover { color: var(--text-dim); }
-  .chip .dot.chrome { background: linear-gradient(180deg, #f5f5f7, #9ea2a8); }
-  .chip .dot.glass  { background: linear-gradient(180deg, #ffffff, #d6eaff); }
+  .chip .dot.chrome { background: linear-gradient(180deg, #e2e4e8, #9ea2a8); border-color: rgba(0,0,0,.1); }
+  .chip .dot.glass  { background: linear-gradient(180deg, #eef4ff, #c0d8f5); border-color: rgba(0,0,0,.1); }
   .chip .rec-tag {
     align-self: center;
     margin-right: 6px;
     font-size: 8px; letter-spacing: .1em; font-weight: 600;
     text-transform: uppercase; color: var(--accent);
-    background: rgba(0,161,255,.12); border: 1px solid rgba(0,161,255,.35);
+    background: var(--accent-light); border: 1px solid rgba(99,102,241,.25);
     border-radius: 3px; padding: 2px 5px; white-space: nowrap;
     pointer-events: none;
   }
@@ -106,8 +116,8 @@
     position: fixed; top: 18px; left: 264px; z-index: 10;
     padding: 14px 16px; min-width: 260px;
     font-size: 12px; line-height: 1.6;
-    background: var(--card); border: 1px solid var(--border); border-radius: 14px;
-    backdrop-filter: blur(8px);
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
   }
   #settings[hidden] { display: none; }
   #settings h1 {
@@ -128,13 +138,13 @@
   }
   #settings .row { display: flex; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
   #settings button {
-    flex: 1; background: transparent; color: var(--text-dim);
-    border: 1px solid var(--border); border-radius: 8px;
+    flex: 1; background: var(--card); color: var(--text-dim);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
     padding: 7px 10px; cursor: pointer; font-size: 11px; font-weight: 500;
-    transition: background .15s, color .15s, border-color .15s;
+    transition: background var(--transition), color var(--transition);
     font-family: inherit;
   }
-  #settings button:hover { background: var(--card-hover); color: var(--text); border-color: rgba(255,255,255,.12); }
+  #settings button:hover { background: var(--card-hover); color: var(--text); }
 
   /* ── Right column: assets + export ──────────────────── */
   #assets {
@@ -146,17 +156,18 @@
     text-align: left;
     background: var(--card);
     color: var(--text-dim);
-    border: 1px solid var(--border); border-radius: 10px;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
     padding: 10px 14px;
-    cursor: pointer; font-size: 12px; font-weight: 500; letter-spacing: .01em;
+    cursor: pointer; font-size: 13px; font-weight: 500; letter-spacing: .01em;
     font-family: inherit;
-    transition: background .15s, color .15s, border-color .15s;
+    transition: background var(--transition), color var(--transition), border-color var(--transition);
+    box-shadow: var(--shadow-sm);
   }
   .asset-chip:hover { background: var(--card-hover); color: var(--text); }
   .asset-chip.active {
-    background: var(--card-active); color: var(--text);
-    border-color: rgba(0,161,255,.3);
-    position: relative;
+    background: var(--accent-light); color: var(--accent);
+    border-color: rgba(99,102,241,.3);
+    position: relative; font-weight: 600;
   }
   .asset-chip.active::before {
     content: ''; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px;
@@ -175,9 +186,9 @@
     margin-top: 14px;
     background: var(--accent); color: #fff; border-color: transparent;
     font-weight: 600; text-align: center;
-    box-shadow: 0 4px 14px rgba(0,161,255,.28);
+    box-shadow: 0 4px 14px rgba(99,102,241,.25);
   }
-  #exportPng:hover { background: #33b4ff; color: #fff; }
+  #exportPng:hover { background: #818cf8; color: #fff; }
   #exportPng.active { background: var(--accent); color: #fff; }
   #exportPng.active::before { display: none; }
 
@@ -193,7 +204,7 @@
     display: flex; align-items: center; gap: 10px;
     background: var(--card); border: 1px solid var(--border);
     border-radius: 999px; padding: 6px 12px 6px 14px;
-    backdrop-filter: blur(8px);
+    box-shadow: var(--shadow);
   }
   #bgSelector .section-label {
     padding: 0; margin: 0;
@@ -202,7 +213,7 @@
   }
   #bgSelector .bg-swatch {
     width: 22px; height: 22px; border-radius: 50%;
-    border: 1px solid rgba(255,255,255,.14);
+    border: 1px solid rgba(0,0,0,.12);
     cursor: pointer; padding: 0; background: transparent;
     position: relative; transition: transform .12s;
   }
@@ -217,7 +228,7 @@
     display: flex; align-items: center; gap: 6px;
     background: var(--card); border: 1px solid var(--border);
     border-radius: 999px; padding: 6px 12px 6px 14px;
-    backdrop-filter: blur(8px);
+    box-shadow: var(--shadow);
   }
   #viewSelector .section-label {
     padding: 0; margin: 0;
@@ -250,14 +261,14 @@
   }
   #bgSelector .toggle .switch {
     width: 28px; height: 16px; border-radius: 999px;
-    background: #3a3a40; position: relative;
+    background: #cbd5e1; position: relative;
     transition: background .15s;
   }
   #bgSelector .toggle .switch::after {
     content: ''; position: absolute;
     top: 2px; left: 2px;
     width: 12px; height: 12px; border-radius: 50%;
-    background: #d4d4d8;
+    background: #fff;
     transition: left .15s, background .15s;
   }
   #bgSelector .toggle.on .switch { background: var(--accent); }
@@ -273,7 +284,7 @@
   #landing .inner { max-width: 1100px; margin: 0 auto; }
   #landing header { text-align: center; margin-bottom: 48px; }
   #landing h1 {
-    font-size: 28px; font-weight: 700; color: var(--text);
+    font-size: 24px; font-weight: 700; color: var(--text);
     margin: 0 0 8px; letter-spacing: -.02em;
   }
   #landing .subtitle {
@@ -292,15 +303,15 @@
   #landing .search input {
     width: 100%; box-sizing: border-box;
     background: var(--card); border: 1px solid var(--border);
-    border-radius: 10px; padding: 11px 38px 11px 38px;
+    border-radius: var(--radius-sm); padding: 11px 38px 11px 38px;
     color: var(--text); font-family: inherit;
     font-size: 13px; letter-spacing: .01em;
-    transition: border-color .15s, background .15s;
+    transition: border-color var(--transition), box-shadow var(--transition);
   }
   #landing .search input::placeholder { color: var(--text-mute); }
   #landing .search input:focus {
-    outline: 0; border-color: rgba(0,161,255,.4);
-    background: var(--card-hover);
+    outline: 0; border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-light);
   }
   #landing .search .icon {
     position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
@@ -312,7 +323,7 @@
     cursor: pointer; padding: 6px; font-size: 14px; line-height: 1;
     border-radius: 4px;
   }
-  #landing .search .clear:hover { color: var(--text); background: rgba(255,255,255,.06); }
+  #landing .search .clear:hover { color: var(--text); background: rgba(0,0,0,.04); }
   #landing .search .clear[hidden] { display: none; }
   #landing .empty {
     text-align: center; color: var(--text-mute);
@@ -325,21 +336,22 @@
     gap: 20px;
   }
   #landing .asset-card {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 14px; padding: 16px;
+    background: var(--card); border: 1px solid var(--border-light);
+    border-radius: var(--radius); padding: 16px;
     cursor: pointer; font-family: inherit;
-    transition: transform .15s, border-color .15s, background .15s;
+    transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
     display: flex; flex-direction: column; gap: 14px;
     text-align: left;
+    box-shadow: var(--shadow-sm);
   }
   #landing .asset-card:hover {
     transform: translateY(-2px);
-    border-color: rgba(0,161,255,.3);
-    background: var(--card-hover);
+    border-color: rgba(99,102,241,.3);
+    box-shadow: var(--shadow-md);
   }
   #landing .asset-card .thumb {
-    aspect-ratio: 1; border-radius: 10px;
-    background: #ffffff;
+    aspect-ratio: 1; border-radius: 6px;
+    background: #f8f9fb;
     overflow: hidden;
     display: flex; align-items: center; justify-content: center;
   }
@@ -358,16 +370,167 @@
   #landing .asset-card .rec .dot {
     display: inline-block; width: 8px; height: 8px;
     border-radius: 50%; vertical-align: middle;
-    margin-right: 6px; border: 1px solid rgba(255,255,255,.15);
+    margin-right: 6px; border: 1px solid rgba(0,0,0,.1);
   }
   #landing.hidden { display: none; }
 
   #projectBadge {
     position: fixed; bottom: 14px; right: 18px; z-index: 10;
-    background: rgba(0,178,107,.12); color: #00d084;
+    background: rgba(16,185,129,.08); color: #059669;
     font-size: 10px; letter-spacing: .14em; font-weight: 600;
-    padding: 6px 10px; border-radius: 6px;
-    border: 1px solid rgba(0,178,107,.2);
+    padding: 6px 10px; border-radius: var(--radius-sm);
+    border: 1px solid rgba(16,185,129,.15);
+  }
+
+  /* ── Principles mode: hide customizer chrome ────── */
+  body.principles-mode #palette,
+  body.principles-mode #assets,
+  body.principles-mode #settings,
+  body.principles-mode #viewSelector,
+  body.principles-mode #bgSelector,
+  body.principles-mode #hint,
+  body.principles-mode #projectBadge { display: none !important; }
+
+  /* ── Principles button on landing ──────────────── */
+  .principles-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    margin-top: 20px;
+    background: var(--accent-light); border: none;
+    border-radius: var(--radius-sm); padding: 10px 20px;
+    color: var(--accent); font-family: inherit;
+    font-size: 13px; font-weight: 600; letter-spacing: .01em;
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition);
+  }
+  .principles-btn:hover {
+    background: var(--accent); color: #fff;
+  }
+
+  /* ── Principles overlay ────────────────────────── */
+  #principles { position: fixed; inset: 0; z-index: 100; display: none; }
+  #principles.active { display: block; }
+
+  #principles .page-title {
+    position: absolute; top: 32px; left: 50%; transform: translateX(-50%);
+    font-size: 11px; letter-spacing: .12em; color: var(--text-mute);
+    text-transform: uppercase; font-weight: 500; z-index: 10;
+    white-space: nowrap;
+  }
+  #principles .close-btn {
+    position: absolute; top: 28px; left: 28px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 10px 16px;
+    color: var(--text-dim); font-family: inherit;
+    font-size: 12px; font-weight: 500; cursor: pointer; z-index: 10;
+    transition: background var(--transition), color var(--transition);
+    box-shadow: var(--shadow-sm);
+  }
+  #principles .close-btn:hover { background: var(--card-hover); color: var(--text); }
+
+  #principles .slide-text {
+    position: absolute; bottom: 60px; left: 50%;
+    transform: translateX(-50%) translateY(12px);
+    max-width: 480px; width: 100%;
+    text-align: center;
+    opacity: 0;
+    transition: opacity .6s ease, transform .6s ease;
+    pointer-events: none;
+    z-index: 10;
+  }
+  #principles .slide-text.visible {
+    opacity: 1; transform: translateX(-50%) translateY(0);
+  }
+  #principles .slide-text .num {
+    font-size: 11px; letter-spacing: .14em; font-weight: 600;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 12px;
+  }
+  #principles .slide-text h2 {
+    font-size: 28px; font-weight: 700; color: var(--text);
+    margin: 0 0 4px; letter-spacing: -.02em; line-height: 1.2;
+  }
+  #principles .slide-text .en {
+    font-size: 12px; color: var(--text-mute); margin: 0 0 10px;
+    letter-spacing: .02em;
+  }
+  #principles .slide-text .desc {
+    font-size: 13px; color: var(--text-dim); line-height: 1.7; margin: 0;
+  }
+
+  #principles .nav-arrow {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 50%; width: 44px; height: 44px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-dim); font-size: 20px;
+    cursor: pointer; z-index: 10; font-family: inherit;
+    transition: background var(--transition), color var(--transition), opacity .2s;
+    box-shadow: var(--shadow-sm);
+  }
+  #principles .nav-arrow:hover { background: var(--card-hover); color: var(--text); }
+  #principles .nav-arrow.prev { left: 28px; }
+  #principles .nav-arrow.next { right: 28px; }
+  #principles .nav-arrow[disabled] { opacity: .25; pointer-events: none; }
+
+  /* ── Mock phone UI (slide 3 — 명확성) ─────────── */
+  #mockPhoneUI {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -55%);
+    z-index: 5; pointer-events: none;
+    opacity: 0;
+  }
+  .mock-phone-frame {
+    width: 320px;
+    background: #fff;
+    border-radius: 32px;
+    padding: 16px 16px 100px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.1), 0 0 0 1px rgba(0,0,0,.05);
+  }
+  .mock-status-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 12px 20px;
+    font-size: 13px; font-weight: 600; color: #333;
+  }
+  .mock-status-icons { display: flex; gap: 4px; align-items: center; }
+  .mock-status-icons span {
+    display: inline-block; width: 14px; height: 10px;
+    border-radius: 2px; background: #333;
+  }
+  .mock-banner {
+    display: flex; align-items: center; gap: 14px;
+    background: #f5f5f7;
+    border-radius: 14px;
+    padding: 16px 18px;
+  }
+  .mock-banner-icon {
+    width: 80px; height: 80px; flex-shrink: 0;
+    border-radius: 12px;
+    background-size: 85%;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: #f0f2f5;
+  }
+  .mock-banner-body { flex: 1; min-width: 0; }
+  .mock-banner-title {
+    font-size: 13px; font-weight: 500; color: #333; line-height: 1.4;
+  }
+  .mock-banner-cta {
+    font-size: 14px; font-weight: 700; color: #35c5f0; margin-top: 3px;
+  }
+  .mock-banner-x {
+    font-size: 16px; color: #bbb; align-self: flex-start; margin-top: -2px;
+  }
+
+  #principles .nav-dots {
+    position: absolute; bottom: 36px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 10px; z-index: 10;
+  }
+  #principles .nav-dots button {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--border); border: 0; padding: 0;
+    cursor: pointer; transition: background .2s, transform .2s;
+  }
+  #principles .nav-dots button.active {
+    background: var(--accent); transform: scale(1.4);
   }
 </style>
 </head>
@@ -379,6 +542,7 @@
     <header>
       <h1>3D Asset Library</h1>
       <p class="subtitle">Select an asset to customize</p>
+      <button id="principlesBtn" class="principles-btn">오늘의집 3D 에셋 조형 원칙</button>
     </header>
     <div class="loading">Generating previews…</div>
     <div class="search" hidden>
@@ -388,6 +552,62 @@
     </div>
     <div class="grid" hidden></div>
     <div class="empty" hidden>No matching assets.</div>
+  </div>
+</div>
+
+<div id="principles">
+  <span class="page-title">오늘의집 3D 에셋 조형 원칙</span>
+  <button class="close-btn" id="principlesClose">← 라이브러리</button>
+
+  <div class="slide-text" data-slide="0">
+    <div class="num">01 — Smoothing Line</div>
+    <h2>부드러움</h2>
+    <p class="en">Smoothing Line</p>
+    <p class="desc">브랜드 심볼의 외형을 닮은 곡선으로 조형적 부드러움을 유지합니다. 모서리와 면의 라운딩으로 각진 단면을 지양합니다.</p>
+  </div>
+  <div class="slide-text" data-slide="1">
+    <div class="num">02 — 유저의 영감과 꿈</div>
+    <h2>다정함</h2>
+    <p class="en">Warmth &amp; Dream</p>
+    <p class="desc">브랜드의 다정한 정서와 꿈의 분위기를 담습니다. 은은한 Vertical Gradient와 약간의 투명한 질감으로 표현합니다.</p>
+  </div>
+  <div class="slide-text" data-slide="2">
+    <div class="num">03 — 실현</div>
+    <h2>명확성</h2>
+    <p class="en">Realization</p>
+    <p class="desc">꿈을 실제로 보여준다는 가치를 보조하기 위해, 작은 화면에서도 또렷이 읽히는 형태를 갖춥니다. 군더더기 없는 명확한 실루엣, 단순한 매스.</p>
+  </div>
+  <div class="slide-text" data-slide="3">
+    <div class="num">04 — 자세 (Attitude)</div>
+    <h2>안정감</h2>
+    <p class="en">Stability</p>
+    <p class="desc">위 세 가지에 신뢰와 확신을 더하기 위한 단단하고 안정적인 무게감을 유지합니다. 지면에 또렷이 붙은 그림자로 표현합니다.</p>
+  </div>
+
+  <div id="mockPhoneUI">
+    <div class="mock-phone-frame">
+      <div class="mock-status-bar">
+        <span>9:41</span>
+        <div class="mock-status-icons"><span></span><span></span><span></span></div>
+      </div>
+      <div class="mock-banner">
+        <div class="mock-banner-icon" id="mockIcon"></div>
+        <div class="mock-banner-body">
+          <div class="mock-banner-title">관리된 파트너와 함께하는 이사</div>
+          <div class="mock-banner-cta">무료로 이사 견적 받기</div>
+        </div>
+        <span class="mock-banner-x">✕</span>
+      </div>
+    </div>
+  </div>
+
+  <button class="nav-arrow prev" id="principlesPrev">‹</button>
+  <button class="nav-arrow next" id="principlesNext">›</button>
+  <div class="nav-dots">
+    <button class="active" data-slide="0"></button>
+    <button data-slide="1"></button>
+    <button data-slide="2"></button>
+    <button data-slide="3"></button>
   </div>
 </div>
 
@@ -440,6 +660,7 @@
   <button id="backToLibrary" class="asset-chip back-btn">← Library</button>
   <div class="section-label">Asset</div>
   <button class="asset-chip active" data-asset="box">Moving Box</button>
+  <button class="asset-chip" data-asset="coupon">Coupon</button>
   <button class="asset-chip" data-asset="purifier">Water Purifier</button>
   <button class="asset-chip" data-asset="gift">Gift Box</button>
   <button class="asset-chip" id="exportPng">PNG 출력</button>
@@ -564,6 +785,7 @@ const chromeMat    = createChrome();
 // Track which body meshes receive the frosted material (so we can swap).
 let bodyMeshes = [];
 let activeVariantId = 'frostedBlue';
+let currentAssetId = 'box';
 
 // ── Asset registry ────────────────────────────────────────
 // Per-asset rules: which meshes are luminance-white accents vs the
@@ -604,22 +826,32 @@ const ASSETS = {
       return 'body';
     },
   },
+  coupon: {
+    url: 'Coupon.gltf',
+    label: 'Coupon',
+    rootName: 'coupon',
+    recommended: 'frostedPink',
+    modelScale: 6.3,
+    frameScale: 1.6,
+    useFullGradientBox: true,
+    viewOverrides: { '3': [0.25, 0.05, 1.00] },
+    materialFor(name, parentName) {
+      const n = (name || '').toLowerCase();
+      if (/percent/.test(n)) return 'luminance';
+      return 'body';
+    },
+  },
   purifier: {
     url: 'waterpurifier.gltf',
     label: 'Water Purifier',
     rootName: 'water purifier',
     recommended: 'frostedBlue',
-    // Source file faces away from the default camera — flip so the
-    // spout/logo side faces forward on load.
     rotationY: Math.PI,
     materialFor(name, parentName) {
       const n = (name || '').toLowerCase();
       const pn = (parentName || '').toLowerCase();
-      // Water-drop logo on the front face → flat white emblem.
       if (/^logo$/.test(n) || /^logo$/.test(pn)) return 'luminance';
-      // Spout cylinder (lives under "Subdivision Surface" group) → chrome.
       if (/cylinder/.test(n) || /cylinder/.test(pn)) return 'chrome';
-      // Cup vessel → glass.
       if (/^cup$/.test(n) || /^cup$/.test(pn)) return 'glass';
       return 'body';
     },
@@ -640,6 +872,10 @@ function loadAsset(assetId) {
   const asset = ASSETS[assetId];
   if (!asset) return Promise.reject(new Error('Unknown asset: ' + assetId));
 
+  group.position.set(0, 0, 0);
+  group.scale.setScalar(1);
+  currentAssetId = assetId;
+
   return new Promise((resolve, reject) => {
   loader.load(asset.url, (gltf) => {
     // Clear previous asset
@@ -659,18 +895,24 @@ function loadAsset(assetId) {
       }
     }
     currentRoot = root;
+    if (asset.modelScale) root.scale.setScalar(asset.modelScale);
     if (asset.rotationY) root.rotation.y = asset.rotationY;
     root.updateMatrixWorld(true);
 
-    // Pass 1: compute vertical bounds of body meshes only, to drive
-    // the frosted gradient consistently across the asset.
+    // Pass 1: compute vertical bounds for the frosted gradient.
+    // Body-only for most assets; full bbox for assets where non-body
+    // parts extend beyond the body (e.g. coupon's percent symbol).
     const bodyBox = new THREE.Box3();
+    const fullBox = new THREE.Box3();
     root.traverse((obj) => {
       if (!obj.isMesh) return;
+      fullBox.expandByObject(obj);
       const kind = asset.materialFor(obj.name, obj.parent?.name);
       if (kind === 'body') bodyBox.expandByObject(obj);
     });
-    const yMin = bodyBox.min.y, yMax = bodyBox.max.y;
+    const useFullBox = bodyBox.isEmpty() || asset.useFullGradientBox;
+    const gradBox = useFullBox ? fullBox : bodyBox;
+    const yMin = gradBox.min.y, yMax = gradBox.max.y;
 
     // Stabilization pass: recompute vertex normals on every mesh to
     // smooth out faceted/broken normals from the C4D→glTF export, and
@@ -1205,11 +1447,16 @@ document.getElementById('shadowToggle').addEventListener('click', (e) => {
 const VIEW_DIRS = {
   '1': [0.85, 0.70, 1.00],   // Isometric — default iso angle
   '2': [0.85, 0.40, 1.00],   // Slight top-down — gentle overhead, front-heavy
-  '3': [1.00, 0.00, 1.00],   // Side — 45° around vertical, no top
+  '3': [0.60, 0.00, 1.00],   // Side-front — front-weighted with side depth
 };
+function getViewDir(viewId) {
+  const asset = ASSETS[currentAssetId];
+  if (asset?.viewOverrides?.[viewId]) return asset.viewOverrides[viewId];
+  return VIEW_DIRS[viewId];
+}
 document.querySelectorAll('#viewSelector .view-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    const v = VIEW_DIRS[btn.dataset.view];
+    const v = getViewDir(btn.dataset.view);
     if (!v) return;
     const d = currentMaxDim * 2.0;
     camera.position.set(v[0] * d, v[1] * d, v[2] * d);
@@ -1308,15 +1555,228 @@ window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
+// ── Principles slideshow ──────────────────────────────────
+const PRINCIPLES_SLIDES = [
+  { asset: 'box',      color: 'frostedBlue', view: '2', rotate: false, shadow: false },
+  { asset: 'gift',     color: 'frostedRed',  view: '3', rotate: true,  shadow: false },
+  { asset: 'box',      color: 'frostedBlue', view: '2', rotate: false, shadow: false, mockUI: true },
+  { asset: 'box',      color: 'frostedBlue', view: '2', rotate: false, shadow: true  },
+];
+let principlesActive = false;
+let principlesSlideIdx = 0;
+let principlesRotating = false;
+let principlesTransitioning = false;
+let savedSceneBg = null;
+
+function tweenAnim(dur, fn) {
+  return new Promise(res => {
+    const t0 = performance.now();
+    (function frame(now) {
+      const p = Math.min((now - t0) / dur, 1);
+      fn(1 - Math.pow(1 - p, 3));
+      p < 1 ? requestAnimationFrame(frame) : res();
+    })(t0);
+  });
+}
+
+function updatePrinciplesNav() {
+  document.getElementById('principlesPrev').toggleAttribute('disabled', principlesSlideIdx === 0);
+  document.getElementById('principlesNext').toggleAttribute('disabled', principlesSlideIdx === PRINCIPLES_SLIDES.length - 1);
+  document.querySelectorAll('#principles .nav-dots button').forEach((d, i) =>
+    d.classList.toggle('active', i === principlesSlideIdx));
+}
+
+function openPrinciples() {
+  principlesActive = true;
+  savedSceneBg = scene.background;
+  scene.background = new THREE.Color('#ffffff');
+  document.body.classList.add('principles-mode');
+  document.getElementById('landing').classList.add('hidden');
+  document.getElementById('principles').classList.add('active');
+  controls.enabled = false;
+  shadow.visible = false;
+  shadowLight.castShadow = false;
+  goToPrinciplesSlide(0);
+}
+
+function closePrinciples() {
+  principlesActive = false;
+  principlesRotating = false;
+  document.body.classList.remove('principles-mode');
+  document.getElementById('principles').classList.remove('active');
+  document.getElementById('landing').classList.remove('hidden');
+  scene.background = savedSceneBg || new THREE.Color('#ffffff');
+  controls.enabled = true;
+  shadow.visible = false;
+  shadowLight.castShadow = false;
+  group.position.set(0, 0, 0);
+  group.scale.setScalar(1);
+  document.getElementById('mockPhoneUI').style.opacity = '0';
+}
+
+let mockUIActive = false;
+
+async function goToPrinciplesSlide(idx) {
+  if (principlesTransitioning) return;
+  principlesTransitioning = true;
+  principlesRotating = false;
+  principlesSlideIdx = idx;
+
+  document.querySelectorAll('#principles .slide-text').forEach(el => el.classList.remove('visible'));
+  updatePrinciplesNav();
+
+  const mockEl = document.getElementById('mockPhoneUI');
+
+  // ── Exit animation ──────────────────────────────────
+  const hasExiting = currentRoot !== null;
+  if (hasExiting) {
+    if (mockUIActive) {
+      // Mock UI slide: fade out phone screen as-is
+      group.visible = false;
+      await tweenAnim(500, (t) => { mockEl.style.opacity = String(1 - t); });
+      mockEl.style.opacity = '0';
+      group.visible = true;
+      group.scale.setScalar(1);
+      mockUIActive = false;
+    } else {
+      // Normal exit: asset flies to bottom-right
+      const exitStartX = group.position.x;
+      const exitStartY = group.position.y;
+      const exitEndX = currentMaxDim * 2.2;
+      const exitEndY = -currentMaxDim * 1.5;
+      const exitRotStart = currentRoot.rotation.y;
+      const exitRotEnd = exitRotStart + Math.PI * 0.6;
+      shadow.visible = false;
+      shadowLight.castShadow = false;
+      await tweenAnim(700, (t) => {
+        group.position.x = exitStartX + (exitEndX - exitStartX) * t;
+        group.position.y = exitStartY + (exitEndY - exitStartY) * t;
+        currentRoot.rotation.y = exitRotStart + (exitRotEnd - exitRotStart) * t;
+      });
+    }
+  }
+
+  // ── Load & enter ────────────────────────────────────
+  const slide = PRINCIPLES_SLIDES[idx];
+  shadow.visible = false;
+  shadowLight.castShadow = false;
+  group.scale.setScalar(1);
+
+  await loadAsset(slide.asset);
+  if (slide.color) setActiveMaterial(slide.color);
+
+  const v = VIEW_DIRS[slide.view];
+  const d = currentMaxDim * 2.0;
+  camera.position.set(v[0] * d, v[1] * d, v[2] * d);
+  camera.zoom = 0.66;
+  camera.updateProjectionMatrix();
+  controls.target.set(0, 0, 0);
+  controls.update();
+
+  // Entrance: bottom-left → center
+  const endX = 0, endY = 0;
+  const startX = -currentMaxDim * 2.2;
+  const startY = -currentMaxDim * 1.5;
+  const baseRotY = currentRoot.rotation.y;
+  const rotOffset = -Math.PI * 0.6;
+
+  group.position.set(startX, startY, 0);
+  currentRoot.rotation.y = baseRotY + rotOffset;
+
+  await tweenAnim(1200, (t) => {
+    group.position.x = startX + (endX - startX) * t;
+    group.position.y = startY + (endY - startY) * t;
+    currentRoot.rotation.y = baseRotY + rotOffset * (1 - t);
+  });
+
+  // Show text
+  const textEl = document.querySelector(`#principles .slide-text[data-slide="${idx}"]`);
+  if (textEl) textEl.classList.add('visible');
+
+  // ── Slide-specific behaviors ────────────────────────
+  if (slide.mockUI) {
+    // Capture current render as the mock icon
+    await new Promise(r => setTimeout(r, 600));
+    renderer.render(scene, camera);
+    const src = renderer.domElement;
+    const sz = Math.min(src.width, src.height);
+    const sx = (src.width - sz) / 2;
+    const sy = (src.height - sz) / 2;
+    const crop = document.createElement('canvas');
+    crop.width = crop.height = 200;
+    crop.getContext('2d').drawImage(src, sx, sy, sz, sz, 0, 0, 200, 200);
+    document.getElementById('mockIcon').style.backgroundImage = `url(${crop.toDataURL('image/png')})`;
+
+    // Shrink 3D + fade in phone mockup
+    const shrinkDim = currentMaxDim;
+    await tweenAnim(1400, (t) => {
+      group.scale.setScalar(1 - t * 0.85);
+      group.position.x = -shrinkDim * 0.6 * t;
+      group.position.y = shrinkDim * 0.15 * t;
+      const fade = Math.max(0, (t - 0.3) / 0.7);
+      mockEl.style.opacity = String(fade);
+    });
+    mockEl.style.opacity = '1';
+    mockUIActive = true;
+  }
+
+  if (slide.shadow) {
+    await new Promise(r => setTimeout(r, 500));
+    shadow.visible = true;
+    shadowLight.castShadow = true;
+    shadowMat.opacity = 0;
+    await tweenAnim(1200, (t) => { shadowMat.opacity = 0.15 * t; });
+  }
+
+  if (slide.rotate) principlesRotating = true;
+  principlesTransitioning = false;
+}
+
+document.getElementById('principlesBtn').addEventListener('click', openPrinciples);
+document.getElementById('principlesClose').addEventListener('click', closePrinciples);
+document.getElementById('principlesPrev').addEventListener('click', () => {
+  if (principlesSlideIdx > 0) goToPrinciplesSlide(principlesSlideIdx - 1);
+});
+document.getElementById('principlesNext').addEventListener('click', () => {
+  if (principlesSlideIdx < PRINCIPLES_SLIDES.length - 1) goToPrinciplesSlide(principlesSlideIdx + 1);
+});
+document.querySelectorAll('#principles .nav-dots button').forEach((btn, i) => {
+  btn.addEventListener('click', () => goToPrinciplesSlide(i));
+});
+document.addEventListener('keydown', (e) => {
+  if (!principlesActive) return;
+  if (e.key === 'ArrowRight' && principlesSlideIdx < PRINCIPLES_SLIDES.length - 1) goToPrinciplesSlide(principlesSlideIdx + 1);
+  if (e.key === 'ArrowLeft' && principlesSlideIdx > 0) goToPrinciplesSlide(principlesSlideIdx - 1);
+  if (e.key === 'Escape') closePrinciples();
+});
+
+let mouseNX = 0, mouseNY = 0;
+document.addEventListener('mousemove', (e) => {
+  mouseNX = (e.clientX / window.innerWidth - 0.5) * 2;
+  mouseNY = (e.clientY / window.innerHeight - 0.5) * 2;
+});
+
 function tick() {
+  if (principlesActive && currentRoot && !principlesTransitioning) {
+    if (principlesRotating) {
+      currentRoot.rotation.y += 0.002;
+    }
+    const strength = 0.15;
+    const isShadowSlide = PRINCIPLES_SLIDES[principlesSlideIdx]?.shadow;
+    const targetRX = isShadowSlide ? 0 : mouseNY * strength;
+    const targetRY = mouseNX * strength;
+    group.rotation.x += (targetRX - group.rotation.x) * 0.05;
+    group.rotation.y += (targetRY - group.rotation.y) * 0.05;
+  } else {
+    group.rotation.x = 0;
+    group.rotation.y = 0;
+  }
   controls.update();
   renderer.render(scene, camera);
   requestAnimationFrame(tick);
 }
 tick();
 
-// Now that all materials, lights, and shadow plane are defined, kick
-// off thumbnail generation and reveal the landing page once it's done.
 buildLanding();
 </script>
 </body>
