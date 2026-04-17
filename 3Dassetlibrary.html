@@ -1,0 +1,2090 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<title>[OHOUSE] Material Test — Frosted Palette</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='28' fill='%2300B26B'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --accent: #6366f1;
+    --accent-light: rgba(99,102,241,.1);
+    --bg: #f0f2f5;
+    --card: #ffffff;
+    --card-hover: #f8f9fb;
+    --card-active: #f0f2f5;
+    --border: #e2e8f0;
+    --border-light: #f1f5f9;
+    --text: #1e293b;
+    --text-dim: #64748b;
+    --text-mute: #94a3b8;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.05);
+    --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,.08);
+    --radius: 8px;
+    --radius-sm: 5px;
+    --font: 'Pretendard', 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    --transition: .2s cubic-bezier(.4,0,.2,1);
+  }
+  html, body {
+    margin: 0; height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    -webkit-font-smoothing: antialiased;
+  }
+  #app { position: fixed; inset: 0; }
+
+  /* ── Shared card shell ───────────────────────────────── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+  }
+  .section-label {
+    font-size: 10px; letter-spacing: .12em; color: var(--text-mute);
+    text-transform: uppercase; font-weight: 500;
+    padding: 0 4px 6px;
+  }
+
+  /* ── Left column: palette ───────────────────────────── */
+  #palette {
+    position: fixed; top: 18px; left: 18px; z-index: 10;
+    display: flex; flex-direction: column; gap: 14px;
+    width: 230px;
+  }
+  .palette-group { display: flex; flex-direction: column; gap: 4px; }
+
+  .palette-category {
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .palette-category-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 10px 6px;
+    background: transparent; border: 0;
+    cursor: pointer; font-family: inherit;
+    font-size: 10px; letter-spacing: .12em; color: var(--text-mute);
+    text-transform: uppercase; font-weight: 600;
+    transition: color var(--transition);
+  }
+  .palette-category-header:hover { color: var(--text-dim); }
+  .palette-category-header .arrow {
+    font-size: 8px; transition: transform .2s;
+    display: inline-block;
+  }
+  .palette-category.collapsed .arrow { transform: rotate(-90deg); }
+  .palette-category.collapsed .palette-category-items { display: none; }
+  .palette-category-items { display: flex; flex-direction: column; gap: 4px; }
+  .palette-category-header.active-category {
+    color: var(--accent);
+  }
+  .palette-category-header .cat-thumb {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 1.5px solid rgba(0,0,0,.08);
+    flex: 0 0 auto;
+    box-shadow: 0 1px 4px rgba(0,0,0,.12);
+  }
+  .cat-thumb.frosted-thumb {
+    background:
+      radial-gradient(ellipse at 30% 25%, rgba(255,255,255,.7) 0%, transparent 55%),
+      linear-gradient(180deg, #EBEFFF 0%, #00a1ff 100%);
+  }
+  .cat-thumb.bf-thumb {
+    background:
+      radial-gradient(ellipse at 30% 25%, rgba(180,140,255,.8) 0%, transparent 50%),
+      radial-gradient(ellipse at 70% 75%, rgba(10,0,30,.6) 0%, transparent 60%),
+      linear-gradient(135deg, #7c4dff 0%, #3a0a6e 60%, #1a0040 100%);
+  }
+
+  /* ── Standalone BF button (no category wrapper) ──── */
+  .bf-standalone {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 10px;
+    background: transparent; border: 0;
+    cursor: pointer; font-family: inherit;
+    font-size: 10px; letter-spacing: .12em; color: var(--text-mute);
+    text-transform: uppercase; font-weight: 600;
+    transition: color var(--transition);
+    border-radius: var(--radius-sm);
+  }
+  .bf-standalone:hover { color: var(--text-dim); }
+  .bf-standalone.active {
+    color: var(--accent);
+  }
+  .bf-standalone .cat-thumb {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 1.5px solid rgba(0,0,0,.08);
+    flex: 0 0 auto;
+    box-shadow: 0 1px 4px rgba(0,0,0,.12);
+  }
+
+  .chip {
+    display: flex; align-items: stretch;
+    background: rgba(255,255,255,.92);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm); overflow: hidden;
+    transition: background var(--transition), border-color var(--transition);
+    box-shadow: var(--shadow-sm);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  }
+  .chip:hover { background: rgba(255,255,255,.96); }
+  .chip.active { background: rgba(99,102,241,.12); border-color: rgba(99,102,241,.3); }
+  .chip.active .swatch { color: var(--text); }
+  .chip .swatch {
+    flex: 1;
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    background: transparent; color: var(--text-dim); border: 0; cursor: pointer;
+    font-size: 12px; font-weight: 500; letter-spacing: .01em;
+    text-align: left; font-family: inherit;
+  }
+  .chip.active .swatch::before {
+    content: ''; width: 3px; align-self: stretch; margin: -10px 0 -10px -12px;
+    background: var(--accent); border-radius: 2px 0 0 2px;
+  }
+  .chip .dot {
+    width: 14px; height: 14px; border-radius: 50%;
+    border: 1px solid rgba(0,0,0,.1);
+    background: linear-gradient(180deg, var(--top), var(--bot));
+    flex: 0 0 auto;
+  }
+  .chip .gear {
+    display: flex; align-items: center; justify-content: center;
+    width: 34px; background: transparent; color: var(--text-mute); border: 0;
+    border-left: 1px solid var(--border);
+    cursor: pointer; font-size: 13px; transition: color var(--transition), background var(--transition);
+  }
+  .chip .gear:hover { background: rgba(0,0,0,.03); color: var(--text); }
+  .chip.settings-open .gear { background: var(--accent-light); color: var(--accent); }
+  .chip.builtin .swatch { cursor: default; }
+  .chip.builtin .swatch:hover { color: var(--text-dim); }
+  .chip .dot.chrome { background: linear-gradient(180deg, #e2e4e8, #9ea2a8); border-color: rgba(0,0,0,.1); }
+  .chip .dot.glass  { background: linear-gradient(180deg, #eef4ff, #c0d8f5); border-color: rgba(0,0,0,.1); }
+  .chip .dot.bf-purple { background: linear-gradient(180deg, #7b3fe4, #2a0a52); border-color: rgba(0,0,0,.2); }
+  .chip .rec-tag {
+    align-self: center;
+    margin-right: 6px;
+    font-size: 8px; letter-spacing: .1em; font-weight: 600;
+    text-transform: uppercase; color: var(--accent);
+    background: var(--accent-light); border: 1px solid rgba(99,102,241,.25);
+    border-radius: 3px; padding: 2px 5px; white-space: nowrap;
+    pointer-events: none;
+  }
+
+  /* ── Settings panel ─────────────────────────────────── */
+  #settings {
+    position: fixed; top: 18px; left: 264px; z-index: 10;
+    padding: 14px 16px; min-width: 260px;
+    font-size: 12px; line-height: 1.6;
+    background: rgba(255,255,255,.92); border: 1px solid var(--border); border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  }
+  #settings[hidden] { display: none; }
+  #settings h1 {
+    font-size: 11px; margin: 0 0 10px;
+    letter-spacing: .08em; color: var(--text-mute);
+    text-transform: uppercase; font-weight: 600;
+  }
+  #settings label {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 10px; margin: 6px 0; color: var(--text-dim); font-size: 11px;
+  }
+  #settings input[type=range] {
+    width: 130px; accent-color: var(--accent);
+  }
+  #settings .val {
+    color: var(--text); min-width: 36px; text-align: right;
+    font-variant-numeric: tabular-nums; font-size: 11px; font-weight: 500;
+  }
+  #settings .row { display: flex; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+  #settings button {
+    flex: 1; background: var(--card); color: var(--text-dim);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 7px 10px; cursor: pointer; font-size: 11px; font-weight: 500;
+    transition: background var(--transition), color var(--transition);
+    font-family: inherit;
+  }
+  #settings button:hover { background: var(--card-hover); color: var(--text); }
+
+  /* ── Right column: assets + export ──────────────────── */
+  #assets {
+    position: fixed; top: 18px; right: 18px; z-index: 10;
+    display: flex; flex-direction: column; gap: 4px; align-items: stretch;
+    width: 180px;
+  }
+  .asset-chip {
+    text-align: left;
+    background: rgba(255,255,255,.92);
+    color: var(--text-dim);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    cursor: pointer; font-size: 13px; font-weight: 500; letter-spacing: .01em;
+    font-family: inherit;
+    transition: background var(--transition), color var(--transition), border-color var(--transition);
+    box-shadow: var(--shadow-sm);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  }
+  .asset-chip:hover { background: rgba(255,255,255,.96); color: var(--text); }
+  .asset-chip.active {
+    background: var(--accent-light); color: var(--accent);
+    border-color: rgba(99,102,241,.3);
+    position: relative; font-weight: 600;
+  }
+  .asset-chip.active::before {
+    content: ''; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px;
+    background: var(--accent); border-radius: 2px 0 0 2px;
+  }
+
+  .back-btn {
+    margin-bottom: 10px;
+    text-align: center; font-weight: 500;
+    color: var(--text-mute);
+  }
+  .back-btn:hover { color: var(--text); }
+  .back-btn::before { display: none !important; }
+
+  #exportPng {
+    margin-top: 14px;
+    background: var(--accent); color: #fff; border-color: transparent;
+    font-weight: 600; text-align: center;
+    box-shadow: 0 4px 14px rgba(99,102,241,.25);
+  }
+  #exportPng:hover { background: #818cf8; color: #fff; }
+  #exportPng.active { background: var(--accent); color: #fff; }
+  #exportPng.active::before { display: none; }
+
+  /* ── Footer elements ────────────────────────────────── */
+  #hint {
+    position: fixed; bottom: 14px; left: 18px; z-index: 10;
+    font-size: 11px; color: var(--text-mute); letter-spacing: .01em;
+  }
+
+  /* ── Background selector ───────────────────────────── */
+  #bgSelector {
+    position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%); z-index: 10;
+    display: flex; align-items: center; gap: 10px;
+    background: rgba(255,255,255,.92); border: 1px solid var(--border);
+    border-radius: 999px; padding: 6px 12px 6px 14px;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  }
+  #bgSelector .section-label {
+    padding: 0; margin: 0;
+    font-size: 10px; letter-spacing: .12em; color: var(--text-mute);
+    font-weight: 500; text-transform: uppercase;
+  }
+  #bgSelector .bg-swatch {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 1px solid rgba(0,0,0,.12);
+    cursor: pointer; padding: 0; background: transparent;
+    position: relative; transition: transform .12s;
+  }
+  #bgSelector .bg-swatch:hover { transform: scale(1.1); }
+  #bgSelector .bg-swatch.active {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  /* ── View selector ─────────────────────────────────── */
+  #viewSelector {
+    position: fixed; bottom: 56px; left: 50%; transform: translateX(-50%); z-index: 10;
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,.92); border: 1px solid var(--border);
+    border-radius: 999px; padding: 6px 12px 6px 14px;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  }
+  #viewSelector .section-label {
+    padding: 0; margin: 0;
+    font-size: 10px; letter-spacing: .12em; color: var(--text-mute);
+    font-weight: 500; text-transform: uppercase;
+  }
+  #viewSelector .view-btn {
+    min-width: 28px; height: 22px;
+    background: transparent; border: 1px solid var(--border);
+    border-radius: 5px; color: var(--text-dim);
+    font-family: inherit; font-size: 11px; font-weight: 500;
+    cursor: pointer; padding: 0 6px;
+    transition: background .15s, color .15s, border-color .15s;
+  }
+  #viewSelector .view-btn:hover { background: var(--card-hover); color: var(--text); }
+  #viewSelector .view-btn.active {
+    background: var(--accent); color: #fff; border-color: var(--accent);
+  }
+
+  #bgSelector .divider {
+    width: 1px; align-self: stretch;
+    background: var(--border); margin: 0 2px;
+  }
+  #bgSelector .toggle {
+    display: flex; align-items: center; gap: 8px;
+    background: transparent; border: 0; padding: 0;
+    cursor: pointer; font-family: inherit;
+    font-size: 10px; letter-spacing: .12em; color: var(--text-mute);
+    font-weight: 500; text-transform: uppercase;
+  }
+  #bgSelector .toggle .switch {
+    width: 28px; height: 16px; border-radius: 999px;
+    background: #cbd5e1; position: relative;
+    transition: background .15s;
+  }
+  #bgSelector .toggle .switch::after {
+    content: ''; position: absolute;
+    top: 2px; left: 2px;
+    width: 12px; height: 12px; border-radius: 50%;
+    background: #fff;
+    transition: left .15s, background .15s;
+  }
+  #bgSelector .toggle.on .switch { background: var(--accent); }
+  #bgSelector .toggle.on .switch::after { left: 14px; background: #fff; }
+  #bgSelector .toggle.on { color: var(--text); }
+  /* ── Landing page ───────────────────────────────────── */
+  #landing {
+    position: fixed; inset: 0; z-index: 100;
+    background: var(--bg);
+    overflow: auto;
+    padding: 60px 40px;
+  }
+  #landing .inner { max-width: 1100px; margin: 0 auto; }
+  #landing header { text-align: center; margin-bottom: 48px; }
+  #landing h1 {
+    font-size: 24px; font-weight: 700; color: var(--text);
+    margin: 0 0 8px; letter-spacing: -.02em;
+  }
+  #landing .subtitle {
+    font-size: 13px; color: var(--text-mute); margin: 0;
+    letter-spacing: .01em;
+  }
+  #landing .loading {
+    text-align: center; color: var(--text-mute);
+    font-size: 12px; padding: 80px 0;
+    letter-spacing: .05em;
+  }
+  #landing .search {
+    max-width: 480px; margin: 0 auto 32px;
+    position: relative;
+  }
+  #landing .search input {
+    width: 100%; box-sizing: border-box;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 11px 38px 11px 38px;
+    color: var(--text); font-family: inherit;
+    font-size: 13px; letter-spacing: .01em;
+    transition: border-color var(--transition), box-shadow var(--transition);
+  }
+  #landing .search input::placeholder { color: var(--text-mute); }
+  #landing .search input:focus {
+    outline: 0; border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-light);
+  }
+  #landing .search .icon {
+    position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+    color: var(--text-mute); pointer-events: none;
+  }
+  #landing .search .clear {
+    position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+    background: transparent; border: 0; color: var(--text-mute);
+    cursor: pointer; padding: 6px; font-size: 14px; line-height: 1;
+    border-radius: 4px;
+  }
+  #landing .search .clear:hover { color: var(--text); background: rgba(0,0,0,.04); }
+  #landing .search .clear[hidden] { display: none; }
+  #landing .empty {
+    text-align: center; color: var(--text-mute);
+    font-size: 13px; padding: 60px 0;
+  }
+  #landing .empty[hidden] { display: none; }
+  #landing .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 20px;
+  }
+  #landing .asset-card {
+    background: var(--card); border: 1px solid var(--border-light);
+    border-radius: var(--radius); padding: 16px;
+    cursor: pointer; font-family: inherit;
+    transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
+    display: flex; flex-direction: column; gap: 14px;
+    text-align: left;
+    box-shadow: var(--shadow-sm);
+  }
+  #landing .asset-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(99,102,241,.3);
+    box-shadow: var(--shadow-md);
+  }
+  #landing .asset-card .thumb {
+    aspect-ratio: 1; border-radius: 6px;
+    background: #f8f9fb;
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+  #landing .asset-card .thumb img {
+    width: 100%; height: 100%; object-fit: contain;
+  }
+  #landing .asset-card .label {
+    font-size: 14px; font-weight: 600; color: var(--text);
+    letter-spacing: -.005em;
+  }
+  #landing .asset-card .rec {
+    font-size: 10px; color: var(--text-mute);
+    letter-spacing: .08em; text-transform: uppercase;
+    margin-top: -10px;
+  }
+  #landing .asset-card .rec .dot {
+    display: inline-block; width: 8px; height: 8px;
+    border-radius: 50%; vertical-align: middle;
+    margin-right: 6px; border: 1px solid rgba(0,0,0,.1);
+  }
+  #landing.hidden { display: none; }
+
+  #projectBadge {
+    position: fixed; bottom: 14px; right: 18px; z-index: 10;
+    background: rgba(16,185,129,.08); color: #059669;
+    font-size: 10px; letter-spacing: .14em; font-weight: 600;
+    padding: 6px 10px; border-radius: var(--radius-sm);
+    border: 1px solid rgba(16,185,129,.15);
+  }
+
+  /* ── Principles mode: hide customizer chrome ────── */
+  body.principles-mode #palette,
+  body.principles-mode #assets,
+  body.principles-mode #settings,
+  body.principles-mode #viewSelector,
+  body.principles-mode #bgSelector,
+  body.principles-mode #hint,
+  body.principles-mode #projectBadge { display: none !important; }
+
+  /* ── Principles button on landing ──────────────── */
+  .principles-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    margin-top: 20px;
+    background: var(--accent-light); border: none;
+    border-radius: var(--radius-sm); padding: 10px 20px;
+    color: var(--accent); font-family: inherit;
+    font-size: 13px; font-weight: 600; letter-spacing: .01em;
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition);
+  }
+  .principles-btn:hover {
+    background: var(--accent); color: #fff;
+  }
+
+  /* ── Principles overlay ────────────────────────── */
+  #principles { position: fixed; inset: 0; z-index: 100; display: none; }
+  #principles.active { display: block; }
+
+  #principles .page-title {
+    position: absolute; top: 32px; left: 50%; transform: translateX(-50%);
+    font-size: 11px; letter-spacing: .12em; color: var(--text-mute);
+    text-transform: uppercase; font-weight: 500; z-index: 10;
+    white-space: nowrap;
+  }
+  #principles .close-btn {
+    position: absolute; top: 28px; left: 28px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 10px 16px;
+    color: var(--text-dim); font-family: inherit;
+    font-size: 12px; font-weight: 500; cursor: pointer; z-index: 10;
+    transition: background var(--transition), color var(--transition);
+    box-shadow: var(--shadow-sm);
+  }
+  #principles .close-btn:hover { background: var(--card-hover); color: var(--text); }
+
+  #principles .slide-text {
+    position: absolute; bottom: 60px; left: 50%;
+    transform: translateX(-50%) translateY(12px);
+    max-width: 480px; width: 100%;
+    text-align: center;
+    opacity: 0;
+    transition: opacity .6s ease, transform .6s ease;
+    pointer-events: none;
+    z-index: 10;
+  }
+  #principles .slide-text.visible {
+    opacity: 1; transform: translateX(-50%) translateY(0);
+  }
+  #principles .slide-text .num {
+    font-size: 11px; letter-spacing: .14em; font-weight: 600;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 12px;
+  }
+  #principles .slide-text h2 {
+    font-size: 28px; font-weight: 700; color: var(--text);
+    margin: 0 0 4px; letter-spacing: -.02em; line-height: 1.2;
+  }
+  #principles .slide-text .en {
+    font-size: 12px; color: var(--text-mute); margin: 0 0 10px;
+    letter-spacing: .02em;
+  }
+  #principles .slide-text .desc {
+    font-size: 13px; color: var(--text-dim); line-height: 1.7; margin: 0;
+  }
+
+  #principles .nav-arrow {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 50%; width: 44px; height: 44px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-dim); font-size: 20px;
+    cursor: pointer; z-index: 10; font-family: inherit;
+    transition: background var(--transition), color var(--transition), opacity .2s;
+    box-shadow: var(--shadow-sm);
+  }
+  #principles .nav-arrow:hover { background: var(--card-hover); color: var(--text); }
+  #principles .nav-arrow.prev { left: 28px; }
+  #principles .nav-arrow.next { right: 28px; }
+  #principles .nav-arrow[disabled] { opacity: .25; pointer-events: none; }
+
+  /* ── Mock phone UI (slide 3 — 명확성) ─────────── */
+  #mockPhoneUI {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -55%);
+    z-index: 5; pointer-events: none;
+    opacity: 0;
+  }
+  .mock-phone-frame {
+    width: 320px;
+    background: #fff;
+    border-radius: 32px;
+    padding: 16px 16px 100px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.1), 0 0 0 1px rgba(0,0,0,.05);
+  }
+  .mock-status-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 12px 20px;
+    font-size: 13px; font-weight: 600; color: #333;
+  }
+  .mock-status-icons { display: flex; gap: 4px; align-items: center; }
+  .mock-status-icons span {
+    display: inline-block; width: 14px; height: 10px;
+    border-radius: 2px; background: #333;
+  }
+  .mock-banner {
+    display: flex; align-items: center; gap: 14px;
+    background: #f5f5f7;
+    border-radius: 14px;
+    padding: 16px 18px;
+  }
+  .mock-banner-icon {
+    width: 80px; height: 80px; flex-shrink: 0;
+    border-radius: 12px;
+    background-size: 85%;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: #f0f2f5;
+  }
+  .mock-banner-body { flex: 1; min-width: 0; }
+  .mock-banner-title {
+    font-size: 13px; font-weight: 500; color: #333; line-height: 1.4;
+  }
+  .mock-banner-cta {
+    font-size: 14px; font-weight: 700; color: #35c5f0; margin-top: 3px;
+  }
+  .mock-banner-x {
+    font-size: 16px; color: #bbb; align-self: flex-start; margin-top: -2px;
+  }
+
+  #principles .nav-dots {
+    position: absolute; bottom: 36px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 10px; z-index: 10;
+  }
+  #principles .nav-dots button {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--border); border: 0; padding: 0;
+    cursor: pointer; transition: background .2s, transform .2s;
+  }
+  #principles .nav-dots button.active {
+    background: var(--accent); transform: scale(1.4);
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<div id="landing">
+  <div class="inner">
+    <header>
+      <h1>3D Asset Library</h1>
+      <p class="subtitle">Select an asset to customize</p>
+      <button id="principlesBtn" class="principles-btn">오늘의집 3D 에셋 조형 원칙</button>
+    </header>
+    <div class="loading">Generating previews…</div>
+    <div class="search" hidden>
+      <span class="icon">⌕</span>
+      <input id="searchInput" type="search" placeholder="Search assets" autocomplete="off" spellcheck="false" />
+      <button class="clear" id="searchClear" hidden title="Clear">✕</button>
+    </div>
+    <div class="grid" hidden></div>
+    <div class="empty" hidden>No matching assets.</div>
+  </div>
+</div>
+
+<div id="principles">
+  <span class="page-title">오늘의집 3D 에셋 조형 원칙</span>
+  <button class="close-btn" id="principlesClose">← 라이브러리</button>
+
+  <div class="slide-text" data-slide="0">
+    <div class="num">01 — Smoothing Line</div>
+    <h2>부드러움</h2>
+    <p class="en">Smoothing Line</p>
+    <p class="desc">브랜드 심볼의 외형을 닮은 곡선으로 조형적 부드러움을 유지합니다. 모서리와 면의 라운딩으로 각진 단면을 지양합니다.</p>
+  </div>
+  <div class="slide-text" data-slide="1">
+    <div class="num">02 — 유저의 영감과 꿈</div>
+    <h2>다정함</h2>
+    <p class="en">Warmth &amp; Dream</p>
+    <p class="desc">브랜드의 다정한 정서와 꿈의 분위기를 담습니다. 은은한 Vertical Gradient와 약간의 투명한 질감으로 표현합니다.</p>
+  </div>
+  <div class="slide-text" data-slide="2">
+    <div class="num">03 — 실현</div>
+    <h2>명확성</h2>
+    <p class="en">Realization</p>
+    <p class="desc">꿈을 실제로 보여준다는 가치를 보조하기 위해, 작은 화면에서도 또렷이 읽히는 형태를 갖춥니다. 군더더기 없는 명확한 실루엣, 단순한 매스.</p>
+  </div>
+  <div class="slide-text" data-slide="3">
+    <div class="num">04 — 자세 (Attitude)</div>
+    <h2>안정감</h2>
+    <p class="en">Stability</p>
+    <p class="desc">위 세 가지에 신뢰와 확신을 더하기 위한 단단하고 안정적인 무게감을 유지합니다. 지면에 또렷이 붙은 그림자로 표현합니다.</p>
+  </div>
+
+  <div id="mockPhoneUI">
+    <div class="mock-phone-frame">
+      <div class="mock-status-bar">
+        <span>9:41</span>
+        <div class="mock-status-icons"><span></span><span></span><span></span></div>
+      </div>
+      <div class="mock-banner">
+        <div class="mock-banner-icon" id="mockIcon"></div>
+        <div class="mock-banner-body">
+          <div class="mock-banner-title">관리된 파트너와 함께하는 이사</div>
+          <div class="mock-banner-cta">무료로 이사 견적 받기</div>
+        </div>
+        <span class="mock-banner-x">✕</span>
+      </div>
+    </div>
+  </div>
+
+  <button class="nav-arrow prev" id="principlesPrev">‹</button>
+  <button class="nav-arrow next" id="principlesNext">›</button>
+  <div class="nav-dots">
+    <button class="active" data-slide="0"></button>
+    <button data-slide="1"></button>
+    <button data-slide="2"></button>
+    <button data-slide="3"></button>
+  </div>
+</div>
+
+<div id="palette">
+  <div class="palette-group">
+    <div class="palette-category" data-category="basic">
+      <button class="palette-category-header active-category">
+        <span class="cat-thumb frosted-thumb"></span>
+        <span class="arrow">▼</span> 기본 재질
+      </button>
+      <div class="palette-category-items">
+        <div class="chip active" data-mat="frostedBlue" data-mat-type="frosted" style="--top:#EBEFFF; --bot:#00a1ff;">
+          <button class="swatch"><span class="dot"></span> Genuine Blue</button>
+          <button class="gear" title="Settings">⚙</button>
+        </div>
+        <div class="chip" data-mat="frostedGreen" data-mat-type="frosted" style="--top:#EDFFF4; --bot:#19BD86;">
+          <button class="swatch"><span class="dot"></span> Jade Green</button>
+          <button class="gear" title="Settings">⚙</button>
+        </div>
+        <div class="chip" data-mat="frostedOrange" data-mat-type="frosted" style="--top:#FFF4EC; --bot:#FF752C;">
+          <button class="swatch"><span class="dot"></span> Mango Orange</button>
+          <button class="gear" title="Settings">⚙</button>
+        </div>
+        <div class="chip" data-mat="frostedRed" data-mat-type="frosted" style="--top:#FFEFEF; --bot:#FF4747;">
+          <button class="swatch"><span class="dot"></span> Coral Red</button>
+          <button class="gear" title="Settings">⚙</button>
+        </div>
+        <div class="chip" data-mat="frostedViolet" data-mat-type="frosted" style="--top:#F7EFFD; --bot:#C475F5;">
+          <button class="swatch"><span class="dot"></span> Violet</button>
+          <button class="gear" title="Settings">⚙</button>
+        </div>
+        <div class="chip" data-mat="frostedDarkBlue" data-mat-type="frosted" style="--top:#E8EEFB; --bot:#2C65CF;">
+          <button class="swatch"><span class="dot"></span> Dark Blue</button>
+          <button class="gear" title="Settings">⚙</button>
+        </div>
+        <div class="chip" data-mat="frostedPink" data-mat-type="frosted" style="--top:#FFF0F4; --bot:#FF6E92;">
+          <button class="swatch"><span class="dot"></span> Candy Pink</button>
+          <button class="gear" title="Settings">⚙</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:0;">
+      <button class="bf-standalone" id="bfButton" data-mat="blackFriday" data-mat-type="blackFriday">
+        <span class="cat-thumb bf-thumb"></span>
+        블랙프라이데이 재질
+      </button>
+      <button class="gear bf-gear" id="bfGear" title="Settings" style="
+        background:transparent; border:0; color:var(--text-mute);
+        cursor:pointer; font-size:13px; padding:6px 8px;
+        transition: color .2s;
+      ">⚙</button>
+    </div>
+  </div>
+</div>
+
+<div id="settings" hidden>
+  <h1 id="settingsTitle">Frosted Blue</h1>
+  <div id="controls"></div>
+  <div class="row">
+    <button id="resetPreset">Reset</button>
+  </div>
+</div>
+
+<div id="assets">
+  <button id="backToLibrary" class="asset-chip back-btn">← Library</button>
+  <div class="section-label">Asset</div>
+  <button class="asset-chip active" data-asset="box">Moving Box</button>
+  <button class="asset-chip" data-asset="coupon">Coupon</button>
+  <button class="asset-chip" data-asset="purifier">Water Purifier</button>
+  <button class="asset-chip" data-asset="gift">Gift Box</button>
+  <button class="asset-chip" id="exportPng">PNG 출력</button>
+</div>
+
+<div id="hint">드래그로 회전 · 휠로 줌 · 우클릭 드래그로 팬</div>
+
+<div id="viewSelector">
+  <span class="section-label">View</span>
+  <button class="view-btn active" data-view="1" title="Isometric">1</button>
+  <button class="view-btn" data-view="2" title="Slight Top-Down">2</button>
+  <button class="view-btn" data-view="3" title="Side">3</button>
+</div>
+
+<div id="bgSelector">
+  <span class="section-label">BG</span>
+  <button class="bg-swatch active" data-bg="#ffffff" style="background:#ffffff;" title="White"></button>
+  <button class="bg-swatch"        data-bg="#f5f5f5" style="background:#f5f5f5;" title="Light Gray"></button>
+  <button class="bg-swatch"        data-bg="#000000" style="background:#000000;" title="Black"></button>
+  <span class="divider"></span>
+  <button class="toggle" id="shadowToggle" title="Toggle shadow">
+    <span>Shadow</span>
+    <span class="switch"></span>
+  </button>
+</div>
+<div id="projectBadge">OHOUSE · ASSET LIBRARY</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import {
+  FROSTED_PRESET,
+  FROSTED_VARIANTS,
+  HARMONY_BY_BODY,
+  BLACK_FRIDAY_PRESET,
+  createFrosted,
+  createBlackFriday,
+  createLuminanceWhite,
+  createRibbonGray,
+  createGlass,
+  createChrome,
+  makeVerticalGradient,
+  remapUVsToWorldY,
+} from './materials.js';
+
+// ── Admin mode: ?admin=true shows gear buttons & settings panel
+const IS_ADMIN = new URLSearchParams(window.location.search).has('admin');
+if (!IS_ADMIN) {
+  document.querySelectorAll('.gear, .bf-gear').forEach(el => el.style.display = 'none');
+  document.getElementById('settings').style.display = 'none';
+}
+
+const app = document.getElementById('app');
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+app.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#ffffff');
+
+const pmrem = new THREE.PMREMGenerator(renderer);
+// Temporary environment until the HDR loads so the scene isn't flat-black.
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.02).texture;
+scene.environmentIntensity = 1.0;
+
+// Load the Botanical Gardens HDR and promote it to the primary environment.
+// Original: EXRLoader + Botanical_Gardens_2.exr (79.5 MB)
+// Optimized: RGBELoader + quarter-res HDR (7.6 MB)
+new RGBELoader().load('Botanical_Gardens_2_quarter.hdr', (hdr) => {
+  hdr.mapping = THREE.EquirectangularReflectionMapping;
+  const envTex = pmrem.fromEquirectangular(hdr).texture;
+  hdr.dispose();
+  // Previous room env → dispose to reclaim GPU memory.
+  scene.environment?.dispose?.();
+  scene.environment = envTex;
+  // Chrome & Black Friday get the same HDR directly — crisp natural reflections.
+  chromeMat.envMap = envTex;
+  chromeMat.needsUpdate = true;
+  materials.blackFriday.envMap = envTex;
+  materials.blackFriday.needsUpdate = true;
+}, undefined, (err) => console.error('HDR load failed', err));
+
+
+let frustumSize = 400;
+const aspect = window.innerWidth / window.innerHeight;
+const camera = new THREE.OrthographicCamera(
+  -frustumSize * aspect / 2,  frustumSize * aspect / 2,
+   frustumSize / 2,          -frustumSize / 2,
+  -5000, 5000,
+);
+camera.position.set(400, 320, 480);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.target.set(0, 0, 0);
+
+// ── Material registry: instantiate each variant once, keep their
+// per-variant state so toggling doesn't reset tuning.
+const materials = {
+  frostedBlue:     createFrosted('frostedBlue'),
+  frostedGreen:    createFrosted('frostedGreen'),
+  frostedOrange:   createFrosted('frostedOrange'),
+  frostedRed:      createFrosted('frostedRed'),
+  frostedViolet:   createFrosted('frostedViolet'),
+  frostedDarkBlue: createFrosted('frostedDarkBlue'),
+  frostedPink:     createFrosted('frostedPink'),
+  blackFriday:     createBlackFriday(),
+};
+// Built-in material chips — not exposed in the palette UI.
+const tapeMat      = createLuminanceWhite();
+const ribbonGrayMat = createRibbonGray();
+const glassMat     = createGlass();
+const chromeMat    = createChrome();
+
+// Track which body meshes receive the active material (so we can swap).
+let bodyMeshes = [];
+let activeVariantId = 'frostedBlue';
+let currentAssetId = 'box';
+
+// ── Asset registry ────────────────────────────────────────
+// Per-asset rules: which meshes are luminance-white accents vs the
+// frosted body. Names from the gltf files are matched case-insensitive.
+// materialFor(name, parentName) returns one of:
+//   'body'      → active frosted variant (swappable via palette)
+//   'luminance' → flat white accents (no lighting)
+//   'glass'     → built-in frosted glass
+//   'chrome'    → built-in chrome metal
+const ASSETS = {
+  box: {
+    url: 'box.gltf',
+    label: 'Moving Box',
+    rootName: 'newbox_blue_moving',
+    recommended: 'frostedBlue',
+    materialFor(name) {
+      return /ribbon/i.test(name) ? 'luminance' : 'body';
+    },
+  },
+  gift: {
+    url: 'gift.gltf',
+    label: 'Gift Box',
+    rootName: 'gift_save',
+    recommended: 'frostedRed',
+    rotationY: Math.PI / 2,
+    // Tighter framing than default so the box+ribbon reads at the same
+    // on-screen size as the 이사박스 asset (whose bbox has no tall accents).
+    frameScale: 1.8,
+    // Ribbons sit above the box, pulling the bbox center upward — when
+    // the root is centered, the box body ends up below the visual center.
+    // Shift up by 15% of asset height to land it where 이사박스 sits.
+    yOffset: 0.15,
+    materialFor(name, parentName) {
+      const n = (name || '').toLowerCase();
+      const pn = (parentName || '').toLowerCase();
+      // Ribbon parts are brand-fixed white (luminance).
+      if (/ribbon/.test(n) || /ribbon/.test(pn)) return 'ribbonGray';
+      return 'body';
+    },
+  },
+  coupon: {
+    url: 'Coupon.gltf',
+    label: 'Coupon',
+    rootName: 'coupon',
+    recommended: 'frostedPink',
+    modelScale: 6.3,
+    frameScale: 1.6,
+    useFullGradientBox: true,
+    viewOverrides: { '3': [0.25, 0.05, 1.00] },
+    materialFor(name, parentName) {
+      const n = (name || '').toLowerCase();
+      if (/percent/.test(n)) return 'luminance';
+      return 'body';
+    },
+  },
+  purifier: {
+    url: 'waterpurifier.gltf',
+    label: 'Water Purifier',
+    rootName: 'water purifier',
+    recommended: 'frostedBlue',
+    rotationY: Math.PI,
+    materialFor(name, parentName) {
+      const n = (name || '').toLowerCase();
+      const pn = (parentName || '').toLowerCase();
+      if (/^logo$/.test(n) || /^logo$/.test(pn)) return 'luminance';
+      if (/cylinder/.test(n) || /cylinder/.test(pn)) return 'chrome';
+      if (/^cup$/.test(n) || /^cup$/.test(pn)) return 'glass';
+      return 'body';
+    },
+  },
+};
+
+// ── Smooth normals by angle — proper smooth-group algorithm ──
+// Computes the true geometric face normal for every triangle,
+// then for each vertex averages only the face normals from
+// co-located vertices whose faces are within `angleThreshold`
+// radians. Flat surfaces get perfectly consistent normals while
+// hard edges (e.g. box top ↔ side at 90°) are preserved.
+function smoothNormalsByAngle(geometry, tolerance = 0.5, angleThreshold = 1.5) {
+  const pos  = geometry.attributes.position;
+  const norm = geometry.attributes.normal;
+  const count = pos.count;
+  const faceCount = count / 3;
+  const cosThreshold = Math.cos(angleThreshold);
+  const inv = 1 / tolerance;
+
+  // Step 1: compute true geometric face normal per triangle
+  const faceNormals = new Array(faceCount);
+  const v0 = new THREE.Vector3(), v1 = new THREE.Vector3(), v2 = new THREE.Vector3();
+  const e1 = new THREE.Vector3(), e2 = new THREE.Vector3();
+  for (let f = 0; f < faceCount; f++) {
+    const i = f * 3;
+    v0.fromBufferAttribute(pos, i);
+    v1.fromBufferAttribute(pos, i + 1);
+    v2.fromBufferAttribute(pos, i + 2);
+    e1.subVectors(v1, v0);
+    e2.subVectors(v2, v0);
+    faceNormals[f] = new THREE.Vector3().crossVectors(e1, e2).normalize();
+  }
+
+  // Step 2: spatial hash — group vertices at the same position.
+  // Each vertex is inserted into its own cell. During lookup,
+  // we check all 27 neighboring cells (3×3×3) to avoid missing
+  // co-located vertices that land on a bucket boundary.
+  const buckets = new Map();
+  for (let i = 0; i < count; i++) {
+    const kx = Math.round(pos.getX(i) * inv);
+    const ky = Math.round(pos.getY(i) * inv);
+    const kz = Math.round(pos.getZ(i) * inv);
+    const key = `${kx},${ky},${kz}`;
+    if (!buckets.has(key)) buckets.set(key, []);
+    buckets.get(key).push(i);
+  }
+
+  // Step 3: for each vertex, gather co-located vertices from
+  // this cell + 26 neighbors, then average face normals within
+  // the angle threshold.
+  const tolSq = tolerance * tolerance;
+  for (const indices of buckets.values()) {
+    for (const i of indices) {
+      const px = pos.getX(i), py = pos.getY(i), pz = pos.getZ(i);
+      const myFN = faceNormals[Math.floor(i / 3)];
+      const cx = Math.round(px * inv), cy = Math.round(py * inv), cz = Math.round(pz * inv);
+      let nx = 0, ny = 0, nz = 0;
+      for (let dx = -1; dx <= 1; dx++) {
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dz = -1; dz <= 1; dz++) {
+            const neighbors = buckets.get(`${cx+dx},${cy+dy},${cz+dz}`);
+            if (!neighbors) continue;
+            for (const j of neighbors) {
+              const ddx = pos.getX(j) - px, ddy = pos.getY(j) - py, ddz = pos.getZ(j) - pz;
+              if (ddx*ddx + ddy*ddy + ddz*ddz > tolSq) continue;
+              const otherFN = faceNormals[Math.floor(j / 3)];
+              if (myFN.dot(otherFN) >= cosThreshold) {
+                nx += otherFN.x; ny += otherFN.y; nz += otherFN.z;
+              }
+            }
+          }
+        }
+      }
+      const len = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
+      norm.setXYZ(i, nx / len, ny / len, nz / len);
+    }
+  }
+  norm.needsUpdate = true;
+}
+
+// ── Load model ─────────────────────────────────────────────
+const group = new THREE.Group();
+scene.add(group);
+let currentRoot = null;
+// Tracked so the designer-preset camera views can scale their
+// orbit distance to the currently loaded asset.
+let currentMaxDim = 1;
+
+const loader = new GLTFLoader();
+
+function loadAsset(assetId) {
+  const asset = ASSETS[assetId];
+  if (!asset) return Promise.reject(new Error('Unknown asset: ' + assetId));
+
+  group.position.set(0, 0, 0);
+  group.scale.setScalar(1);
+  currentAssetId = assetId;
+
+  return new Promise((resolve, reject) => {
+  loader.load(asset.url, (gltf) => {
+    // Clear previous asset
+    if (currentRoot) {
+      group.remove(currentRoot);
+      currentRoot.traverse((o) => { if (o.isMesh) o.geometry?.dispose(); });
+    }
+    bodyMeshes = [];
+
+    // Pick the requested subtree if the file contains multiple assets.
+    let root = gltf.scene;
+    if (asset.rootName) {
+      const match = root.getObjectByName(asset.rootName);
+      if (match) {
+        match.parent?.remove(match);
+        root = match;
+      }
+    }
+    currentRoot = root;
+    if (asset.modelScale) root.scale.setScalar(asset.modelScale);
+    if (asset.rotationY) root.rotation.y = asset.rotationY;
+    root.updateMatrixWorld(true);
+
+    // Pass 1: compute vertical bounds for the frosted gradient.
+    // Body-only for most assets; full bbox for assets where non-body
+    // parts extend beyond the body (e.g. coupon's percent symbol).
+    const bodyBox = new THREE.Box3();
+    const fullBox = new THREE.Box3();
+    root.traverse((obj) => {
+      if (!obj.isMesh) return;
+      fullBox.expandByObject(obj);
+      const kind = asset.materialFor(obj.name, obj.parent?.name);
+      if (kind === 'body') bodyBox.expandByObject(obj);
+    });
+    const useFullBox = bodyBox.isEmpty() || asset.useFullGradientBox;
+    const gradBox = useFullBox ? fullBox : bodyBox;
+    const yMin = gradBox.min.y, yMax = gradBox.max.y;
+
+    // Collect body meshes for merging. Original glTF normals are
+    // preserved (no computeVertexNormals) — they're authored smooth
+    // in C4D and give the best result on reflective materials.
+    // After merge, angle-aware weldNormals smooths seam boundaries
+    // while preserving intentional hard edges.
+    const bodyToMerge = [];
+    root.traverse((obj) => {
+      if (!obj.isMesh) return;
+      const kind = asset.materialFor(obj.name, obj.parent?.name);
+      obj.castShadow = true;
+      obj.receiveShadow = true;
+      switch (kind) {
+        case 'luminance':  obj.material = tapeMat;        break;
+        case 'ribbonGray': obj.material = ribbonGrayMat;  break;
+        case 'glass':      obj.material = glassMat;       break;
+        case 'chrome':     obj.material = chromeMat;      break;
+        case 'body':
+        default:
+          bodyToMerge.push(obj);
+      }
+    });
+
+    if (bodyToMerge.length === 1) {
+      // Single body mesh — use indexed computeVertexNormals (shared
+      // vertices guarantee perfectly smooth flat surfaces).
+      const obj = bodyToMerge[0];
+      obj.geometry.computeVertexNormals();
+      obj.material = materials[activeVariantId];
+      remapUVsToWorldY(obj, yMin, yMax);
+      bodyMeshes.push(obj);
+    } else if (bodyToMerge.length > 1) {
+      // Step 1: computeVertexNormals on each indexed mesh (smooth
+      // within each piece via shared-vertex averaging).
+      // Step 2: bake transforms, merge, convert to non-indexed.
+      // Step 3: smoothNormalsByAngle to fix seam normals across
+      // formerly separate meshes.
+      for (const m of bodyToMerge) m.geometry.computeVertexNormals();
+      const bakedGeos = bodyToMerge.map((m) => {
+        const g = m.geometry.clone();
+        g.applyMatrix4(m.matrixWorld);
+        for (const name of Object.keys(g.attributes)) {
+          if (name !== 'position' && name !== 'normal') g.deleteAttribute(name);
+        }
+        return g;
+      });
+      for (const m of bodyToMerge) {
+        m.geometry.dispose();
+        m.parent?.remove(m);
+      }
+      let merged = mergeGeometries(bakedGeos, false);
+      for (const g of bakedGeos) g.dispose();
+      if (merged.index) {
+        const ni = merged.toNonIndexed();
+        merged.dispose();
+        merged = ni;
+      }
+      smoothNormalsByAngle(merged);
+      const mergedMesh = new THREE.Mesh(merged, materials[activeVariantId]);
+      mergedMesh.castShadow = true;
+      mergedMesh.receiveShadow = true;
+      remapUVsToWorldY(mergedMesh, yMin, yMax);
+      root.add(mergedMesh);
+      bodyMeshes.push(mergedMesh);
+    }
+
+    const bbox = new THREE.Box3().setFromObject(root);
+    const size = bbox.getSize(new THREE.Vector3());
+    const center = bbox.getCenter(new THREE.Vector3());
+    root.position.sub(center);
+    if (asset.yOffset) root.position.y += size.y * asset.yOffset;
+    group.add(root);
+
+    // Frame camera for this asset
+    const maxDim = Math.max(size.x, size.y, size.z);
+    currentMaxDim = maxDim;
+    const dist = maxDim * 2.0;
+    camera.position.set(dist * 0.85, dist * 0.7, dist);
+    // Reset the view selector to the isometric preset on every new load.
+    document.querySelectorAll('#viewSelector .view-btn')
+      .forEach(b => b.classList.toggle('active', b.dataset.view === '1'));
+    frustumSize = maxDim * (asset.frameScale ?? 2.2);
+    const a = window.innerWidth / window.innerHeight;
+    camera.left   = -frustumSize * a / 2;
+    camera.right  =  frustumSize * a / 2;
+    camera.top    =  frustumSize / 2;
+    camera.bottom = -frustumSize / 2;
+    camera.near   = -maxDim * 10;
+    camera.far    =  maxDim * 10;
+    camera.zoom = 1;
+    camera.updateProjectionMatrix();
+    controls.target.set(0, 0, 0);
+    controls.update();
+
+    // After centering + yOffset, the object's bbox center sits at
+    // world Y = size.y * yOffset, so its bottom is that minus half
+    // the height. Place the ground plane exactly at that bottom so
+    // the shadow starts right at the object's base.
+    const objectCenterY = size.y * (asset.yOffset || 0);
+    // Assets have a rounded bottom bevel, so the camera-visible bottom
+    // edge sits above the bbox's true minimum Y. Lift the ground plane
+    // a few percent of height so the shadow meets the visible edge and
+    // there's no white gap under the object.
+    const bevelComp = size.y * (asset.bevelComp ?? 0.03);
+    shadow.position.y = objectCenterY - size.y / 2 + bevelComp;
+    // Scale the ground plane to the asset so the shadow footprint
+    // always lands on it — glTF scales vary wildly between assets
+    // (meters vs centimeters), so a fixed 50×50 plane leaves large
+    // assets casting shadows into empty space.
+    shadow.scale.setScalar(maxDim);
+
+    // Retarget the shadow light at the object center and scale the
+    // orthographic shadow camera so any asset's silhouette fits.
+    shadowLight.position.copy(SHADOW_LIGHT_DIR).multiplyScalar(maxDim * 5);
+    shadowLight.position.y += objectCenterY;
+    shadowLight.target.position.set(0, objectCenterY, 0);
+    shadowLight.target.updateMatrixWorld();
+    const shadowExtent = maxDim * 3;
+    shadowLight.shadow.camera.left   = -shadowExtent;
+    shadowLight.shadow.camera.right  =  shadowExtent;
+    shadowLight.shadow.camera.top    =  shadowExtent;
+    shadowLight.shadow.camera.bottom = -shadowExtent;
+    shadowLight.shadow.camera.near   = 0.1;
+    shadowLight.shadow.camera.far    = maxDim * 20;
+    shadowLight.shadow.camera.updateProjectionMatrix();
+
+    // Update the radial-fade uniforms so the shadow is fully opaque
+    // near the object's ground footprint and smoothly fades to zero as
+    // the shadow extends outward.
+    shadowFadeUniforms.uObjectCenter.value.set(0, shadow.position.y, 0);
+    shadowFadeUniforms.uFadeInner.value = maxDim * 0.7;
+    shadowFadeUniforms.uFadeOuter.value = maxDim * 1.5;
+
+    // Frosted (basic) mode: each asset loads in its recommended color.
+    // Black Friday mode: keep the BF material across asset switches.
+    const isBlackFriday = activeVariantId === 'blackFriday';
+    if (!isBlackFriday && asset.recommended && materials[asset.recommended]) {
+      setActiveMaterial(asset.recommended);
+    } else {
+      setActiveMaterial(activeVariantId);
+    }
+
+    // Always update the Recommended tag to reflect each asset's designer pick.
+    document.querySelectorAll('.chip .rec-tag').forEach(el => el.remove());
+    if (asset.recommended) {
+      const recChip = document.querySelector(`.chip[data-mat="${asset.recommended}"]`);
+      if (recChip) {
+        const tag = document.createElement('span');
+        tag.className = 'rec-tag';
+        tag.textContent = 'Recommended';
+        const gear = recChip.querySelector('.gear');
+        if (gear) recChip.insertBefore(tag, gear);
+        else recChip.appendChild(tag);
+      }
+    }
+    resolve();
+  }, undefined, (err) => {
+    console.error('GLTF load error', err);
+    const d = document.createElement('div');
+    d.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#300;color:#fbb;padding:16px 20px;border-radius:8px;font-family:monospace;';
+    d.textContent = `${asset.url} 로드 실패 — 로컬 서버를 통해 열어주세요.`;
+    document.body.appendChild(d);
+    reject(err);
+  });
+  });
+}
+
+// ── Landing page: thumbnail grid ───────────────────────────
+// Sequentially load each asset in its recommended color + View 1
+// framing, capture the canvas to a data URL, and assemble a click-
+// able card grid. Clicking a card hides the landing overlay and
+// shows the main customizer with the selected asset loaded.
+async function buildLanding() {
+  const landing = document.getElementById('landing');
+  const loading = landing.querySelector('.loading');
+  const grid = landing.querySelector('.grid');
+  const thumbs = {};
+  for (const id of Object.keys(ASSETS)) {
+    await loadAsset(id);
+    // Apply View 1 for the thumbnail capture.
+    const v = VIEW_DIRS['1'];
+    const d = currentMaxDim * 2.0;
+    camera.position.set(v[0] * d, v[1] * d, v[2] * d);
+    camera.zoom = 1;
+    camera.updateProjectionMatrix();
+    controls.target.set(0, 0, 0);
+    controls.update();
+    // One frame for controls/shadow updates to settle before capture.
+    await new Promise((r) => requestAnimationFrame(r));
+    renderer.render(scene, camera);
+    // Center-crop the wide viewport canvas to a square so the thumb
+    // frames the object tightly instead of showing blank side margins.
+    const srcCanvas = renderer.domElement;
+    const sz = Math.min(srcCanvas.width, srcCanvas.height);
+    const sx = (srcCanvas.width - sz) / 2;
+    const sy = (srcCanvas.height - sz) / 2;
+    const crop = document.createElement('canvas');
+    crop.width = crop.height = 500;
+    crop.getContext('2d').drawImage(srcCanvas, sx, sy, sz, sz, 0, 0, 500, 500);
+    thumbs[id] = crop.toDataURL('image/png');
+  }
+  grid.innerHTML = '';
+  for (const [id, asset] of Object.entries(ASSETS)) {
+    const card = document.createElement('button');
+    card.className = 'asset-card';
+    card.dataset.asset = id;
+    card.innerHTML = `
+      <div class="thumb"><img src="${thumbs[id]}" alt="${asset.label}" /></div>
+      <div class="label">${asset.label}</div>
+    `;
+    card.addEventListener('click', () => selectAsset(id));
+    grid.appendChild(card);
+  }
+  loading.hidden = true;
+  landing.querySelector('.search').hidden = false;
+  grid.hidden = false;
+
+  // Live search filter — case-insensitive substring match on label.
+  // The empty-state message replaces the grid when no card matches.
+  const searchInput = document.getElementById('searchInput');
+  const searchClear = document.getElementById('searchClear');
+  const emptyMsg = landing.querySelector('.empty');
+  function applyFilter() {
+    const q = searchInput.value.trim().toLowerCase();
+    searchClear.hidden = q.length === 0;
+    let visible = 0;
+    grid.querySelectorAll('.asset-card').forEach(card => {
+      const label = (card.querySelector('.label')?.textContent || '').toLowerCase();
+      const match = !q || label.includes(q);
+      card.style.display = match ? '' : 'none';
+      if (match) visible++;
+    });
+    emptyMsg.hidden = visible > 0;
+  }
+  searchInput.addEventListener('input', applyFilter);
+  searchClear.addEventListener('click', () => {
+    searchInput.value = '';
+    applyFilter();
+    searchInput.focus();
+  });
+}
+
+// Hide the landing, sync the right-side asset chip state, load the
+// chosen asset into the customizer.
+function selectAsset(id) {
+  document.getElementById('landing').classList.add('hidden');
+  document.querySelectorAll('.asset-chip').forEach(b => {
+    if (b.id !== 'exportPng' && b.id !== 'backToLibrary') {
+      b.classList.toggle('active', b.dataset.asset === id);
+    }
+  });
+  loadAsset(id);
+}
+
+// Re-open the landing overlay so the user can switch back to the
+// asset grid from within the customizer.
+document.getElementById('backToLibrary').addEventListener('click', () => {
+  document.getElementById('landing').classList.remove('hidden');
+});
+
+// ── Ground shadow ──────────────────────────────────────────
+// Dedicated shadow-caster light: intensity 0 so it contributes no
+// illumination to the assets (their lighting stays untouched), but it
+// still renders a shadow map that the ShadowMaterial plane below
+// reads to produce a tinted, object-silhouette drop shadow.
+const shadowLight = new THREE.DirectionalLight(0xffffff, 0);
+shadowLight.castShadow = true;
+// Lower-angled light → longer drop shadow. Ratio of horizontal to
+// vertical components controls the stretch: the larger the horizontal,
+// the longer the shadow extends from the object's base.
+const SHADOW_LIGHT_DIR = new THREE.Vector3(-2.5, 5, 2).normalize();
+shadowLight.position.copy(SHADOW_LIGHT_DIR).multiplyScalar(10);
+shadowLight.shadow.mapSize.set(2048, 2048);
+shadowLight.shadow.radius = 10;
+shadowLight.shadow.blurSamples = 25;
+shadowLight.shadow.bias = -0.0005;
+scene.add(shadowLight);
+scene.add(shadowLight.target);
+
+// Ground plane — only visible where a shadow is cast. The color tracks
+// the active body variant's bottom-gradient color so the drop shadow
+// picks up the dominant body tint. Opacity 0.5 gives the "near object"
+// intensity; PCF softness + blurSamples spread it out into a natural
+// fade toward the edge.
+const shadowMat = new THREE.ShadowMaterial({
+  color: new THREE.Color(FROSTED_VARIANTS.frostedBlue.bottom),
+  transparent: true,
+  opacity: 0.15,
+});
+// Shared uniform refs so we can update fade params per-asset after
+// the shader has been compiled lazily on first use.
+const shadowFadeUniforms = {
+  uObjectCenter: { value: new THREE.Vector3() },
+  uFadeInner:    { value: 1 },
+  uFadeOuter:    { value: 2 },
+};
+shadowMat.onBeforeCompile = (shader) => {
+  Object.assign(shader.uniforms, shadowFadeUniforms);
+  shader.vertexShader = shader.vertexShader
+    .replace('void main() {', 'varying vec3 vShadowWorldPos;\nvoid main() {')
+    .replace(
+      '#include <project_vertex>',
+      '#include <project_vertex>\nvShadowWorldPos = (modelMatrix * vec4(position, 1.0)).xyz;'
+    );
+  shader.fragmentShader = shader.fragmentShader
+    .replace(
+      'uniform float opacity;',
+      `uniform float opacity;
+       uniform vec3 uObjectCenter;
+       uniform float uFadeInner;
+       uniform float uFadeOuter;
+       varying vec3 vShadowWorldPos;`
+    )
+    .replace(
+      'gl_FragColor = vec4( color, opacity * ( 1.0 - getShadowMask() ) );',
+      `float shadowDist = distance(vShadowWorldPos.xz, uObjectCenter.xz);
+       float radialFade = 1.0 - smoothstep(uFadeInner, uFadeOuter, shadowDist);
+       gl_FragColor = vec4( color, opacity * radialFade * ( 1.0 - getShadowMask() ) );`
+    );
+};
+const shadow = new THREE.Mesh(new THREE.PlaneGeometry(50, 50), shadowMat);
+shadow.rotation.x = -Math.PI / 2;
+shadow.receiveShadow = true;
+// Default to shadow-off; user can toggle on via the bottom UI.
+shadow.visible = false;
+shadowLight.castShadow = false;
+scene.add(shadow);
+
+// ── Lights ─────────────────────────────────────────────────
+scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+const key = new THREE.DirectionalLight(0xffffff, 1.8);
+key.position.set(3, 5, 4); scene.add(key);
+const fill = new THREE.DirectionalLight(0xdceaff, 0.75);
+fill.position.set(-4, 2, -3); scene.add(fill);
+const rim = new THREE.DirectionalLight(0xffffff, 0.4);
+rim.position.set(0, 3, -5); scene.add(rim);
+
+// ── Palette UI ─────────────────────────────────────────────
+const chips = document.querySelectorAll('.chip');
+const settingsPanel = document.getElementById('settings');
+const settingsTitle = document.getElementById('settingsTitle');
+const controlsEl    = document.getElementById('controls');
+
+
+// Dynamic control schemas, one per material type. Each entry maps a
+// slider to a property on the material (or a custom apply fn).
+const CONTROL_SCHEMAS = {
+  frosted: [
+    { key: 'transmission',        label: 'Transmission',    min: 0, max: 1,     step: 0.01 },
+    { key: 'roughness',           label: 'Roughness',       min: 0, max: 1,     step: 0.01 },
+    { key: 'thickness',           label: 'Thickness',       min: 0, max: 4,     step: 0.01 },
+    { key: 'ior',                 label: 'IOR',             min: 1, max: 2.333, step: 0.01 },
+    { key: 'clearcoat',           label: 'Clearcoat',       min: 0, max: 1,     step: 0.01 },
+    { key: 'clearcoatRoughness',  label: 'Coat Roughness',  min: 0, max: 1,     step: 0.01 },
+    { key: 'attenuationDistance', label: 'Attenuation',     min: 0.2, max: 8,   step: 0.01 },
+    { key: 'gradientStrength',    label: 'Gradient Strength', min: 0, max: 1,   step: 0.01, custom: true },
+  ],
+  glass: [
+    { key: 'opacity',            label: 'Opacity',        min: 0, max: 1, step: 0.01 },
+    { key: 'roughness',          label: 'Roughness',      min: 0, max: 1, step: 0.01 },
+    { key: 'clearcoat',          label: 'Clearcoat',      min: 0, max: 1, step: 0.01 },
+    { key: 'clearcoatRoughness', label: 'Coat Roughness', min: 0, max: 1, step: 0.01 },
+    { key: 'envMapIntensity',    label: 'Env Intensity',  min: 0, max: 3, step: 0.01 },
+  ],
+  chrome: [
+    { key: 'roughness',           label: 'Roughness',       min: 0, max: 1,     step: 0.01 },
+    { key: 'metalness',           label: 'Metalness',       min: 0, max: 1,     step: 0.01 },
+    { key: 'envMapIntensity',     label: 'Env Intensity',   min: 0, max: 5,     step: 0.01 },
+    { key: 'emissiveIntensity',   label: 'Emissive',        min: 0, max: 1,     step: 0.01 },
+  ],
+  blackFriday: [
+    { key: 'roughness',           label: 'Roughness',       min: 0, max: 1,     step: 0.01 },
+    { key: 'metalness',           label: 'Metalness',       min: 0, max: 1,     step: 0.01 },
+    { key: 'clearcoat',           label: 'Clearcoat',       min: 0, max: 1,     step: 0.01 },
+    { key: 'clearcoatRoughness',  label: 'Coat Roughness',  min: 0, max: 1,     step: 0.01 },
+    { key: 'envMapIntensity',     label: 'Env Intensity',   min: 0, max: 5,     step: 0.01 },
+    { key: 'emissiveIntensity',   label: 'Emissive',        min: 0, max: 1,     step: 0.01 },
+    { key: 'reflectivity',        label: 'Reflectivity',    min: 0, max: 1,     step: 0.01 },
+    { key: 'sheen',               label: 'Sheen',           min: 0, max: 1,     step: 0.01 },
+    { key: 'sheenRoughness',      label: 'Sheen Roughness', min: 0, max: 1,     step: 0.01 },
+    { key: 'colorR',              label: 'Color Red',       min: 0, max: 1,     step: 0.01, custom: true },
+    { key: 'colorG',              label: 'Color Green',     min: 0, max: 1,     step: 0.01, custom: true },
+    { key: 'colorB',              label: 'Color Blue',      min: 0, max: 1,     step: 0.01, custom: true },
+  ],
+};
+
+// Registry of all editable materials (including frosted variants + built-ins)
+const editableMaterials = {
+  frostedBlue:     materials.frostedBlue,
+  frostedGreen:    materials.frostedGreen,
+  frostedOrange:   materials.frostedOrange,
+  frostedRed:      materials.frostedRed,
+  frostedViolet:   materials.frostedViolet,
+  frostedDarkBlue: materials.frostedDarkBlue,
+  frostedPink:     materials.frostedPink,
+  blackFriday:     materials.blackFriday,
+  glass:           glassMat,
+  chrome:          chromeMat,
+};
+
+// Per-key state snapshots (so frosted variant switches preserve tuning,
+// and Reset can restore built-ins to their factory values)
+// Snapshot helper for Black Friday: pull standard props + decomposed color
+function snapshotBlackFriday(mat) {
+  const s = {};
+  for (const c of CONTROL_SCHEMAS.blackFriday) {
+    if (c.key === 'colorR')      s.colorR = mat.color.r;
+    else if (c.key === 'colorG') s.colorG = mat.color.g;
+    else if (c.key === 'colorB') s.colorB = mat.color.b;
+    else s[c.key] = mat[c.key];
+  }
+  return s;
+}
+
+const INITIAL_STATE = {
+  frostedBlue:     { ...FROSTED_PRESET, ...(FROSTED_VARIANTS.frostedBlue.preset     || {}) },
+  frostedGreen:    { ...FROSTED_PRESET, ...(FROSTED_VARIANTS.frostedGreen.preset    || {}) },
+  frostedOrange:   { ...FROSTED_PRESET, ...(FROSTED_VARIANTS.frostedOrange.preset   || {}) },
+  frostedRed:      { ...FROSTED_PRESET, ...(FROSTED_VARIANTS.frostedRed.preset      || {}) },
+  frostedViolet:   { ...FROSTED_PRESET, ...(FROSTED_VARIANTS.frostedViolet.preset   || {}) },
+  frostedDarkBlue: { ...FROSTED_PRESET, ...(FROSTED_VARIANTS.frostedDarkBlue.preset || {}) },
+  frostedPink:     { ...FROSTED_PRESET, ...(FROSTED_VARIANTS.frostedPink.preset     || {}) },
+  blackFriday:     snapshotBlackFriday(materials.blackFriday),
+  glass:           snapshotMaterial(glassMat,  CONTROL_SCHEMAS.glass),
+  chrome:          snapshotMaterial(chromeMat, CONTROL_SCHEMAS.chrome),
+};
+const state = {
+  frostedBlue:     { ...INITIAL_STATE.frostedBlue },
+  frostedGreen:    { ...INITIAL_STATE.frostedGreen },
+  frostedOrange:   { ...INITIAL_STATE.frostedOrange },
+  frostedRed:      { ...INITIAL_STATE.frostedRed },
+  frostedViolet:   { ...INITIAL_STATE.frostedViolet },
+  frostedDarkBlue: { ...INITIAL_STATE.frostedDarkBlue },
+  frostedPink:     { ...INITIAL_STATE.frostedPink },
+  blackFriday:     { ...INITIAL_STATE.blackFriday },
+  glass:           { ...INITIAL_STATE.glass },
+  chrome:          { ...INITIAL_STATE.chrome },
+};
+
+function snapshotMaterial(mat, schema) {
+  const out = {};
+  for (const c of schema) out[c.key] = mat[c.key];
+  return out;
+}
+
+function setActiveMaterial(id) {
+  activeVariantId = id;
+  const mat = materials[id];
+  for (const mesh of bodyMeshes) mesh.material = mat;
+  chips.forEach(c => c.classList.toggle('active', c.dataset.mat === id));
+
+  // Update category & BF button highlights.
+  const bfBtn = document.getElementById('bfButton');
+  if (id === 'blackFriday') {
+    bfBtn.classList.add('active');
+    document.querySelectorAll('.palette-category-header').forEach(h => h.classList.remove('active-category'));
+    document.querySelector('.palette-category[data-category="basic"]')?.classList.add('collapsed');
+  } else {
+    bfBtn.classList.remove('active');
+    const basicCat = document.querySelector('.palette-category[data-category="basic"]');
+    if (basicCat) {
+      basicCat.classList.remove('collapsed');
+      basicCat.querySelector('.palette-category-header')?.classList.add('active-category');
+    }
+  }
+
+  // Retint the ground shadow
+  if (FROSTED_VARIANTS[id]) {
+    shadowMat.color.set(FROSTED_VARIANTS[id].bottom);
+  } else if (id === 'blackFriday') {
+    shadowMat.color.set('#1a0052');
+  }
+
+  // Auto-switch background: black for Black Friday, white for basic
+  if (id === 'blackFriday') {
+    scene.background = new THREE.Color('#000000');
+    document.querySelectorAll('#bgSelector .bg-swatch')
+      .forEach(b => b.classList.toggle('active', b.dataset.bg === '#000000'));
+  } else if (FROSTED_VARIANTS[id]) {
+    scene.background = new THREE.Color('#ffffff');
+    document.querySelectorAll('#bgSelector .bg-swatch')
+      .forEach(b => b.classList.toggle('active', b.dataset.bg === '#ffffff'));
+  }
+  // Sync the Harmony accent (ribbon) to the paired companion color
+  const harmony = HARMONY_BY_BODY[id];
+  if (harmony) {
+    ribbonGrayMat.color.set(harmony);
+    const harmonyDot = document.querySelector('.chip[data-mat="ribbonGray"] .dot');
+    if (harmonyDot) harmonyDot.style.background = harmony;
+  }
+}
+
+let openMatKey = null;
+function openSettingsFor(matKey, matType) {
+  if (!IS_ADMIN) return;
+  openMatKey = matKey;
+  const labelMap = {
+    frostedBlue:     'Genuine Blue',
+    frostedGreen:    'Jade Green',
+    frostedOrange:   'Mango Orange',
+    frostedRed:      'Coral Red',
+    frostedViolet:   'Violet',
+    frostedDarkBlue: 'Dark Blue',
+    frostedPink:     'Candy Pink',
+    blackFriday:     'Purple Chrome',
+    glass:           'Glass (Built-in)',
+    chrome:          'Chrome (Built-in)',
+  };
+  settingsTitle.textContent = labelMap[matKey] || matKey;
+  renderControls(matKey, matType);
+  chips.forEach(c => c.classList.toggle('settings-open', c.dataset.mat === matKey));
+  settingsPanel.hidden = false;
+}
+function closeSettings() {
+  if (!IS_ADMIN) return;
+  openMatKey = null;
+  chips.forEach(c => c.classList.remove('settings-open'));
+  settingsPanel.hidden = true;
+}
+
+function renderControls(matKey, matType) {
+  const schema = CONTROL_SCHEMAS[matType];
+  const mat = editableMaterials[matKey];
+  const s = state[matKey];
+  controlsEl.innerHTML = '';
+  for (const c of schema) {
+    const row = document.createElement('label');
+    const valueText = document.createElement('span');
+    valueText.className = 'val';
+    const current = s[c.key] ?? mat[c.key];
+    valueText.textContent = (+current).toFixed(2);
+    const input = document.createElement('input');
+    input.type = 'range';
+    input.min = c.min; input.max = c.max; input.step = c.step;
+    input.value = current;
+    input.addEventListener('input', () => {
+      const v = parseFloat(input.value);
+      valueText.textContent = v.toFixed(2);
+      s[c.key] = v;
+      if (c.custom && c.key === 'gradientStrength') {
+        const variant = FROSTED_VARIANTS[matKey];
+        const t = makeVerticalGradient(variant.top, variant.bottom, v);
+        if (mat.map) mat.map.dispose();
+        mat.map = t;
+        mat.needsUpdate = true;
+      } else if (c.custom && (c.key === 'colorR' || c.key === 'colorG' || c.key === 'colorB')) {
+        const r = s.colorR ?? mat.color.r;
+        const g = s.colorG ?? mat.color.g;
+        const b = s.colorB ?? mat.color.b;
+        mat.color.setRGB(r, g, b);
+        mat.needsUpdate = true;
+      } else {
+        mat[c.key] = v;
+        mat.needsUpdate = true;
+      }
+    });
+    row.append(document.createTextNode(c.label + ' '), input, valueText);
+    controlsEl.appendChild(row);
+  }
+}
+
+// ── Category collapse/expand ──────────────────────────────
+document.querySelectorAll('.palette-category-header').forEach(header => {
+  header.addEventListener('click', () => {
+    header.closest('.palette-category').classList.toggle('collapsed');
+  });
+});
+
+// Chip events
+chips.forEach(chip => {
+  const id = chip.dataset.mat;
+  const type = chip.dataset.matType;
+  const isBuiltin = chip.classList.contains('builtin');
+  chip.querySelector('.swatch').addEventListener('click', () => {
+    if (isBuiltin) return;
+    setActiveMaterial(id);
+    if (!settingsPanel.hidden && openMatKey) openSettingsFor(id, type);
+  });
+  chip.querySelector('.gear')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpenForThis = !settingsPanel.hidden && openMatKey === id;
+    if (isOpenForThis) {
+      closeSettings();
+    } else {
+      if (!isBuiltin) setActiveMaterial(id);
+      openSettingsFor(id, type);
+    }
+  });
+});
+
+// Black Friday standalone button
+document.getElementById('bfButton').addEventListener('click', () => {
+  setActiveMaterial('blackFriday');
+  if (!settingsPanel.hidden && openMatKey === 'blackFriday') {
+    // already open — keep it
+  } else if (!settingsPanel.hidden) {
+    openSettingsFor('blackFriday', 'blackFriday');
+  }
+});
+document.getElementById('bfGear').addEventListener('click', (e) => {
+  e.stopPropagation();
+  const isOpen = !settingsPanel.hidden && openMatKey === 'blackFriday';
+  if (isOpen) {
+    closeSettings();
+  } else {
+    setActiveMaterial('blackFriday');
+    openSettingsFor('blackFriday', 'blackFriday');
+  }
+});
+
+// Asset switcher
+document.querySelectorAll('.asset-chip').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.asset-chip').forEach(b => b.classList.toggle('active', b === btn));
+    loadAsset(btn.dataset.asset);
+  });
+});
+
+document.querySelectorAll('#bgSelector .bg-swatch').forEach(btn => {
+  btn.addEventListener('click', () => {
+    scene.background = new THREE.Color(btn.dataset.bg);
+    document.querySelectorAll('#bgSelector .bg-swatch')
+      .forEach(b => b.classList.toggle('active', b === btn));
+  });
+});
+
+document.getElementById('shadowToggle').addEventListener('click', (e) => {
+  const btn = e.currentTarget;
+  const on = btn.classList.toggle('on');
+  shadow.visible = on;
+  shadowLight.castShadow = on;
+});
+
+// ── Designer-preset camera views ───────────────────────────
+// Direction vectors (scaled by the asset's framing distance) for
+// three quick camera presets designers can hand off to users.
+const VIEW_DIRS = {
+  '1': [0.85, 0.70, 1.00],   // Isometric — default iso angle
+  '2': [0.85, 0.40, 1.00],   // Slight top-down — gentle overhead, front-heavy
+  '3': [0.60, 0.00, 1.00],   // Side-front — front-weighted with side depth
+};
+function getViewDir(viewId) {
+  const asset = ASSETS[currentAssetId];
+  if (asset?.viewOverrides?.[viewId]) return asset.viewOverrides[viewId];
+  return VIEW_DIRS[viewId];
+}
+let viewTween = null;
+document.querySelectorAll('#viewSelector .view-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const v = getViewDir(btn.dataset.view);
+    if (!v) return;
+    const d = currentMaxDim * 2.0;
+    const targetPos = new THREE.Vector3(v[0] * d, v[1] * d, v[2] * d);
+    const startPos = camera.position.clone();
+    const startZoom = camera.zoom;
+    const targetZoom = 1;
+
+    document.querySelectorAll('#viewSelector .view-btn')
+      .forEach(b => b.classList.toggle('active', b === btn));
+
+    // Cancel any in-progress tween
+    if (viewTween) viewTween.cancel = true;
+    const tween = { cancel: false };
+    viewTween = tween;
+
+    const duration = 600;
+    const t0 = performance.now();
+    (function animate(now) {
+      if (tween.cancel) return;
+      const elapsed = now - t0;
+      // Ease-out cubic
+      const t = Math.min(elapsed / duration, 1);
+      const e = 1 - Math.pow(1 - t, 3);
+
+      camera.position.lerpVectors(startPos, targetPos, e);
+      camera.zoom = startZoom + (targetZoom - startZoom) * e;
+      camera.updateProjectionMatrix();
+      controls.target.set(0, 0, 0);
+      controls.update();
+
+      if (t < 1) requestAnimationFrame(animate);
+      else viewTween = null;
+    })(t0);
+  });
+});
+document.getElementById('resetPreset').addEventListener('click', () => {
+  if (!openMatKey) return;
+  const matKey = openMatKey;
+  const mat = editableMaterials[matKey];
+  state[matKey] = { ...INITIAL_STATE[matKey] };
+  const s = state[matKey];
+  const type = mat.userData.paletteId?.startsWith('frosted') ? 'frosted'
+             : mat.userData.paletteId === 'blackFriday' ? 'blackFriday'
+             : mat.userData.paletteId === 'glass'   ? 'glass'
+             : mat.userData.paletteId === 'chrome'  ? 'chrome'
+             : 'frosted';
+  for (const c of CONTROL_SCHEMAS[type]) {
+    if (c.custom && c.key === 'gradientStrength') {
+      const variant = FROSTED_VARIANTS[matKey];
+      const t = makeVerticalGradient(variant.top, variant.bottom, s.gradientStrength);
+      if (mat.map) mat.map.dispose();
+      mat.map = t;
+    } else if (c.custom && (c.key === 'colorR' || c.key === 'colorG' || c.key === 'colorB')) {
+      mat.color.setRGB(s.colorR, s.colorG, s.colorB);
+    } else {
+      mat[c.key] = s[c.key];
+    }
+  }
+  mat.needsUpdate = true;
+  renderControls(matKey, type);
+});
+
+// ── PNG 출력 (1080x1080, alpha, 오브젝트만) ────────────────
+document.getElementById('exportPng').addEventListener('click', () => {
+  // When the shadow is on, widen the canvas so the drop shadow has
+  // room to breathe and doesn't get cropped at the edge.
+  const SIZE_H = 1080;
+  const SIZE_W = shadow.visible ? 1480 : 1080;
+
+  // Reuse the main renderer for export — its PMREM'd HDR environment
+  // and chrome/frosted materials are bound to this specific WebGL
+  // context, so a separate renderer would render the scene without
+  // reflections (chrome goes matte, IBL lighting collapses).
+  const prevPixelRatio = renderer.getPixelRatio();
+  const prevW = renderer.domElement.width  / prevPixelRatio;
+  const prevH = renderer.domElement.height / prevPixelRatio;
+  const prevLeft   = camera.left;
+  const prevRight  = camera.right;
+  const prevTop    = camera.top;
+  const prevBottom = camera.bottom;
+  const prevBg = scene.background;
+
+  renderer.setPixelRatio(1);
+  renderer.setSize(SIZE_W, SIZE_H, false);
+  const h = frustumSize;
+  const w = h * (SIZE_W / SIZE_H);
+  camera.left   = -w / 2;
+  camera.right  =  w / 2;
+  camera.top    =  h / 2;
+  camera.bottom = -h / 2;
+  camera.updateProjectionMatrix();
+  scene.background = null;
+  renderer.setClearColor(0x000000, 0);
+
+  renderer.render(scene, camera);
+  const dataUrl = renderer.domElement.toDataURL('image/png');
+
+  scene.background = prevBg;
+  renderer.setPixelRatio(prevPixelRatio);
+  renderer.setSize(prevW, prevH, false);
+  camera.left   = prevLeft;
+  camera.right  = prevRight;
+  camera.top    = prevTop;
+  camera.bottom = prevBottom;
+  camera.updateProjectionMatrix();
+
+  const a = document.createElement('a');
+  const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  a.href = dataUrl;
+  a.download = `asset_${ts}.png`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+});
+
+window.addEventListener('resize', () => {
+  const a = window.innerWidth / window.innerHeight;
+  camera.left   = -frustumSize * a / 2;
+  camera.right  =  frustumSize * a / 2;
+  camera.top    =  frustumSize / 2;
+  camera.bottom = -frustumSize / 2;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ── Principles slideshow ──────────────────────────────────
+const PRINCIPLES_SLIDES = [
+  { asset: 'box',      color: 'frostedBlue', view: '2', rotate: false, shadow: false },
+  { asset: 'gift',     color: 'frostedRed',  view: '3', rotate: true,  shadow: false },
+  { asset: 'box',      color: 'frostedBlue', view: '2', rotate: false, shadow: false, mockUI: true },
+  { asset: 'box',      color: 'frostedBlue', view: '2', rotate: false, shadow: true  },
+];
+let principlesActive = false;
+let principlesSlideIdx = 0;
+let principlesRotating = false;
+let principlesTransitioning = false;
+let savedSceneBg = null;
+
+function tweenAnim(dur, fn) {
+  return new Promise(res => {
+    const t0 = performance.now();
+    (function frame(now) {
+      const p = Math.min((now - t0) / dur, 1);
+      fn(1 - Math.pow(1 - p, 3));
+      p < 1 ? requestAnimationFrame(frame) : res();
+    })(t0);
+  });
+}
+
+function updatePrinciplesNav() {
+  document.getElementById('principlesPrev').toggleAttribute('disabled', principlesSlideIdx === 0);
+  document.getElementById('principlesNext').toggleAttribute('disabled', principlesSlideIdx === PRINCIPLES_SLIDES.length - 1);
+  document.querySelectorAll('#principles .nav-dots button').forEach((d, i) =>
+    d.classList.toggle('active', i === principlesSlideIdx));
+}
+
+function openPrinciples() {
+  principlesActive = true;
+  savedSceneBg = scene.background;
+  scene.background = new THREE.Color('#ffffff');
+  document.body.classList.add('principles-mode');
+  document.getElementById('landing').classList.add('hidden');
+  document.getElementById('principles').classList.add('active');
+  controls.enabled = false;
+  shadow.visible = false;
+  shadowLight.castShadow = false;
+  goToPrinciplesSlide(0);
+}
+
+function closePrinciples() {
+  principlesActive = false;
+  principlesRotating = false;
+  document.body.classList.remove('principles-mode');
+  document.getElementById('principles').classList.remove('active');
+  document.getElementById('landing').classList.remove('hidden');
+  scene.background = savedSceneBg || new THREE.Color('#ffffff');
+  controls.enabled = true;
+  shadow.visible = false;
+  shadowLight.castShadow = false;
+  group.position.set(0, 0, 0);
+  group.scale.setScalar(1);
+  document.getElementById('mockPhoneUI').style.opacity = '0';
+}
+
+let mockUIActive = false;
+
+async function goToPrinciplesSlide(idx) {
+  if (principlesTransitioning) return;
+  principlesTransitioning = true;
+  principlesRotating = false;
+  principlesSlideIdx = idx;
+
+  document.querySelectorAll('#principles .slide-text').forEach(el => el.classList.remove('visible'));
+  updatePrinciplesNav();
+
+  const mockEl = document.getElementById('mockPhoneUI');
+
+  // ── Exit animation ──────────────────────────────────
+  const hasExiting = currentRoot !== null;
+  if (hasExiting) {
+    if (mockUIActive) {
+      // Mock UI slide: fade out phone screen as-is
+      group.visible = false;
+      await tweenAnim(500, (t) => { mockEl.style.opacity = String(1 - t); });
+      mockEl.style.opacity = '0';
+      group.visible = true;
+      group.scale.setScalar(1);
+      mockUIActive = false;
+    } else {
+      // Normal exit: asset flies to bottom-right
+      const exitStartX = group.position.x;
+      const exitStartY = group.position.y;
+      const exitEndX = currentMaxDim * 2.2;
+      const exitEndY = -currentMaxDim * 1.5;
+      const exitRotStart = currentRoot.rotation.y;
+      const exitRotEnd = exitRotStart + Math.PI * 0.6;
+      shadow.visible = false;
+      shadowLight.castShadow = false;
+      await tweenAnim(700, (t) => {
+        group.position.x = exitStartX + (exitEndX - exitStartX) * t;
+        group.position.y = exitStartY + (exitEndY - exitStartY) * t;
+        currentRoot.rotation.y = exitRotStart + (exitRotEnd - exitRotStart) * t;
+      });
+    }
+  }
+
+  // ── Load & enter ────────────────────────────────────
+  const slide = PRINCIPLES_SLIDES[idx];
+  shadow.visible = false;
+  shadowLight.castShadow = false;
+  group.scale.setScalar(1);
+
+  await loadAsset(slide.asset);
+  if (slide.color) setActiveMaterial(slide.color);
+
+  const v = VIEW_DIRS[slide.view];
+  const d = currentMaxDim * 2.0;
+  camera.position.set(v[0] * d, v[1] * d, v[2] * d);
+  camera.zoom = 0.66;
+  camera.updateProjectionMatrix();
+  controls.target.set(0, 0, 0);
+  controls.update();
+
+  // Entrance: bottom-left → center
+  const endX = 0, endY = 0;
+  const startX = -currentMaxDim * 2.2;
+  const startY = -currentMaxDim * 1.5;
+  const baseRotY = currentRoot.rotation.y;
+  const rotOffset = -Math.PI * 0.6;
+
+  group.position.set(startX, startY, 0);
+  currentRoot.rotation.y = baseRotY + rotOffset;
+
+  await tweenAnim(1200, (t) => {
+    group.position.x = startX + (endX - startX) * t;
+    group.position.y = startY + (endY - startY) * t;
+    currentRoot.rotation.y = baseRotY + rotOffset * (1 - t);
+  });
+
+  // Show text
+  const textEl = document.querySelector(`#principles .slide-text[data-slide="${idx}"]`);
+  if (textEl) textEl.classList.add('visible');
+
+  // ── Slide-specific behaviors ────────────────────────
+  if (slide.mockUI) {
+    // Capture current render as the mock icon
+    await new Promise(r => setTimeout(r, 600));
+    renderer.render(scene, camera);
+    const src = renderer.domElement;
+    const sz = Math.min(src.width, src.height);
+    const sx = (src.width - sz) / 2;
+    const sy = (src.height - sz) / 2;
+    const crop = document.createElement('canvas');
+    crop.width = crop.height = 200;
+    crop.getContext('2d').drawImage(src, sx, sy, sz, sz, 0, 0, 200, 200);
+    document.getElementById('mockIcon').style.backgroundImage = `url(${crop.toDataURL('image/png')})`;
+
+    // Shrink 3D + fade in phone mockup
+    const shrinkDim = currentMaxDim;
+    await tweenAnim(1400, (t) => {
+      group.scale.setScalar(1 - t * 0.85);
+      group.position.x = -shrinkDim * 0.6 * t;
+      group.position.y = shrinkDim * 0.15 * t;
+      const fade = Math.max(0, (t - 0.3) / 0.7);
+      mockEl.style.opacity = String(fade);
+    });
+    mockEl.style.opacity = '1';
+    mockUIActive = true;
+  }
+
+  if (slide.shadow) {
+    await new Promise(r => setTimeout(r, 500));
+    shadow.visible = true;
+    shadowLight.castShadow = true;
+    shadowMat.opacity = 0;
+    await tweenAnim(1200, (t) => { shadowMat.opacity = 0.15 * t; });
+  }
+
+  if (slide.rotate) principlesRotating = true;
+  principlesTransitioning = false;
+}
+
+document.getElementById('principlesBtn').addEventListener('click', openPrinciples);
+document.getElementById('principlesClose').addEventListener('click', closePrinciples);
+document.getElementById('principlesPrev').addEventListener('click', () => {
+  if (principlesSlideIdx > 0) goToPrinciplesSlide(principlesSlideIdx - 1);
+});
+document.getElementById('principlesNext').addEventListener('click', () => {
+  if (principlesSlideIdx < PRINCIPLES_SLIDES.length - 1) goToPrinciplesSlide(principlesSlideIdx + 1);
+});
+document.querySelectorAll('#principles .nav-dots button').forEach((btn, i) => {
+  btn.addEventListener('click', () => goToPrinciplesSlide(i));
+});
+document.addEventListener('keydown', (e) => {
+  if (!principlesActive) return;
+  if (e.key === 'ArrowRight' && principlesSlideIdx < PRINCIPLES_SLIDES.length - 1) goToPrinciplesSlide(principlesSlideIdx + 1);
+  if (e.key === 'ArrowLeft' && principlesSlideIdx > 0) goToPrinciplesSlide(principlesSlideIdx - 1);
+  if (e.key === 'Escape') closePrinciples();
+});
+
+let mouseNX = 0, mouseNY = 0;
+document.addEventListener('mousemove', (e) => {
+  mouseNX = (e.clientX / window.innerWidth - 0.5) * 2;
+  mouseNY = (e.clientY / window.innerHeight - 0.5) * 2;
+});
+
+function tick() {
+  if (principlesActive && currentRoot && !principlesTransitioning) {
+    if (principlesRotating) {
+      currentRoot.rotation.y += 0.002;
+    }
+    const strength = 0.15;
+    const isShadowSlide = PRINCIPLES_SLIDES[principlesSlideIdx]?.shadow;
+    const targetRX = isShadowSlide ? 0 : mouseNY * strength;
+    const targetRY = mouseNX * strength;
+    group.rotation.x += (targetRX - group.rotation.x) * 0.05;
+    group.rotation.y += (targetRY - group.rotation.y) * 0.05;
+  } else {
+    group.rotation.x = 0;
+    group.rotation.y = 0;
+  }
+  controls.update();
+  renderer.render(scene, camera);
+  requestAnimationFrame(tick);
+}
+tick();
+
+buildLanding();
+</script>
+</body>
+</html>

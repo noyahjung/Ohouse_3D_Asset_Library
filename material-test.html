@@ -60,16 +60,80 @@
   }
   .palette-group { display: flex; flex-direction: column; gap: 4px; }
 
+  .palette-category {
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .palette-category-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 10px 6px;
+    background: transparent; border: 0;
+    cursor: pointer; font-family: inherit;
+    font-size: 10px; letter-spacing: .12em; color: var(--text-mute);
+    text-transform: uppercase; font-weight: 600;
+    transition: color var(--transition);
+  }
+  .palette-category-header:hover { color: var(--text-dim); }
+  .palette-category-header .arrow {
+    font-size: 8px; transition: transform .2s;
+    display: inline-block;
+  }
+  .palette-category.collapsed .arrow { transform: rotate(-90deg); }
+  .palette-category.collapsed .palette-category-items { display: none; }
+  .palette-category-items { display: flex; flex-direction: column; gap: 4px; }
+  .palette-category-header.active-category {
+    color: var(--accent);
+  }
+  .palette-category-header .cat-thumb {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 1.5px solid rgba(0,0,0,.08);
+    flex: 0 0 auto;
+    box-shadow: 0 1px 4px rgba(0,0,0,.12);
+  }
+  .cat-thumb.frosted-thumb {
+    background:
+      radial-gradient(ellipse at 30% 25%, rgba(255,255,255,.7) 0%, transparent 55%),
+      linear-gradient(180deg, #EBEFFF 0%, #00a1ff 100%);
+  }
+  .cat-thumb.bf-thumb {
+    background:
+      radial-gradient(ellipse at 30% 25%, rgba(180,140,255,.8) 0%, transparent 50%),
+      radial-gradient(ellipse at 70% 75%, rgba(10,0,30,.6) 0%, transparent 60%),
+      linear-gradient(135deg, #7c4dff 0%, #3a0a6e 60%, #1a0040 100%);
+  }
+
+  /* ── Standalone BF button (no category wrapper) ──── */
+  .bf-standalone {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 10px;
+    background: transparent; border: 0;
+    cursor: pointer; font-family: inherit;
+    font-size: 10px; letter-spacing: .12em; color: var(--text-mute);
+    text-transform: uppercase; font-weight: 600;
+    transition: color var(--transition);
+    border-radius: var(--radius-sm);
+  }
+  .bf-standalone:hover { color: var(--text-dim); }
+  .bf-standalone.active {
+    color: var(--accent);
+  }
+  .bf-standalone .cat-thumb {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 1.5px solid rgba(0,0,0,.08);
+    flex: 0 0 auto;
+    box-shadow: 0 1px 4px rgba(0,0,0,.12);
+  }
+
   .chip {
     display: flex; align-items: stretch;
-    background: var(--card);
+    background: rgba(255,255,255,.92);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm); overflow: hidden;
     transition: background var(--transition), border-color var(--transition);
     box-shadow: var(--shadow-sm);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   }
-  .chip:hover { background: var(--card-hover); }
-  .chip.active { background: var(--accent-light); border-color: rgba(99,102,241,.3); }
+  .chip:hover { background: rgba(255,255,255,.96); }
+  .chip.active { background: rgba(99,102,241,.12); border-color: rgba(99,102,241,.3); }
   .chip.active .swatch { color: var(--text); }
   .chip .swatch {
     flex: 1;
@@ -101,6 +165,7 @@
   .chip.builtin .swatch:hover { color: var(--text-dim); }
   .chip .dot.chrome { background: linear-gradient(180deg, #e2e4e8, #9ea2a8); border-color: rgba(0,0,0,.1); }
   .chip .dot.glass  { background: linear-gradient(180deg, #eef4ff, #c0d8f5); border-color: rgba(0,0,0,.1); }
+  .chip .dot.bf-purple { background: linear-gradient(180deg, #7b3fe4, #2a0a52); border-color: rgba(0,0,0,.2); }
   .chip .rec-tag {
     align-self: center;
     margin-right: 6px;
@@ -116,8 +181,9 @@
     position: fixed; top: 18px; left: 264px; z-index: 10;
     padding: 14px 16px; min-width: 260px;
     font-size: 12px; line-height: 1.6;
-    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    background: rgba(255,255,255,.92); border: 1px solid var(--border); border-radius: var(--radius);
     box-shadow: var(--shadow-md);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   }
   #settings[hidden] { display: none; }
   #settings h1 {
@@ -154,7 +220,7 @@
   }
   .asset-chip {
     text-align: left;
-    background: var(--card);
+    background: rgba(255,255,255,.92);
     color: var(--text-dim);
     border: 1px solid var(--border); border-radius: var(--radius-sm);
     padding: 10px 14px;
@@ -162,8 +228,9 @@
     font-family: inherit;
     transition: background var(--transition), color var(--transition), border-color var(--transition);
     box-shadow: var(--shadow-sm);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   }
-  .asset-chip:hover { background: var(--card-hover); color: var(--text); }
+  .asset-chip:hover { background: rgba(255,255,255,.96); color: var(--text); }
   .asset-chip.active {
     background: var(--accent-light); color: var(--accent);
     border-color: rgba(99,102,241,.3);
@@ -202,9 +269,10 @@
   #bgSelector {
     position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%); z-index: 10;
     display: flex; align-items: center; gap: 10px;
-    background: var(--card); border: 1px solid var(--border);
+    background: rgba(255,255,255,.92); border: 1px solid var(--border);
     border-radius: 999px; padding: 6px 12px 6px 14px;
     box-shadow: var(--shadow);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   }
   #bgSelector .section-label {
     padding: 0; margin: 0;
@@ -226,9 +294,10 @@
   #viewSelector {
     position: fixed; bottom: 56px; left: 50%; transform: translateX(-50%); z-index: 10;
     display: flex; align-items: center; gap: 6px;
-    background: var(--card); border: 1px solid var(--border);
+    background: rgba(255,255,255,.92); border: 1px solid var(--border);
     border-radius: 999px; padding: 6px 12px 6px 14px;
     box-shadow: var(--shadow);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   }
   #viewSelector .section-label {
     padding: 0; margin: 0;
@@ -613,39 +682,55 @@
 
 <div id="palette">
   <div class="palette-group">
-    <div class="section-label">Body</div>
-    <div class="chip active" data-mat="frostedBlue" data-mat-type="frosted" style="--top:#EBEFFF; --bot:#00a1ff;">
-      <button class="swatch"><span class="dot"></span> Genuine Blue</button>
-      <button class="gear" title="Settings">⚙</button>
+    <div class="palette-category" data-category="basic">
+      <button class="palette-category-header active-category">
+        <span class="cat-thumb frosted-thumb"></span>
+        <span class="arrow">▼</span> 기본 재질
+      </button>
+      <div class="palette-category-items">
+        <div class="chip active" data-mat="frostedBlue" data-mat-type="frosted" style="--top:#EBEFFF; --bot:#00a1ff;">
+          <button class="swatch"><span class="dot"></span> Genuine Blue</button>
+          <button class="gear" title="Settings">⚙</button>
+        </div>
+        <div class="chip" data-mat="frostedGreen" data-mat-type="frosted" style="--top:#EDFFF4; --bot:#19BD86;">
+          <button class="swatch"><span class="dot"></span> Jade Green</button>
+          <button class="gear" title="Settings">⚙</button>
+        </div>
+        <div class="chip" data-mat="frostedOrange" data-mat-type="frosted" style="--top:#FFF4EC; --bot:#FF752C;">
+          <button class="swatch"><span class="dot"></span> Mango Orange</button>
+          <button class="gear" title="Settings">⚙</button>
+        </div>
+        <div class="chip" data-mat="frostedRed" data-mat-type="frosted" style="--top:#FFEFEF; --bot:#FF4747;">
+          <button class="swatch"><span class="dot"></span> Coral Red</button>
+          <button class="gear" title="Settings">⚙</button>
+        </div>
+        <div class="chip" data-mat="frostedViolet" data-mat-type="frosted" style="--top:#F7EFFD; --bot:#C475F5;">
+          <button class="swatch"><span class="dot"></span> Violet</button>
+          <button class="gear" title="Settings">⚙</button>
+        </div>
+        <div class="chip" data-mat="frostedDarkBlue" data-mat-type="frosted" style="--top:#E8EEFB; --bot:#2C65CF;">
+          <button class="swatch"><span class="dot"></span> Dark Blue</button>
+          <button class="gear" title="Settings">⚙</button>
+        </div>
+        <div class="chip" data-mat="frostedPink" data-mat-type="frosted" style="--top:#FFF0F4; --bot:#FF6E92;">
+          <button class="swatch"><span class="dot"></span> Candy Pink</button>
+          <button class="gear" title="Settings">⚙</button>
+        </div>
+      </div>
     </div>
-    <div class="chip" data-mat="frostedGreen" data-mat-type="frosted" style="--top:#EDFFF4; --bot:#19BD86;">
-      <button class="swatch"><span class="dot"></span> Jade Green</button>
-      <button class="gear" title="Settings">⚙</button>
-    </div>
-    <div class="chip" data-mat="frostedOrange" data-mat-type="frosted" style="--top:#FFF4EC; --bot:#FF752C;">
-      <button class="swatch"><span class="dot"></span> Mango Orange</button>
-      <button class="gear" title="Settings">⚙</button>
-    </div>
-    <div class="chip" data-mat="frostedRed" data-mat-type="frosted" style="--top:#FFEFEF; --bot:#FF4747;">
-      <button class="swatch"><span class="dot"></span> Coral Red</button>
-      <button class="gear" title="Settings">⚙</button>
-    </div>
-    <div class="chip" data-mat="frostedViolet" data-mat-type="frosted" style="--top:#F7EFFD; --bot:#C475F5;">
-      <button class="swatch"><span class="dot"></span> Violet</button>
-      <button class="gear" title="Settings">⚙</button>
-    </div>
-    <div class="chip" data-mat="frostedDarkBlue" data-mat-type="frosted" style="--top:#E8EEFB; --bot:#2C65CF;">
-      <button class="swatch"><span class="dot"></span> Dark Blue</button>
-      <button class="gear" title="Settings">⚙</button>
-    </div>
-    <div class="chip" data-mat="frostedPink" data-mat-type="frosted" style="--top:#FFF0F4; --bot:#FF6E92;">
-      <button class="swatch"><span class="dot"></span> Candy Pink</button>
-      <button class="gear" title="Settings">⚙</button>
+
+    <div style="display:flex; align-items:center; gap:0;">
+      <button class="bf-standalone" id="bfButton" data-mat="blackFriday" data-mat-type="blackFriday">
+        <span class="cat-thumb bf-thumb"></span>
+        블랙프라이데이 재질
+      </button>
+      <button class="gear bf-gear" id="bfGear" title="Settings" style="
+        background:transparent; border:0; color:var(--text-mute);
+        cursor:pointer; font-size:13px; padding:6px 8px;
+        transition: color .2s;
+      ">⚙</button>
     </div>
   </div>
-  <!-- Built-in materials (Glass, Harmony) remain instantiated in JS as
-       system colors applied automatically to specific mesh kinds, but
-       are no longer surfaced in the palette UI. -->
 </div>
 
 <div id="settings" hidden>
@@ -708,7 +793,9 @@ import {
   FROSTED_PRESET,
   FROSTED_VARIANTS,
   HARMONY_BY_BODY,
+  BLACK_FRIDAY_PRESET,
   createFrosted,
+  createBlackFriday,
   createLuminanceWhite,
   createRibbonGray,
   createGlass,
@@ -745,9 +832,11 @@ new EXRLoader().load('Botanical_Gardens_2.exr', (hdr) => {
   // Previous room env → dispose to reclaim GPU memory.
   scene.environment?.dispose?.();
   scene.environment = envTex;
-  // Chrome gets the same HDR directly — crisp natural reflections.
+  // Chrome & Black Friday get the same HDR directly — crisp natural reflections.
   chromeMat.envMap = envTex;
   chromeMat.needsUpdate = true;
+  materials.blackFriday.envMap = envTex;
+  materials.blackFriday.needsUpdate = true;
 }, undefined, (err) => console.error('HDR load failed', err));
 
 
@@ -775,6 +864,7 @@ const materials = {
   frostedViolet:   createFrosted('frostedViolet'),
   frostedDarkBlue: createFrosted('frostedDarkBlue'),
   frostedPink:     createFrosted('frostedPink'),
+  blackFriday:     createBlackFriday(),
 };
 // Built-in material chips — not exposed in the palette UI.
 const tapeMat      = createLuminanceWhite();
@@ -782,7 +872,7 @@ const ribbonGrayMat = createRibbonGray();
 const glassMat     = createGlass();
 const chromeMat    = createChrome();
 
-// Track which body meshes receive the frosted material (so we can swap).
+// Track which body meshes receive the active material (so we can swap).
 let bodyMeshes = [];
 let activeVariantId = 'frostedBlue';
 let currentAssetId = 'box';
@@ -858,6 +948,66 @@ const ASSETS = {
   },
 };
 
+// ── Smooth normals by angle — proper smooth-group algorithm ──
+// Computes the true geometric face normal for every triangle,
+// then for each vertex averages only the face normals from
+// co-located vertices whose faces are within `angleThreshold`
+// radians. Flat surfaces get perfectly consistent normals while
+// hard edges (e.g. box top ↔ side at 90°) are preserved.
+function smoothNormalsByAngle(geometry, tolerance = 0.01, angleThreshold = 1.3) {
+  const pos  = geometry.attributes.position;
+  const norm = geometry.attributes.normal;
+  const count = pos.count;
+  const faceCount = count / 3;
+  const cosThreshold = Math.cos(angleThreshold);
+  const inv = 1 / tolerance;
+
+  // Step 1: compute true geometric face normal per triangle
+  const faceNormals = new Array(faceCount);
+  const v0 = new THREE.Vector3(), v1 = new THREE.Vector3(), v2 = new THREE.Vector3();
+  const e1 = new THREE.Vector3(), e2 = new THREE.Vector3();
+  for (let f = 0; f < faceCount; f++) {
+    const i = f * 3;
+    v0.fromBufferAttribute(pos, i);
+    v1.fromBufferAttribute(pos, i + 1);
+    v2.fromBufferAttribute(pos, i + 2);
+    e1.subVectors(v1, v0);
+    e2.subVectors(v2, v0);
+    faceNormals[f] = new THREE.Vector3().crossVectors(e1, e2).normalize();
+  }
+
+  // Step 2: spatial hash — group vertices at the same position
+  const buckets = new Map();
+  for (let i = 0; i < count; i++) {
+    const kx = Math.round(pos.getX(i) * inv);
+    const ky = Math.round(pos.getY(i) * inv);
+    const kz = Math.round(pos.getZ(i) * inv);
+    const key = `${kx},${ky},${kz}`;
+    if (!buckets.has(key)) buckets.set(key, []);
+    buckets.get(key).push(i);
+  }
+
+  // Step 3: for each vertex, average face normals from co-located
+  // vertices whose face normals are within the angle threshold.
+  for (const indices of buckets.values()) {
+    for (const i of indices) {
+      const myFN = faceNormals[Math.floor(i / 3)];
+      let nx = 0, ny = 0, nz = 0;
+      for (const j of indices) {
+        const otherFN = faceNormals[Math.floor(j / 3)];
+        if (myFN.dot(otherFN) >= cosThreshold) {
+          nx += otherFN.x;
+          ny += otherFN.y;
+          nz += otherFN.z;
+        }
+      }
+      const len = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
+      norm.setXYZ(i, nx / len, ny / len, nz / len);
+    }
+  }
+  norm.needsUpdate = true;
+}
+
 // ── Load model ─────────────────────────────────────────────
 const group = new THREE.Group();
 scene.add(group);
@@ -914,15 +1064,14 @@ function loadAsset(assetId) {
     const gradBox = useFullBox ? fullBox : bodyBox;
     const yMin = gradBox.min.y, yMax = gradBox.max.y;
 
-    // Stabilization pass: recompute vertex normals on every mesh to
-    // smooth out faceted/broken normals from the C4D→glTF export, and
-    // collect body meshes so we can merge them into a single geometry
-    // (removes tiny gaps/seams between plastic panels and lets the
-    // frosted gradient read as one continuous surface).
+    // Collect body meshes for merging. Original glTF normals are
+    // preserved (no computeVertexNormals) — they're authored smooth
+    // in C4D and give the best result on reflective materials.
+    // After merge, angle-aware weldNormals smooths seam boundaries
+    // while preserving intentional hard edges.
     const bodyToMerge = [];
     root.traverse((obj) => {
       if (!obj.isMesh) return;
-      obj.geometry.computeVertexNormals();
       const kind = asset.materialFor(obj.name, obj.parent?.name);
       obj.castShadow = true;
       obj.receiveShadow = true;
@@ -938,35 +1087,40 @@ function loadAsset(assetId) {
     });
 
     if (bodyToMerge.length === 1) {
-      // Single body mesh — skip merge, just remap UVs in place.
+      // Single body mesh — use indexed computeVertexNormals (shared
+      // vertices guarantee perfectly smooth flat surfaces).
       const obj = bodyToMerge[0];
+      obj.geometry.computeVertexNormals();
       obj.material = materials[activeVariantId];
       remapUVsToWorldY(obj, yMin, yMax);
       bodyMeshes.push(obj);
     } else if (bodyToMerge.length > 1) {
-      // Bake each mesh's world transform into its position/normal,
-      // strip per-mesh attribute mismatches (keep only position+normal),
-      // then merge into a single geometry at root-local identity.
+      // Step 1: computeVertexNormals on each indexed mesh (smooth
+      // within each piece via shared-vertex averaging).
+      // Step 2: bake transforms, merge, convert to non-indexed.
+      // Step 3: smoothNormalsByAngle to fix seam normals across
+      // formerly separate meshes.
+      for (const m of bodyToMerge) m.geometry.computeVertexNormals();
       const bakedGeos = bodyToMerge.map((m) => {
         const g = m.geometry.clone();
         g.applyMatrix4(m.matrixWorld);
-        // Keep only position + normal so every input has matching attrs.
         for (const name of Object.keys(g.attributes)) {
           if (name !== 'position' && name !== 'normal') g.deleteAttribute(name);
         }
         return g;
       });
-      // Drop the original meshes from the hierarchy before the merge.
       for (const m of bodyToMerge) {
         m.geometry.dispose();
         m.parent?.remove(m);
       }
-      const merged = mergeGeometries(bakedGeos, false);
+      let merged = mergeGeometries(bakedGeos, false);
       for (const g of bakedGeos) g.dispose();
-      // Intentionally do NOT recompute normals here — the pre-merge
-      // per-mesh computeVertexNormals() already cleaned each piece, and
-      // re-averaging across what used to be separate meshes produces
-      // visible shading breaks at those former boundaries.
+      if (merged.index) {
+        const ni = merged.toNonIndexed();
+        merged.dispose();
+        merged = ni;
+      }
+      smoothNormalsByAngle(merged);
       const mergedMesh = new THREE.Mesh(merged, materials[activeVariantId]);
       mergedMesh.castShadow = true;
       mergedMesh.receiveShadow = true;
@@ -1042,12 +1196,18 @@ function loadAsset(assetId) {
     shadowFadeUniforms.uFadeInner.value = maxDim * 0.7;
     shadowFadeUniforms.uFadeOuter.value = maxDim * 1.5;
 
-    // Each asset ships with a recommended body color — apply it so the
-    // asset loads in its "designer-approved" look, and surface that pick
-    // to the user by pinning a small Recommended tag on the chip.
-    if (asset.recommended && materials[asset.recommended]) {
+    // Frosted (basic) mode: each asset loads in its recommended color.
+    // Black Friday mode: keep the BF material across asset switches.
+    const isBlackFriday = activeVariantId === 'blackFriday';
+    if (!isBlackFriday && asset.recommended && materials[asset.recommended]) {
       setActiveMaterial(asset.recommended);
-      document.querySelectorAll('.chip .rec-tag').forEach(el => el.remove());
+    } else {
+      setActiveMaterial(activeVariantId);
+    }
+
+    // Always update the Recommended tag to reflect each asset's designer pick.
+    document.querySelectorAll('.chip .rec-tag').forEach(el => el.remove());
+    if (asset.recommended) {
       const recChip = document.querySelector(`.chip[data-mat="${asset.recommended}"]`);
       if (recChip) {
         const tag = document.createElement('span');
@@ -1272,6 +1432,20 @@ const CONTROL_SCHEMAS = {
     { key: 'envMapIntensity',     label: 'Env Intensity',   min: 0, max: 5,     step: 0.01 },
     { key: 'emissiveIntensity',   label: 'Emissive',        min: 0, max: 1,     step: 0.01 },
   ],
+  blackFriday: [
+    { key: 'roughness',           label: 'Roughness',       min: 0, max: 1,     step: 0.01 },
+    { key: 'metalness',           label: 'Metalness',       min: 0, max: 1,     step: 0.01 },
+    { key: 'clearcoat',           label: 'Clearcoat',       min: 0, max: 1,     step: 0.01 },
+    { key: 'clearcoatRoughness',  label: 'Coat Roughness',  min: 0, max: 1,     step: 0.01 },
+    { key: 'envMapIntensity',     label: 'Env Intensity',   min: 0, max: 5,     step: 0.01 },
+    { key: 'emissiveIntensity',   label: 'Emissive',        min: 0, max: 1,     step: 0.01 },
+    { key: 'reflectivity',        label: 'Reflectivity',    min: 0, max: 1,     step: 0.01 },
+    { key: 'sheen',               label: 'Sheen',           min: 0, max: 1,     step: 0.01 },
+    { key: 'sheenRoughness',      label: 'Sheen Roughness', min: 0, max: 1,     step: 0.01 },
+    { key: 'colorR',              label: 'Color Red',       min: 0, max: 1,     step: 0.01, custom: true },
+    { key: 'colorG',              label: 'Color Green',     min: 0, max: 1,     step: 0.01, custom: true },
+    { key: 'colorB',              label: 'Color Blue',      min: 0, max: 1,     step: 0.01, custom: true },
+  ],
 };
 
 // Registry of all editable materials (including frosted variants + built-ins)
@@ -1283,12 +1457,25 @@ const editableMaterials = {
   frostedViolet:   materials.frostedViolet,
   frostedDarkBlue: materials.frostedDarkBlue,
   frostedPink:     materials.frostedPink,
+  blackFriday:     materials.blackFriday,
   glass:           glassMat,
   chrome:          chromeMat,
 };
 
 // Per-key state snapshots (so frosted variant switches preserve tuning,
 // and Reset can restore built-ins to their factory values)
+// Snapshot helper for Black Friday: pull standard props + decomposed color
+function snapshotBlackFriday(mat) {
+  const s = {};
+  for (const c of CONTROL_SCHEMAS.blackFriday) {
+    if (c.key === 'colorR')      s.colorR = mat.color.r;
+    else if (c.key === 'colorG') s.colorG = mat.color.g;
+    else if (c.key === 'colorB') s.colorB = mat.color.b;
+    else s[c.key] = mat[c.key];
+  }
+  return s;
+}
+
 const INITIAL_STATE = {
   frostedBlue:     { ...FROSTED_PRESET, ...(FROSTED_VARIANTS.frostedBlue.preset     || {}) },
   frostedGreen:    { ...FROSTED_PRESET, ...(FROSTED_VARIANTS.frostedGreen.preset    || {}) },
@@ -1297,6 +1484,7 @@ const INITIAL_STATE = {
   frostedViolet:   { ...FROSTED_PRESET, ...(FROSTED_VARIANTS.frostedViolet.preset   || {}) },
   frostedDarkBlue: { ...FROSTED_PRESET, ...(FROSTED_VARIANTS.frostedDarkBlue.preset || {}) },
   frostedPink:     { ...FROSTED_PRESET, ...(FROSTED_VARIANTS.frostedPink.preset     || {}) },
+  blackFriday:     snapshotBlackFriday(materials.blackFriday),
   glass:           snapshotMaterial(glassMat,  CONTROL_SCHEMAS.glass),
   chrome:          snapshotMaterial(chromeMat, CONTROL_SCHEMAS.chrome),
 };
@@ -1308,6 +1496,7 @@ const state = {
   frostedViolet:   { ...INITIAL_STATE.frostedViolet },
   frostedDarkBlue: { ...INITIAL_STATE.frostedDarkBlue },
   frostedPink:     { ...INITIAL_STATE.frostedPink },
+  blackFriday:     { ...INITIAL_STATE.blackFriday },
   glass:           { ...INITIAL_STATE.glass },
   chrome:          { ...INITIAL_STATE.chrome },
 };
@@ -1323,11 +1512,40 @@ function setActiveMaterial(id) {
   const mat = materials[id];
   for (const mesh of bodyMeshes) mesh.material = mat;
   chips.forEach(c => c.classList.toggle('active', c.dataset.mat === id));
-  // Retint the ground shadow to the new variant's bottom color.
-  shadowMat.color.set(FROSTED_VARIANTS[id].bottom);
+
+  // Update category & BF button highlights.
+  const bfBtn = document.getElementById('bfButton');
+  if (id === 'blackFriday') {
+    bfBtn.classList.add('active');
+    document.querySelectorAll('.palette-category-header').forEach(h => h.classList.remove('active-category'));
+    document.querySelector('.palette-category[data-category="basic"]')?.classList.add('collapsed');
+  } else {
+    bfBtn.classList.remove('active');
+    const basicCat = document.querySelector('.palette-category[data-category="basic"]');
+    if (basicCat) {
+      basicCat.classList.remove('collapsed');
+      basicCat.querySelector('.palette-category-header')?.classList.add('active-category');
+    }
+  }
+
+  // Retint the ground shadow
+  if (FROSTED_VARIANTS[id]) {
+    shadowMat.color.set(FROSTED_VARIANTS[id].bottom);
+  } else if (id === 'blackFriday') {
+    shadowMat.color.set('#1a0052');
+  }
+
+  // Auto-switch background: black for Black Friday, white for basic
+  if (id === 'blackFriday') {
+    scene.background = new THREE.Color('#000000');
+    document.querySelectorAll('#bgSelector .bg-swatch')
+      .forEach(b => b.classList.toggle('active', b.dataset.bg === '#000000'));
+  } else if (FROSTED_VARIANTS[id]) {
+    scene.background = new THREE.Color('#ffffff');
+    document.querySelectorAll('#bgSelector .bg-swatch')
+      .forEach(b => b.classList.toggle('active', b.dataset.bg === '#ffffff'));
+  }
   // Sync the Harmony accent (ribbon) to the paired companion color
-  // and reflect it on the palette swatch so the chip previews the
-  // current accent without opening the asset.
   const harmony = HARMONY_BY_BODY[id];
   if (harmony) {
     ribbonGrayMat.color.set(harmony);
@@ -1347,6 +1565,7 @@ function openSettingsFor(matKey, matType) {
     frostedViolet:   'Violet',
     frostedDarkBlue: 'Dark Blue',
     frostedPink:     'Candy Pink',
+    blackFriday:     'Purple Chrome',
     glass:           'Glass (Built-in)',
     chrome:          'Chrome (Built-in)',
   };
@@ -1386,6 +1605,12 @@ function renderControls(matKey, matType) {
         if (mat.map) mat.map.dispose();
         mat.map = t;
         mat.needsUpdate = true;
+      } else if (c.custom && (c.key === 'colorR' || c.key === 'colorG' || c.key === 'colorB')) {
+        const r = s.colorR ?? mat.color.r;
+        const g = s.colorG ?? mat.color.g;
+        const b = s.colorB ?? mat.color.b;
+        mat.color.setRGB(r, g, b);
+        mat.needsUpdate = true;
       } else {
         mat[c.key] = v;
         mat.needsUpdate = true;
@@ -1396,15 +1621,22 @@ function renderControls(matKey, matType) {
   }
 }
 
+// ── Category collapse/expand ──────────────────────────────
+document.querySelectorAll('.palette-category-header').forEach(header => {
+  header.addEventListener('click', () => {
+    header.closest('.palette-category').classList.toggle('collapsed');
+  });
+});
+
 // Chip events
 chips.forEach(chip => {
   const id = chip.dataset.mat;
   const type = chip.dataset.matType;
   const isBuiltin = chip.classList.contains('builtin');
   chip.querySelector('.swatch').addEventListener('click', () => {
-    if (isBuiltin) return; // built-in chips don't swap the body material
+    if (isBuiltin) return;
     setActiveMaterial(id);
-    if (!settingsPanel.hidden && openMatKey && type === 'frosted') openSettingsFor(id, type);
+    if (!settingsPanel.hidden && openMatKey) openSettingsFor(id, type);
   });
   chip.querySelector('.gear')?.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -1416,6 +1648,26 @@ chips.forEach(chip => {
       openSettingsFor(id, type);
     }
   });
+});
+
+// Black Friday standalone button
+document.getElementById('bfButton').addEventListener('click', () => {
+  setActiveMaterial('blackFriday');
+  if (!settingsPanel.hidden && openMatKey === 'blackFriday') {
+    // already open — keep it
+  } else if (!settingsPanel.hidden) {
+    openSettingsFor('blackFriday', 'blackFriday');
+  }
+});
+document.getElementById('bfGear').addEventListener('click', (e) => {
+  e.stopPropagation();
+  const isOpen = !settingsPanel.hidden && openMatKey === 'blackFriday';
+  if (isOpen) {
+    closeSettings();
+  } else {
+    setActiveMaterial('blackFriday');
+    openSettingsFor('blackFriday', 'blackFriday');
+  }
 });
 
 // Asset switcher
@@ -1454,18 +1706,43 @@ function getViewDir(viewId) {
   if (asset?.viewOverrides?.[viewId]) return asset.viewOverrides[viewId];
   return VIEW_DIRS[viewId];
 }
+let viewTween = null;
 document.querySelectorAll('#viewSelector .view-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     const v = getViewDir(btn.dataset.view);
     if (!v) return;
     const d = currentMaxDim * 2.0;
-    camera.position.set(v[0] * d, v[1] * d, v[2] * d);
-    camera.zoom = 1;
-    camera.updateProjectionMatrix();
-    controls.target.set(0, 0, 0);
-    controls.update();
+    const targetPos = new THREE.Vector3(v[0] * d, v[1] * d, v[2] * d);
+    const startPos = camera.position.clone();
+    const startZoom = camera.zoom;
+    const targetZoom = 1;
+
     document.querySelectorAll('#viewSelector .view-btn')
       .forEach(b => b.classList.toggle('active', b === btn));
+
+    // Cancel any in-progress tween
+    if (viewTween) viewTween.cancel = true;
+    const tween = { cancel: false };
+    viewTween = tween;
+
+    const duration = 600;
+    const t0 = performance.now();
+    (function animate(now) {
+      if (tween.cancel) return;
+      const elapsed = now - t0;
+      // Ease-out cubic
+      const t = Math.min(elapsed / duration, 1);
+      const e = 1 - Math.pow(1 - t, 3);
+
+      camera.position.lerpVectors(startPos, targetPos, e);
+      camera.zoom = startZoom + (targetZoom - startZoom) * e;
+      camera.updateProjectionMatrix();
+      controls.target.set(0, 0, 0);
+      controls.update();
+
+      if (t < 1) requestAnimationFrame(animate);
+      else viewTween = null;
+    })(t0);
   });
 });
 document.getElementById('resetPreset').addEventListener('click', () => {
@@ -1475,6 +1752,7 @@ document.getElementById('resetPreset').addEventListener('click', () => {
   state[matKey] = { ...INITIAL_STATE[matKey] };
   const s = state[matKey];
   const type = mat.userData.paletteId?.startsWith('frosted') ? 'frosted'
+             : mat.userData.paletteId === 'blackFriday' ? 'blackFriday'
              : mat.userData.paletteId === 'glass'   ? 'glass'
              : mat.userData.paletteId === 'chrome'  ? 'chrome'
              : 'frosted';
@@ -1484,6 +1762,8 @@ document.getElementById('resetPreset').addEventListener('click', () => {
       const t = makeVerticalGradient(variant.top, variant.bottom, s.gradientStrength);
       if (mat.map) mat.map.dispose();
       mat.map = t;
+    } else if (c.custom && (c.key === 'colorR' || c.key === 'colorG' || c.key === 'colorB')) {
+      mat.color.setRGB(s.colorR, s.colorG, s.colorB);
     } else {
       mat[c.key] = s[c.key];
     }
