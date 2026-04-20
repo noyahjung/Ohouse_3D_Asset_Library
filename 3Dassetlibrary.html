@@ -259,6 +259,28 @@
   #exportPng.active { background: var(--accent); color: #fff; }
   #exportPng.active::before { display: none; }
 
+  #assetSettings {
+    margin-top: 14px; padding: 12px 14px;
+    background: rgba(255,255,255,.92); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); box-shadow: var(--shadow-sm);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    font-size: 11px; line-height: 1.6;
+  }
+  #assetSettings[hidden] { display: none; }
+  #assetSettings .section-label {
+    font-size: 10px; letter-spacing: .08em; color: var(--text-mute);
+    text-transform: uppercase; font-weight: 600; margin-bottom: 8px;
+  }
+  #assetSettings label {
+    display: flex; flex-direction: column; gap: 4px;
+    color: var(--text-dim); font-size: 11px;
+  }
+  #assetSettings input[type=range] { width: 100%; accent-color: var(--accent); }
+  #assetSettings .val {
+    align-self: flex-end; color: var(--text);
+    font-variant-numeric: tabular-nums; font-weight: 500;
+  }
+
   /* ── Footer elements ────────────────────────────────── */
   #hint {
     position: fixed; bottom: 14px; left: 18px; z-index: 10;
@@ -748,7 +770,16 @@
   <button class="asset-chip" data-asset="coupon">Coupon</button>
   <button class="asset-chip" data-asset="purifier">Water Purifier</button>
   <button class="asset-chip" data-asset="gift">Gift Box</button>
+  <button class="asset-chip" data-asset="basket">Basket</button>
   <button class="asset-chip" id="exportPng">PNG 출력</button>
+
+  <div id="assetSettings" hidden>
+    <div class="section-label">Asset Settings</div>
+    <label>Gradient Y Shift
+      <input type="range" id="gradYShift" min="-1" max="1" step="0.01" value="0">
+      <span id="gradYShiftVal" class="val">0.00</span>
+    </label>
+  </div>
 </div>
 
 <div id="hint">드래그로 회전 · 휠로 줌 · 우클릭 드래그로 팬</div>
@@ -955,6 +986,28 @@ const ASSETS = {
       return 'body';
     },
   },
+  basket: {
+    url: 'basket.glb',
+    label: 'Basket',
+    rootName: 'basket',
+    recommended: 'frostedOrange',
+    keepOriginalNormals: true,
+    frameScale: 1.7,
+    materialFor() {
+      return 'body';
+    },
+    // Exclude the handle so the gradient spans only the basket body's
+    // height, keeping the color saturated instead of stretching across
+    // the full bbox up to the handle's top.
+    inGradientBox(name) {
+      return /^basket$/i.test(name);
+    },
+    // Negative shift biases the gradient toward saturated by
+    // extending the bbox below the mesh, so the bottom never reaches
+    // the lightest end of the gradient — basket otherwise reads
+    // washed out at default.
+    gradientYShift: -0.30,
+  },
 };
 
 // ── Smooth normals by angle — proper smooth-group algorithm ──
@@ -1082,11 +1135,26 @@ function loadAsset(assetId) {
       if (!obj.isMesh) return;
       fullBox.expandByObject(obj);
       const kind = asset.materialFor(obj.name, obj.parent?.name);
-      if (kind === 'body') bodyBox.expandByObject(obj);
+      // inGradientBox lets an asset narrow the gradient range to a
+      // subset of its body meshes — useful when an outlying part
+      // (e.g. a handle) would otherwise stretch the gradient and wash
+      // out the dominant body. Default: every 'body' mesh contributes.
+      const inGrad = asset.inGradientBox
+        ? asset.inGradientBox(obj.name, obj.parent?.name)
+        : (kind === 'body');
+      if (inGrad) bodyBox.expandByObject(obj);
     });
     const useFullBox = bodyBox.isEmpty() || asset.useFullGradientBox;
     const gradBox = useFullBox ? fullBox : bodyBox;
-    const yMin = gradBox.min.y, yMax = gradBox.max.y;
+    // gradientYShift biases the gradient toward darker (negative) or
+    // lighter (positive) by extending the gradient bbox on one side
+    // instead of sliding the whole window — this avoids a clamped
+    // flat band at the mesh edge and keeps the transition smooth
+    // across the full visible body height.
+    const span = gradBox.max.y - gradBox.min.y;
+    const shift = asset.gradientYShift || 0;
+    const yMin = shift < 0 ? gradBox.min.y + shift * span : gradBox.min.y;
+    const yMax = shift > 0 ? gradBox.max.y + shift * span : gradBox.max.y;
 
     // Collect body meshes for merging. Original glTF normals are
     // preserved (no computeVertexNormals) — they're authored smooth
@@ -1110,11 +1178,17 @@ function loadAsset(assetId) {
       }
     });
 
+    // When the source file has authored smooth normals worth keeping
+    // (e.g. C4D exports with hard-edge splits), opting out of normal
+    // recomputation prevents the smoothing pipeline from flattening
+    // intentional curvature into faceted shading.
+    const keepNormals = !!asset.keepOriginalNormals;
+
     if (bodyToMerge.length === 1) {
       // Single body mesh — use indexed computeVertexNormals (shared
       // vertices guarantee perfectly smooth flat surfaces).
       const obj = bodyToMerge[0];
-      obj.geometry.computeVertexNormals();
+      if (!keepNormals) obj.geometry.computeVertexNormals();
       obj.material = materials[activeVariantId];
       remapUVsToWorldY(obj, yMin, yMax);
       bodyMeshes.push(obj);
@@ -1124,13 +1198,38 @@ function loadAsset(assetId) {
       // Step 2: bake transforms, merge, convert to non-indexed.
       // Step 3: smoothNormalsByAngle to fix seam normals across
       // formerly separate meshes.
-      for (const m of bodyToMerge) m.geometry.computeVertexNormals();
+      if (!keepNormals) {
+        for (const m of bodyToMerge) m.geometry.computeVertexNormals();
+      }
       const bakedGeos = bodyToMerge.map((m) => {
         const g = m.geometry.clone();
-        g.applyMatrix4(m.matrixWorld);
+        // Standardize attributes BEFORE applyMatrix4 so the transform
+        // doesn't clamp values back into a narrow integer range:
+        //  • InterleavedBufferAttribute → mergeGeometries can't merge it
+        //    (C4D glTF exports often interleave attributes).
+        //  • Normalized integer storage (KHR_mesh_quantization) →
+        //    applyMatrix4 would re-quantize transformed positions and
+        //    collapse them into the original [-1,1] range.
         for (const name of Object.keys(g.attributes)) {
-          if (name !== 'position' && name !== 'normal') g.deleteAttribute(name);
+          if (name !== 'position' && name !== 'normal') {
+            g.deleteAttribute(name);
+            continue;
+          }
+          const a = g.attributes[name];
+          const needsCopy = a.isInterleavedBufferAttribute
+            || a.normalized
+            || !(a.array instanceof Float32Array);
+          if (!needsCopy) continue;
+          const arr = new Float32Array(a.itemSize * a.count);
+          const getters = ['getX', 'getY', 'getZ', 'getW'];
+          for (let i = 0; i < a.count; i++) {
+            for (let j = 0; j < a.itemSize; j++) {
+              arr[i * a.itemSize + j] = a[getters[j]](i);
+            }
+          }
+          g.setAttribute(name, new THREE.BufferAttribute(arr, a.itemSize, false));
         }
+        g.applyMatrix4(m.matrixWorld);
         return g;
       });
       for (const m of bodyToMerge) {
@@ -1144,7 +1243,7 @@ function loadAsset(assetId) {
         merged.dispose();
         merged = ni;
       }
-      smoothNormalsByAngle(merged);
+      if (!keepNormals) smoothNormalsByAngle(merged);
       const mergedMesh = new THREE.Mesh(merged, materials[activeVariantId]);
       mergedMesh.castShadow = true;
       mergedMesh.receiveShadow = true;
@@ -1339,6 +1438,7 @@ function selectAsset(id) {
     }
   });
   loadAsset(id);
+  refreshAssetSettings();
 }
 
 // Re-open the landing overlay so the user can switch back to the
@@ -1702,8 +1802,47 @@ document.querySelectorAll('.asset-chip').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.asset-chip').forEach(b => b.classList.toggle('active', b === btn));
     loadAsset(btn.dataset.asset);
+    refreshAssetSettings();
   });
 });
+
+// ── Asset settings (admin) ─────────────────────────────────
+// Per-asset gradientYShift slider — lets the designer tune how the
+// frosted gradient maps onto each model from the live UI without
+// having to edit ASSETS{} and reload. Stays hidden in user mode.
+const assetSettingsPanel = document.getElementById('assetSettings');
+const gradYShiftInput    = document.getElementById('gradYShift');
+const gradYShiftVal      = document.getElementById('gradYShiftVal');
+
+function refreshAssetSettings() {
+  if (!IS_ADMIN) return;
+  const a = ASSETS[currentAssetId];
+  if (!a) return;
+  const v = a.gradientYShift ?? 0;
+  gradYShiftInput.value = v;
+  gradYShiftVal.textContent = v.toFixed(2);
+}
+
+if (IS_ADMIN) {
+  assetSettingsPanel.hidden = false;
+  refreshAssetSettings();
+  // Coalesce rapid slider events into one reload per frame so dragging
+  // doesn't queue up dozens of full asset rebuilds back-to-back.
+  let pendingReload = false;
+  gradYShiftInput.addEventListener('input', () => {
+    const v = parseFloat(gradYShiftInput.value);
+    gradYShiftVal.textContent = v.toFixed(2);
+    const a = ASSETS[currentAssetId];
+    if (!a) return;
+    a.gradientYShift = v;
+    if (pendingReload) return;
+    pendingReload = true;
+    requestAnimationFrame(() => {
+      pendingReload = false;
+      loadAsset(currentAssetId);
+    });
+  });
+}
 
 document.querySelectorAll('#bgSelector .bg-swatch').forEach(btn => {
   btn.addEventListener('click', () => {
