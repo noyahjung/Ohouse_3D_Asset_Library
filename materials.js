@@ -9,32 +9,32 @@ import * as THREE from 'three';
 // ── Color tokens ─────────────────────────────────────────────
 export const COLORS = {
   // Frosted Blue — top (cool white) → bottom (saturated blue)
-  frostedBlueTop: '#EBEFFF',
+  frostedBlueTop: '#cce2ff',
   frostedBlueBottom: '#00a1ff',
 
   // Frosted Green — mirrored curve with a fresh mint→green
-  frostedGreenTop: '#EDFFF4',
+  frostedGreenTop: '#a8f5c6',
   frostedGreenBottom: '#19BD86',
 
   // Frosted Orange — warm peach → saturated orange
-  frostedOrangeTop: '#FFF4EC',
-  frostedOrangeBottom: '#FF752C',
+  frostedOrangeTop: '#ffd4a3',
+  frostedOrangeBottom: '#ff6a1a',
 
   // Coral Red — pale rose → coral red
-  frostedRedTop: '#FFEFEF',
+  frostedRedTop: '#ffd1bd',
   frostedRedBottom: '#FF4747',
 
   // Violet — pale lilac → vibrant violet
-  frostedVioletTop: '#F7EFFD',
-  frostedVioletBottom: '#C475F5',
+  frostedVioletTop: '#e2bdff',
+  frostedVioletBottom: '#be57ff',
 
   // Dark Blue — pale sky → deep navy blue
-  frostedDarkBlueTop: '#E8EEFB',
+  frostedDarkBlueTop: '#99b9ff',
   frostedDarkBlueBottom: '#2C65CF',
 
   // Candy Pink — pale blush → sweet pink
-  frostedPinkTop: '#FFF0F4',
-  frostedPinkBottom: '#FF6E92',
+  frostedPinkTop: '#ffd1dd',
+  frostedPinkBottom: '#ff5c85',
 
   // Pure luminance white — unaffected by scene lighting
   luminanceWhite: '#FFFFFF',
@@ -69,14 +69,14 @@ export const FROSTED_VARIANTS = {
     top: COLORS.frostedBlueTop,
     bottom: COLORS.frostedBlueBottom,
     preset: {
-      transmission: 0.50,
+      transmission: 0.70,
       roughness: 0.60,
       thickness: 2.30,
       ior: 1.70,
       clearcoat: 0.39,
       clearcoatRoughness: 0.50,
       attenuationDistance: 4.50,
-      gradientStrength: 0.85,
+      gradientStrength: 0.45,
     },
   },
   frostedGreen: {
@@ -84,14 +84,14 @@ export const FROSTED_VARIANTS = {
     top: COLORS.frostedGreenTop,
     bottom: COLORS.frostedGreenBottom,
     preset: {
-      transmission: 0.50,
+      transmission: 0.70,
       roughness: 0.60,
       thickness: 2.30,
       ior: 1.70,
       clearcoat: 0.39,
       clearcoatRoughness: 0.50,
       attenuationDistance: 4.50,
-      gradientStrength: 0.85,
+      gradientStrength: 0.44,
     },
   },
   frostedOrange: {
@@ -99,14 +99,14 @@ export const FROSTED_VARIANTS = {
     top: COLORS.frostedOrangeTop,
     bottom: COLORS.frostedOrangeBottom,
     preset: {
-      transmission: 0.50,
+      transmission: 0.70,
       roughness: 0.60,
       thickness: 2.30,
       ior: 1.70,
       clearcoat: 0.39,
       clearcoatRoughness: 0.50,
       attenuationDistance: 4.50,
-      gradientStrength: 0.85,
+      gradientStrength: 0.50,
     },
   },
   frostedRed: {
@@ -114,14 +114,14 @@ export const FROSTED_VARIANTS = {
     top: COLORS.frostedRedTop,
     bottom: COLORS.frostedRedBottom,
     preset: {
-      transmission: 0.50,
+      transmission: 0.70,
       roughness: 0.60,
       thickness: 2.30,
       ior: 1.70,
       clearcoat: 0.39,
       clearcoatRoughness: 0.50,
       attenuationDistance: 4.50,
-      gradientStrength: 0.85,
+      gradientStrength: 0.50,
     },
   },
   frostedViolet: {
@@ -129,14 +129,14 @@ export const FROSTED_VARIANTS = {
     top: COLORS.frostedVioletTop,
     bottom: COLORS.frostedVioletBottom,
     preset: {
-      transmission: 0.50,
+      transmission: 0.70,
       roughness: 0.60,
       thickness: 2.30,
       ior: 1.70,
       clearcoat: 0.39,
       clearcoatRoughness: 0.50,
       attenuationDistance: 4.50,
-      gradientStrength: 0.85,
+      gradientStrength: 0.50,
     },
   },
   frostedDarkBlue: {
@@ -144,14 +144,14 @@ export const FROSTED_VARIANTS = {
     top: COLORS.frostedDarkBlueTop,
     bottom: COLORS.frostedDarkBlueBottom,
     preset: {
-      transmission: 0.50,
+      transmission: 0.70,
       roughness: 0.60,
       thickness: 2.30,
       ior: 1.70,
       clearcoat: 0.39,
       clearcoatRoughness: 0.50,
       attenuationDistance: 4.50,
-      gradientStrength: 0.85,
+      gradientStrength: 0.50,
     },
   },
   frostedPink: {
@@ -159,14 +159,14 @@ export const FROSTED_VARIANTS = {
     top: COLORS.frostedPinkTop,
     bottom: COLORS.frostedPinkBottom,
     preset: {
-      transmission: 0.50,
+      transmission: 0.70,
       roughness: 0.60,
       thickness: 2.30,
       ior: 1.70,
       clearcoat: 0.39,
       clearcoatRoughness: 0.50,
       attenuationDistance: 4.50,
-      gradientStrength: 0.85,
+      gradientStrength: 0.50,
     },
   },
 };

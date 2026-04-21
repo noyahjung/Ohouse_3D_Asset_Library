@@ -39,6 +39,24 @@
   }
   #app { position: fixed; inset: 0; }
 
+  #dragHint {
+    position: fixed;
+    top: 8%;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(0, 0, 0, 0.28);
+    font-size: 20px;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    pointer-events: none;
+    user-select: none;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    z-index: 5;
+    white-space: nowrap;
+  }
+  #dragHint.visible { opacity: 1; }
+
   /* ── Shared card shell ───────────────────────────────── */
   .card {
     background: var(--card);
@@ -198,9 +216,17 @@
   #settings input[type=range] {
     width: 130px; accent-color: var(--accent);
   }
+  #settings input[type=color] {
+    width: 44px; height: 22px; padding: 0;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: transparent; cursor: pointer;
+  }
   #settings .val {
     color: var(--text); min-width: 36px; text-align: right;
     font-variant-numeric: tabular-nums; font-size: 11px; font-weight: 500;
+  }
+  #settings .val.hex {
+    font-size: 10px; color: var(--text-mute); min-width: 60px;
   }
   #settings .row { display: flex; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
   #settings button {
@@ -279,6 +305,68 @@
   #assetSettings .val {
     align-self: flex-end; color: var(--text);
     font-variant-numeric: tabular-nums; font-weight: 500;
+  }
+  #assetSettings .capture-row {
+    display: flex; flex-direction: column; gap: 8px;
+    margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border);
+  }
+  #assetSettings .row-label {
+    font-size: 10px; color: var(--text-mute);
+    letter-spacing: .04em; text-transform: uppercase; font-weight: 600;
+  }
+  #assetSettings .capture-list { display: flex; flex-direction: column; gap: 4px; }
+  #assetSettings .capture-item {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    grid-template-areas:
+      "label val save reset"
+      "full  full full full";
+    align-items: center; gap: 4px 6px;
+    padding: 4px 0;
+  }
+  #assetSettings .capture-item + .capture-item { border-top: 1px dashed var(--border); }
+  #assetSettings .capture-label {
+    grid-area: label;
+    font-size: 10px; color: var(--text-dim); font-weight: 500;
+  }
+  #assetSettings .capture-val {
+    grid-area: val;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    font-size: 9px; color: var(--text-mute);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  #assetSettings .capture-val.overridden { color: var(--accent); }
+  #assetSettings .capture-full {
+    grid-area: full;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    font-size: 10px; color: var(--text);
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 4px 6px;
+    cursor: text; user-select: all; -webkit-user-select: all;
+    word-break: break-all;
+  }
+  #assetSettings .capture-btn[data-action="save"]  { grid-area: save;  }
+  #assetSettings .capture-btn[data-action="reset"] { grid-area: reset; }
+  #assetSettings .capture-btn {
+    background: var(--card); color: var(--text-dim);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 3px 8px; cursor: pointer; font-size: 10px; font-weight: 500;
+    font-family: inherit; transition: background var(--transition), color var(--transition);
+  }
+  #assetSettings .capture-btn:hover { background: var(--card-hover); color: var(--text); }
+  #assetSettings .capture-btn.reset { padding: 3px 6px; color: var(--text-mute); }
+  #assetSettings .capture-btn.reset:disabled {
+    opacity: .35; cursor: default; background: var(--card);
+  }
+  #assetSettings .thumbnail-tools { display: flex; gap: 4px; }
+  #assetSettings .thumbnail-tools .capture-btn { flex: 1; }
+  #assetSettings .thumbnail-hint {
+    font-size: 9px; color: var(--text-mute); line-height: 1.4;
+  }
+  #assetSettings .thumbnail-hint code {
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    background: var(--card); padding: 1px 4px; border-radius: 3px;
+    font-size: 9px;
   }
 
   /* ── Footer elements ────────────────────────────────── */
@@ -442,7 +530,7 @@
   }
   #landing .asset-card .thumb {
     aspect-ratio: 1; border-radius: 6px;
-    background: #f8f9fb;
+    background: #ffffff;
     overflow: hidden;
     display: flex; align-items: center; justify-content: center;
   }
@@ -627,6 +715,7 @@
 </head>
 <body>
 <div id="app"></div>
+<div id="dragHint">마우스를 드래그해 에셋을 돌려보세요</div>
 
 <div id="landing">
   <div class="inner">
@@ -771,6 +860,7 @@
   <button class="asset-chip" data-asset="purifier">Water Purifier</button>
   <button class="asset-chip" data-asset="gift">Gift Box</button>
   <button class="asset-chip" data-asset="basket">Basket</button>
+  <button class="asset-chip" data-asset="clock">Clock</button>
   <button class="asset-chip" id="exportPng">PNG 출력</button>
 
   <div id="assetSettings" hidden>
@@ -779,13 +869,48 @@
       <input type="range" id="gradYShift" min="-1" max="1" step="0.01" value="0">
       <span id="gradYShiftVal" class="val">0.00</span>
     </label>
+    <div class="capture-row">
+      <span class="row-label">Library Thumbnails</span>
+      <div class="thumbnail-tools">
+        <button id="exportThumbCurrent" class="capture-btn">Save current as PNG</button>
+        <button id="exportThumbAll" class="capture-btn">Export all (View 1)</button>
+      </div>
+      <span class="thumbnail-hint">Save into <code>librarythumbnail/&lt;id&gt;.png</code>.</span>
+    </div>
+
+    <div class="capture-row">
+      <span class="row-label">Camera Views (per asset)</span>
+      <div class="capture-list">
+        <div class="capture-item" data-view="1">
+          <span class="capture-label">View 1</span>
+          <span class="capture-val"></span>
+          <button class="capture-btn" data-action="save">Save</button>
+          <button class="capture-btn reset" data-action="reset" title="Use default">×</button>
+          <code class="capture-full" title="Click to select, copy with Cmd+C"></code>
+        </div>
+        <div class="capture-item" data-view="2">
+          <span class="capture-label">View 2</span>
+          <span class="capture-val"></span>
+          <button class="capture-btn" data-action="save">Save</button>
+          <button class="capture-btn reset" data-action="reset" title="Use default">×</button>
+          <code class="capture-full" title="Click to select, copy with Cmd+C"></code>
+        </div>
+        <div class="capture-item" data-view="3">
+          <span class="capture-label">View 3</span>
+          <span class="capture-val"></span>
+          <button class="capture-btn" data-action="save">Save</button>
+          <button class="capture-btn reset" data-action="reset" title="Use default">×</button>
+          <code class="capture-full" title="Click to select, copy with Cmd+C"></code>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
 <div id="hint">드래그로 회전 · 휠로 줌 · 우클릭 드래그로 팬</div>
 
 <div id="viewSelector">
-  <span class="section-label">View</span>
+  <span class="section-label">디자이너 추천 뷰</span>
   <button class="view-btn active" data-view="1" title="Isometric">1</button>
   <button class="view-btn" data-view="2" title="Slight Top-Down">2</button>
   <button class="view-btn" data-view="3" title="Side">3</button>
@@ -917,6 +1042,17 @@ let bodyMeshes = [];
 let activeVariantId = 'frostedBlue';
 let currentAssetId = 'box';
 
+// ── Designer-preset camera views ───────────────────────────
+// Direction vectors (scaled by the asset's framing distance) for
+// three quick camera presets designers can hand off to users.
+// Declared here so admin UI / landing preview code running earlier
+// in the module can reference it without a temporal-dead-zone error.
+const VIEW_DIRS = {
+  '1': [0.85, 0.70, 1.00],   // Isometric — default iso angle
+  '2': [0.85, 0.40, 1.00],   // Slight top-down — gentle overhead, front-heavy
+  '3': [0.60, 0.00, 1.00],   // Side-front — front-weighted with side depth
+};
+
 // ── Asset registry ────────────────────────────────────────
 // Per-asset rules: which meshes are luminance-white accents vs the
 // frosted body. Names from the gltf files are matched case-insensitive.
@@ -931,8 +1067,24 @@ const ASSETS = {
     label: 'Moving Box',
     rootName: 'newbox_blue_moving',
     recommended: 'frostedBlue',
+    gradientYShift: -0.12,
     materialFor(name) {
       return /ribbon/i.test(name) ? 'luminance' : 'body';
+    },
+  },
+  coupon: {
+    url: 'Coupon.gltf',
+    label: 'Coupon',
+    rootName: 'coupon',
+    recommended: 'frostedPink',
+    modelScale: 6.3,
+    frameScale: 1.6,
+    useFullGradientBox: true,
+    viewOverrides: { '3': [0.25, 0.05, 1.00] },
+    materialFor(name, parentName) {
+      const n = (name || '').toLowerCase();
+      if (/percent/.test(n)) return 'luminance';
+      return 'body';
     },
   },
   gift: {
@@ -956,21 +1108,6 @@ const ASSETS = {
       return 'body';
     },
   },
-  coupon: {
-    url: 'Coupon.gltf',
-    label: 'Coupon',
-    rootName: 'coupon',
-    recommended: 'frostedPink',
-    modelScale: 6.3,
-    frameScale: 1.6,
-    useFullGradientBox: true,
-    viewOverrides: { '3': [0.25, 0.05, 1.00] },
-    materialFor(name, parentName) {
-      const n = (name || '').toLowerCase();
-      if (/percent/.test(n)) return 'luminance';
-      return 'body';
-    },
-  },
   purifier: {
     url: 'waterpurifier.gltf',
     label: 'Water Purifier',
@@ -987,12 +1124,17 @@ const ASSETS = {
     },
   },
   basket: {
-    url: 'basket.glb',
+    url: 'basket.glb?v=2',
     label: 'Basket',
     rootName: 'basket',
     recommended: 'frostedOrange',
     keepOriginalNormals: true,
     frameScale: 1.7,
+    viewOverrides: {
+      '1': [1.039, 0.774, 0.790],
+      '2': [1.299, 0.442, -0.002],
+      '3': [1.126, -0.001, 0.303],
+    },
     materialFor() {
       return 'body';
     },
@@ -1006,7 +1148,28 @@ const ASSETS = {
     // extending the bbox below the mesh, so the bottom never reaches
     // the lightest end of the gradient — basket otherwise reads
     // washed out at default.
-    gradientYShift: -0.30,
+    gradientYShift: -0.25,
+  },
+  clock: {
+    url: 'clock.glb?v=2',
+    label: 'Clock',
+    rootName: 'clock',
+    recommended: 'frostedViolet',
+    keepOriginalNormals: true,
+    frameScale: 1.89,
+    // Lift the shadow plane a bit more than the default to close the
+    // white gap between the clock's rounded bottom and the shadow.
+    bevelComp: 0.08,
+    materialFor(name) {
+      const n = (name || '').toLowerCase();
+      // Hands read as pure white signage — flat luminance keeps them
+      // crisp regardless of the active body color.
+      if (n === 'clock_arrow') return 'luminance';
+      // The white tape band around the body picks up the active
+      // variant's harmony hex (via ribbonGrayMat).
+      if (n === 'body-tape') return 'ribbonGray';
+      return 'body';
+    },
   },
 };
 
@@ -1201,6 +1364,12 @@ function loadAsset(assetId) {
       if (!keepNormals) {
         for (const m of bodyToMerge) m.geometry.computeVertexNormals();
       }
+      // The merged mesh is re-parented to `root`, whose own matrix will
+      // be applied again at render time. Bake vertices into root-LOCAL
+      // space (not world) so non-body meshes (still in their original
+      // scene-graph slots) and the merged body end up aligned instead
+      // of double-transformed by the root node.
+      const rootInv = new THREE.Matrix4().copy(root.matrixWorld).invert();
       const bakedGeos = bodyToMerge.map((m) => {
         const g = m.geometry.clone();
         // Standardize attributes BEFORE applyMatrix4 so the transform
@@ -1229,7 +1398,8 @@ function loadAsset(assetId) {
           }
           g.setAttribute(name, new THREE.BufferAttribute(arr, a.itemSize, false));
         }
-        g.applyMatrix4(m.matrixWorld);
+        const meshToRoot = new THREE.Matrix4().multiplyMatrices(rootInv, m.matrixWorld);
+        g.applyMatrix4(meshToRoot);
         return g;
       });
       for (const m of bodyToMerge) {
@@ -1259,11 +1429,14 @@ function loadAsset(assetId) {
     if (asset.yOffset) root.position.y += size.y * asset.yOffset;
     group.add(root);
 
-    // Frame camera for this asset
+    // Frame camera for this asset. Use the asset's View 1 override if
+    // defined so a custom framing shows immediately on asset switch
+    // rather than snapping to the generic iso first.
     const maxDim = Math.max(size.x, size.y, size.z);
     currentMaxDim = maxDim;
     const dist = maxDim * 2.0;
-    camera.position.set(dist * 0.85, dist * 0.7, dist);
+    const v1 = asset.viewOverrides?.['1'] || [0.85, 0.70, 1.00];
+    camera.position.set(v1[0] * dist, v1[1] * dist, v1[2] * dist);
     // Reset the view selector to the isometric preset on every new load.
     document.querySelectorAll('#viewSelector .view-btn')
       .forEach(b => b.classList.toggle('active', b.dataset.view === '1'));
@@ -1363,28 +1536,44 @@ async function buildLanding() {
   const loading = landing.querySelector('.loading');
   const grid = landing.querySelector('.grid');
   const thumbs = {};
-  for (const id of Object.keys(ASSETS)) {
+  const assetIds = Object.keys(ASSETS);
+
+  // Step 1: Try pre-baked PNGs in /librarythumbnail/ first. Static files
+  // load in parallel and skip the per-asset GLB + render entirely, so
+  // the grid appears almost instantly when thumbnails exist.
+  await Promise.all(assetIds.map(id => new Promise((resolve) => {
+    const img = new Image();
+    img.onload  = () => { thumbs[id] = `librarythumbnail/${id}.png`; resolve(); };
+    img.onerror = () => resolve();
+    img.src = `librarythumbnail/${id}.png`;
+  })));
+
+  // Step 2: For any asset still missing a thumbnail, live-render one as
+  // a fallback — keeps the library usable while designers are staging
+  // new thumbnails into the folder.
+  for (const id of assetIds) {
+    if (thumbs[id]) continue;
     await loadAsset(id);
-    // Apply View 1 for the thumbnail capture.
-    const v = VIEW_DIRS['1'];
+    const asset = ASSETS[id];
+    const v = asset.viewOverrides?.['1'] || VIEW_DIRS['1'];
     const d = currentMaxDim * 2.0;
     camera.position.set(v[0] * d, v[1] * d, v[2] * d);
     camera.zoom = 1;
     camera.updateProjectionMatrix();
     controls.target.set(0, 0, 0);
     controls.update();
-    // One frame for controls/shadow updates to settle before capture.
     await new Promise((r) => requestAnimationFrame(r));
     renderer.render(scene, camera);
-    // Center-crop the wide viewport canvas to a square so the thumb
-    // frames the object tightly instead of showing blank side margins.
     const srcCanvas = renderer.domElement;
     const sz = Math.min(srcCanvas.width, srcCanvas.height);
     const sx = (srcCanvas.width - sz) / 2;
     const sy = (srcCanvas.height - sz) / 2;
     const crop = document.createElement('canvas');
     crop.width = crop.height = 500;
-    crop.getContext('2d').drawImage(srcCanvas, sx, sy, sz, sz, 0, 0, 500, 500);
+    const ctx = crop.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, 500, 500);
+    ctx.drawImage(srcCanvas, sx, sy, sz, sz, 0, 0, 500, 500);
     thumbs[id] = crop.toDataURL('image/png');
   }
   grid.innerHTML = '';
@@ -1439,6 +1628,31 @@ function selectAsset(id) {
   });
   loadAsset(id);
   refreshAssetSettings();
+  showDragHint();
+}
+
+// ── Drag-hint tutorial overlay ──────────────────────────────
+// Faint gray prompt that floats above the asset when the user first
+// enters the customizer. Dismissed on any pointer movement so it never
+// gets in the way of actual interaction.
+const dragHintEl = document.getElementById('dragHint');
+let dragHintDismissHandler = null;
+function showDragHint() {
+  if (!dragHintEl) return;
+  dragHintEl.classList.add('visible');
+  if (dragHintDismissHandler) return;
+  // Defer listener binding so the click that opened the asset (and any
+  // micro-movement during it) doesn't dismiss the hint immediately.
+  setTimeout(() => {
+    dragHintDismissHandler = (e) => {
+      // Only dismiss on actual click-drag: pointermove with a button held down.
+      if (e.buttons === 0) return;
+      dragHintEl.classList.remove('visible');
+      window.removeEventListener('pointermove', dragHintDismissHandler);
+      dragHintDismissHandler = null;
+    };
+    window.addEventListener('pointermove', dragHintDismissHandler, { passive: true });
+  }, 150);
 }
 
 // Re-open the landing overlay so the user can switch back to the
@@ -1535,6 +1749,8 @@ const controlsEl    = document.getElementById('controls');
 // slider to a property on the material (or a custom apply fn).
 const CONTROL_SCHEMAS = {
   frosted: [
+    { key: 'top',                 label: 'Gradient Top',      type: 'color', custom: true },
+    { key: 'bottom',              label: 'Gradient Bottom',   type: 'color', custom: true },
     { key: 'transmission',        label: 'Transmission',    min: 0, max: 1,     step: 0.01 },
     { key: 'roughness',           label: 'Roughness',       min: 0, max: 1,     step: 0.01 },
     { key: 'thickness',           label: 'Thickness',       min: 0, max: 4,     step: 0.01 },
@@ -1601,14 +1817,27 @@ function snapshotBlackFriday(mat) {
   return s;
 }
 
+// Snapshot the initial gradient color pair for every frosted variant so
+// the admin Reset can restore them — these live on FROSTED_VARIANTS,
+// which we mutate when the user picks a new color.
+function frostedInitial(id) {
+  const v = FROSTED_VARIANTS[id];
+  return {
+    ...FROSTED_PRESET,
+    ...(v.preset || {}),
+    top: v.top,
+    bottom: v.bottom,
+  };
+}
+
 const INITIAL_STATE = {
-  frostedBlue:     { ...FROSTED_PRESET, ...(FROSTED_VARIANTS.frostedBlue.preset     || {}) },
-  frostedGreen:    { ...FROSTED_PRESET, ...(FROSTED_VARIANTS.frostedGreen.preset    || {}) },
-  frostedOrange:   { ...FROSTED_PRESET, ...(FROSTED_VARIANTS.frostedOrange.preset   || {}) },
-  frostedRed:      { ...FROSTED_PRESET, ...(FROSTED_VARIANTS.frostedRed.preset      || {}) },
-  frostedViolet:   { ...FROSTED_PRESET, ...(FROSTED_VARIANTS.frostedViolet.preset   || {}) },
-  frostedDarkBlue: { ...FROSTED_PRESET, ...(FROSTED_VARIANTS.frostedDarkBlue.preset || {}) },
-  frostedPink:     { ...FROSTED_PRESET, ...(FROSTED_VARIANTS.frostedPink.preset     || {}) },
+  frostedBlue:     frostedInitial('frostedBlue'),
+  frostedGreen:    frostedInitial('frostedGreen'),
+  frostedOrange:   frostedInitial('frostedOrange'),
+  frostedRed:      frostedInitial('frostedRed'),
+  frostedViolet:   frostedInitial('frostedViolet'),
+  frostedDarkBlue: frostedInitial('frostedDarkBlue'),
+  frostedPink:     frostedInitial('frostedPink'),
   blackFriday:     snapshotBlackFriday(materials.blackFriday),
   glass:           snapshotMaterial(glassMat,  CONTROL_SCHEMAS.glass),
   chrome:          snapshotMaterial(chromeMat, CONTROL_SCHEMAS.chrome),
@@ -1714,6 +1943,30 @@ function renderControls(matKey, matType) {
   controlsEl.innerHTML = '';
   for (const c of schema) {
     const row = document.createElement('label');
+
+    // Color picker branch — gradient top/bottom hex colors. Mutates
+    // FROSTED_VARIANTS so the chosen colors propagate to every asset
+    // that renders the same variant, the shadow tint, and the chip
+    // swatch preview.
+    if (c.type === 'color' && c.custom) {
+      const input = document.createElement('input');
+      input.type = 'color';
+      const hex = document.createElement('span');
+      hex.className = 'val hex';
+      const current = s[c.key] ?? FROSTED_VARIANTS[matKey]?.[c.key];
+      input.value = current;
+      hex.textContent = current;
+      input.addEventListener('input', () => {
+        const v = input.value;
+        hex.textContent = v;
+        s[c.key] = v;
+        applyFrostedColor(matKey, c.key, v);
+      });
+      row.append(document.createTextNode(c.label + ' '), input, hex);
+      controlsEl.appendChild(row);
+      continue;
+    }
+
     const valueText = document.createElement('span');
     valueText.className = 'val';
     const current = s[c.key] ?? mat[c.key];
@@ -1745,6 +1998,31 @@ function renderControls(matKey, matType) {
     });
     row.append(document.createTextNode(c.label + ' '), input, valueText);
     controlsEl.appendChild(row);
+  }
+}
+
+// Apply a new gradient color (top or bottom) to a frosted variant:
+// regenerate the gradient texture, retint the chip swatch preview,
+// and sync the shadow color if this variant is currently active.
+function applyFrostedColor(matKey, key, hex) {
+  const variant = FROSTED_VARIANTS[matKey];
+  if (!variant) return;
+  variant[key] = hex;
+  const mat = editableMaterials[matKey];
+  const strength = state[matKey].gradientStrength ?? FROSTED_PRESET.gradientStrength;
+  const t = makeVerticalGradient(variant.top, variant.bottom, strength);
+  if (mat.map) mat.map.dispose();
+  mat.map = t;
+  mat.needsUpdate = true;
+  // Chip swatch shows via `--top` and `--bot` CSS variables.
+  const chip = document.querySelector(`.chip[data-mat="${matKey}"]`);
+  if (chip) {
+    if (key === 'top')    chip.style.setProperty('--top', hex);
+    if (key === 'bottom') chip.style.setProperty('--bot', hex);
+  }
+  // Keep the ground shadow and palette dot in sync with the bottom hex.
+  if (key === 'bottom' && matKey === activeVariantId) {
+    shadowMat.color.set(hex);
   }
 }
 
@@ -1821,6 +2099,27 @@ function refreshAssetSettings() {
   const v = a.gradientYShift ?? 0;
   gradYShiftInput.value = v;
   gradYShiftVal.textContent = v.toFixed(2);
+  refreshViewOverridesUI();
+}
+
+// Paint the per-view status rows — defaults come from VIEW_DIRS, but
+// if the asset has a viewOverrides entry we highlight it and enable
+// the reset button so the designer can revert one view at a time.
+function refreshViewOverridesUI() {
+  const a = ASSETS[currentAssetId];
+  if (!a) return;
+  for (const item of document.querySelectorAll('.capture-item')) {
+    const viewId = item.dataset.view;
+    const override = a.viewOverrides?.[viewId];
+    const effective = override || VIEW_DIRS[viewId];
+    const short = `[${effective.map(n => n.toFixed(2)).join(', ')}]`;
+    const full  = `[${effective.map(n => (+n).toFixed(3)).join(', ')}]`;
+    const valEl = item.querySelector('.capture-val');
+    valEl.textContent = short;
+    valEl.classList.toggle('overridden', !!override);
+    item.querySelector('.capture-full').textContent = full;
+    item.querySelector('.capture-btn.reset').disabled = !override;
+  }
 }
 
 if (IS_ADMIN) {
@@ -1842,6 +2141,87 @@ if (IS_ADMIN) {
       loadAsset(currentAssetId);
     });
   });
+
+  // Render the current asset from its View 1 onto a white-background
+  // 500×500 canvas and trigger a download — designer drops the file
+  // into /librarythumbnail/ to replace the live-render fallback.
+  async function renderThumbnailPng(assetId) {
+    await loadAsset(assetId);
+    const asset = ASSETS[assetId];
+    const v = asset.viewOverrides?.['1'] || VIEW_DIRS['1'];
+    const d = currentMaxDim * 2.0;
+    camera.position.set(v[0] * d, v[1] * d, v[2] * d);
+    camera.zoom = 1;
+    camera.updateProjectionMatrix();
+    controls.target.set(0, 0, 0);
+    controls.update();
+    // Force white so the thumbnail matches the library card background
+    // even when the user is currently viewing Black Friday (black bg).
+    const prevBg = scene.background;
+    scene.background = new THREE.Color('#ffffff');
+    await new Promise((r) => requestAnimationFrame(r));
+    renderer.render(scene, camera);
+    scene.background = prevBg;
+    const srcCanvas = renderer.domElement;
+    const sz = Math.min(srcCanvas.width, srcCanvas.height);
+    const sx = (srcCanvas.width - sz) / 2;
+    const sy = (srcCanvas.height - sz) / 2;
+    const out = document.createElement('canvas');
+    out.width = out.height = 500;
+    const ctx = out.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, 500, 500);
+    ctx.drawImage(srcCanvas, sx, sy, sz, sz, 0, 0, 500, 500);
+    return new Promise((resolve) => out.toBlob((blob) => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `${assetId}.png`;
+      document.body.appendChild(a); a.click(); a.remove();
+      // Delay revoke so the download actually starts before the blob
+      // URL is invalidated.
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      resolve();
+    }, 'image/png'));
+  }
+
+  document.getElementById('exportThumbCurrent').addEventListener('click', async () => {
+    await renderThumbnailPng(currentAssetId);
+  });
+  document.getElementById('exportThumbAll').addEventListener('click', async () => {
+    for (const id of Object.keys(ASSETS)) {
+      await renderThumbnailPng(id);
+      // Breather between downloads so the browser doesn't batch or
+      // suppress them.
+      await new Promise((r) => setTimeout(r, 400));
+    }
+  });
+
+  // Capture/reset per-view camera angles. Distance is stored implicitly
+  // via the vector magnitude, matching VIEW_DIRS convention (each entry
+  // = direction * scale, where scale is later multiplied by the asset's
+  // maxDim-derived camera distance).
+  document.querySelectorAll('.capture-item').forEach(item => {
+    const viewId = item.dataset.view;
+    item.querySelector('[data-action="save"]').addEventListener('click', () => {
+      const a = ASSETS[currentAssetId];
+      if (!a) return;
+      const d = currentMaxDim * 2.0;
+      const v = [
+        +(camera.position.x / d).toFixed(3),
+        +(camera.position.y / d).toFixed(3),
+        +(camera.position.z / d).toFixed(3),
+      ];
+      a.viewOverrides = { ...(a.viewOverrides || {}), [viewId]: v };
+      refreshViewOverridesUI();
+    });
+    item.querySelector('[data-action="reset"]').addEventListener('click', () => {
+      const a = ASSETS[currentAssetId];
+      if (!a || !a.viewOverrides) return;
+      delete a.viewOverrides[viewId];
+      if (Object.keys(a.viewOverrides).length === 0) delete a.viewOverrides;
+      refreshViewOverridesUI();
+    });
+  });
 }
 
 document.querySelectorAll('#bgSelector .bg-swatch').forEach(btn => {
@@ -1859,14 +2239,6 @@ document.getElementById('shadowToggle').addEventListener('click', (e) => {
   shadowLight.castShadow = on;
 });
 
-// ── Designer-preset camera views ───────────────────────────
-// Direction vectors (scaled by the asset's framing distance) for
-// three quick camera presets designers can hand off to users.
-const VIEW_DIRS = {
-  '1': [0.85, 0.70, 1.00],   // Isometric — default iso angle
-  '2': [0.85, 0.40, 1.00],   // Slight top-down — gentle overhead, front-heavy
-  '3': [0.60, 0.00, 1.00],   // Side-front — front-weighted with side depth
-};
 function getViewDir(viewId) {
   const asset = ASSETS[currentAssetId];
   if (asset?.viewOverrides?.[viewId]) return asset.viewOverrides[viewId];
@@ -1922,7 +2294,20 @@ document.getElementById('resetPreset').addEventListener('click', () => {
              : mat.userData.paletteId === 'glass'   ? 'glass'
              : mat.userData.paletteId === 'chrome'  ? 'chrome'
              : 'frosted';
+  // Gradient top/bottom live on FROSTED_VARIANTS — restore them first
+  // so any texture regeneration below reads the reset colors.
+  if (type === 'frosted' && FROSTED_VARIANTS[matKey]) {
+    FROSTED_VARIANTS[matKey].top    = INITIAL_STATE[matKey].top;
+    FROSTED_VARIANTS[matKey].bottom = INITIAL_STATE[matKey].bottom;
+    const chip = document.querySelector(`.chip[data-mat="${matKey}"]`);
+    if (chip) {
+      chip.style.setProperty('--top', INITIAL_STATE[matKey].top);
+      chip.style.setProperty('--bot', INITIAL_STATE[matKey].bottom);
+    }
+    if (matKey === activeVariantId) shadowMat.color.set(INITIAL_STATE[matKey].bottom);
+  }
   for (const c of CONTROL_SCHEMAS[type]) {
+    if (c.type === 'color') continue;
     if (c.custom && c.key === 'gradientStrength') {
       const variant = FROSTED_VARIANTS[matKey];
       const t = makeVerticalGradient(variant.top, variant.bottom, s.gradientStrength);

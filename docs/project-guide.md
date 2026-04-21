@@ -1,6 +1,6 @@
 # Ohouse 3D Asset Library — 프로젝트 가이드
 
-> 최종 업데이트: 2026-04-17
+> 최종 업데이트: 2026-04-21
 
 ---
 
@@ -10,7 +10,7 @@
 
 | 항목 | 내용 |
 |---|---|
-| 엔트리 | `material-test.html` (SPA) |
+| 엔트리 | `3Dassetlibrary.html` (SPA — 현재 메인). `material-test.html`은 레거시로 유지만 됨 |
 | 기술 스택 | Three.js r160 (CDN), 순수 HTML/CSS/JS |
 | 백엔드 | 없음 — 100% 정적 파일 |
 | 빌드 도구 | 없음 — importmap 기반 ES Module |
@@ -25,39 +25,38 @@
 ```
 Ohouse_3D_Asset_Library/
 │
-├── material-test.html          ← 엔트리 (UI + 씬 + 로직 전부)
-├── materials.js                ← 재질 정의 (프로스티드, 블프, 크롬 등)
+├── 3Dassetlibrary.html            ← 엔트리 (UI + 씬 + 로직 전부)
+├── material-test.html             ← 레거시 (배포 제외)
+├── materials.js                   ← 재질 정의 (프로스티드, 블프, 크롬 등)
 │
-├── Botanical_Gardens_2.exr     ← HDR 환경맵 (83MB)
+├── Botanical_Gardens_2_quarter.hdr  ← HDR 환경맵 (8MB, 실사용)
+├── Botanical_Gardens_2.exr          ← 원본 EXR (83MB, 배포 제외 — 참고용)
 │
-├── box.gltf                    ← 이사박스 에셋
-├── box_simplified_1.bin
-├── box_simplified_2.bin
+├── box.gltf                       ← 이사박스 에셋
+├── box_simplified_1~2.bin
 │
-├── gift.gltf                   ← 선물상자 에셋
+├── gift.gltf                      ← 선물상자 에셋
 ├── gift_welded_1~6.bin
 │
-├── Coupon.gltf                 ← 쿠폰 에셋
+├── Coupon.gltf                    ← 쿠폰 에셋
 │
-├── waterpurifier.gltf          ← 정수기 에셋
+├── waterpurifier.gltf             ← 정수기 에셋
 ├── waterpurifier_simplified_1~4.bin
 │
-├── CLAUDE.md                   ← Claude Code 설정
-├── docs/                       ← 문서
-└── *.png, *.c4d                ← 레퍼런스 (배포 불필요)
+├── basket.glb                     ← 바구니 에셋
+├── clock.glb                      ← 시계 에셋
+│
+├── librarythumbnail/*.png         ← 랜딩 썸네일 (6장, 배포 필수)
+├── libraythumbnail/               ← 오타 폴더 (배포 제외)
+│
+├── CLAUDE.md                      ← Claude Code 설정
+├── docs/                          ← 문서
+└── *.png, *.c4d, 정수기레퍼런스.png ← 레퍼런스 (배포 불필요)
 ```
 
-### 배포 대상 파일 (17개)
+### 배포 대상 파일
 
-| 파일 | 용도 |
-|---|---|
-| `material-test.html` | 앱 엔트리 |
-| `materials.js` | 재질 모듈 |
-| `Botanical_Gardens_2.exr` | HDR 환경맵 |
-| `box.gltf` + `box_simplified_*.bin` (2) | 이사박스 |
-| `gift.gltf` + `gift_welded_*.bin` (6) | 선물상자 |
-| `Coupon.gltf` | 쿠폰 |
-| `waterpurifier.gltf` + `waterpurifier_simplified_*.bin` (4) | 정수기 |
+배포 파일의 단일 진실 공급원(single source of truth)은 [§5-3의 sync include 패턴](#5-3-전체-sync-권장-배포-방법)이며, 현재 배포되는 파일 목록은 [§5-4](#5-4-현재-배포-대상-파일-2026-04-21-기준)에 정리되어 있다.
 
 ---
 
@@ -106,7 +105,7 @@ Reflectivity 0.68 / Sheen 0.36 / Sheen Roughness 0.58
 
 ### 4-1. glTF 파일 준비
 
-- Cinema 4D에서 모델링 후 **glTF (.gltf + .bin)** 포맷으로 익스포트
+- Cinema 4D에서 모델링 후 **glTF (.gltf + .bin)** 또는 **GLB (.glb)** 포맷으로 익스포트 (최근 에셋은 GLB 단일 파일을 사용 — `basket.glb`, `clock.glb`)
 - 메시 이름 규칙으로 재질 분류:
   - 바디(컬러 변경 대상) → 별도 명명 불필요 (기본값이 `body`)
   - 리본/액센트 → 이름에 `ribbon` 포함
@@ -116,11 +115,11 @@ Reflectivity 0.68 / Sheen 0.36 / Sheen Roughness 0.58
 
 ### 4-2. ASSETS 레지스트리에 등록
 
-`material-test.html`의 `ASSETS` 객체에 항목 추가:
+`3Dassetlibrary.html`의 `ASSETS` 객체에 항목 추가:
 
 ```javascript
 newAsset: {
-  url: 'newAsset.gltf',        // glTF 파일명
+  url: 'newAsset.gltf',        // 또는 'newAsset.glb?v=1' — 캐시 버스팅용 쿼리스트링 권장
   label: 'New Asset',           // UI에 표시할 이름
   rootName: 'root_node_name',   // glTF 내 루트 노드 이름
   recommended: 'frostedBlue',   // 추천 컬러 ID
@@ -165,73 +164,99 @@ newAsset: {
 
 ## 5. S3 배포
 
-### 5-1. 배포 경로
+### 5-1. 배포 경로와 라이브 URL
 
-```
-s3://bucketplace-data-static/prod/branddesign/
+| 항목 | 값 |
+|---|---|
+| S3 경로 | `s3://bucketplace-data-static/prod/branddesign/3Dassetlibrary/` |
+| 라이브 URL | `https://static-contents.datapl.datahou.se/v2/branddesign/3Dassetlibrary/3Dassetlibrary.html` |
+| AWS 계정 | `534193482673` (Athena-Mgmt SSO — `luka.jung@bucketplace.net`) |
+
+> ⚠️ 경로 맨 끝의 `3Dassetlibrary/` 프리픽스를 빠뜨리면 `branddesign/` 루트에 덮어써져 다른 프로젝트 자산과 섞이므로 주의.
+
+### 5-2. 배포 전 안전 체크
+
+공용 prod 버킷이므로 실행 전 반드시 확인:
+
+```bash
+pwd                                # 프로젝트 루트인지
+aws sts get-caller-identity        # 계정 534193482673인지
+aws s3 ls s3://bucketplace-data-static/prod/branddesign/3Dassetlibrary/
 ```
 
-### 5-2. 전체 파일 업로드 (최초 또는 전체 갱신)
+### 5-3. 전체 sync (권장 배포 방법)
+
+로컬의 배포 대상 파일만 골라서 S3와 동기화. 동일 파일은 자동으로 skip되고, 변경·신규 파일만 올라간다.
 
 ```bash
 cd "/Users/luka.jung/Desktop/ai frontire/Ohouse_3D_Asset_Library"
 
-# 코어 파일
-aws s3 cp material-test.html s3://bucketplace-data-static/prod/branddesign/
-aws s3 cp materials.js s3://bucketplace-data-static/prod/branddesign/
-aws s3 cp Botanical_Gardens_2.exr s3://bucketplace-data-static/prod/branddesign/
+# 1) 드라이런으로 어떤 파일이 올라갈지 먼저 확인
+aws s3 sync . s3://bucketplace-data-static/prod/branddesign/3Dassetlibrary/ \
+  --exclude "*" \
+  --include "3Dassetlibrary.html" \
+  --include "*.glb" \
+  --include "*.gltf" \
+  --include "*.bin" \
+  --include "Botanical_Gardens_2_quarter.hdr" \
+  --include "materials.js" \
+  --include "librarythumbnail/*" \
+  --dryrun
 
-# 이사박스
-aws s3 cp box.gltf s3://bucketplace-data-static/prod/branddesign/
-aws s3 cp box_simplified_1.bin s3://bucketplace-data-static/prod/branddesign/
-aws s3 cp box_simplified_2.bin s3://bucketplace-data-static/prod/branddesign/
-
-# 선물상자
-aws s3 cp gift.gltf s3://bucketplace-data-static/prod/branddesign/
-aws s3 cp gift_welded_1.bin s3://bucketplace-data-static/prod/branddesign/
-aws s3 cp gift_welded_2.bin s3://bucketplace-data-static/prod/branddesign/
-aws s3 cp gift_welded_3.bin s3://bucketplace-data-static/prod/branddesign/
-aws s3 cp gift_welded_4.bin s3://bucketplace-data-static/prod/branddesign/
-aws s3 cp gift_welded_5.bin s3://bucketplace-data-static/prod/branddesign/
-aws s3 cp gift_welded_6.bin s3://bucketplace-data-static/prod/branddesign/
-
-# 쿠폰
-aws s3 cp Coupon.gltf s3://bucketplace-data-static/prod/branddesign/
-
-# 정수기
-aws s3 cp waterpurifier.gltf s3://bucketplace-data-static/prod/branddesign/
-aws s3 cp waterpurifier_simplified_1.bin s3://bucketplace-data-static/prod/branddesign/
-aws s3 cp waterpurifier_simplified_2.bin s3://bucketplace-data-static/prod/branddesign/
-aws s3 cp waterpurifier_simplified_3.bin s3://bucketplace-data-static/prod/branddesign/
-aws s3 cp waterpurifier_simplified_4.bin s3://bucketplace-data-static/prod/branddesign/
+# 2) 문제 없으면 --dryrun 빼고 실제 실행
+aws s3 sync . s3://bucketplace-data-static/prod/branddesign/3Dassetlibrary/ \
+  --exclude "*" \
+  --include "3Dassetlibrary.html" \
+  --include "*.glb" \
+  --include "*.gltf" \
+  --include "*.bin" \
+  --include "Botanical_Gardens_2_quarter.hdr" \
+  --include "materials.js" \
+  --include "librarythumbnail/*"
 ```
 
-### 5-3. 코드만 수정한 경우 (빠른 배포)
+**include 패턴 설계 원칙** — 이 화이트리스트가 곧 "배포 대상 파일 정의"다. 새로운 확장자/폴더가 생기면 이 목록에도 반드시 추가해야 한다. 제외해야 할 대상(절대 올리면 안 되는 것):
 
-재질이나 UI 수정 시 HTML/JS만 업로드:
+- `.c4d` 원본 소스, 레퍼런스 PNG (`01.png`, `view01.png`, `정수기레퍼런스.png` 등)
+- `.git/`, `.DS_Store`, `.claude/`, `CLAUDE.md`, `docs/`
+- `libraythumbnail/` (오타 폴더 — HTML이 참조 안 함)
+- `material-test.html` (legacy 엔트리 — 현재 S3에도 없음)
+
+### 5-4. 현재 배포 대상 파일 (2026-04-21 기준)
+
+| 파일/폴더 | 용도 |
+|---|---|
+| `3Dassetlibrary.html` | 앱 엔트리 (현재 메인) |
+| `materials.js` | 재질 모듈 |
+| `Botanical_Gardens_2_quarter.hdr` | HDR 환경맵 (8MB, EXR에서 다운그레이드됨) |
+| `box.gltf` + `box_simplified_*.bin` (2) | 이사박스 |
+| `gift.gltf` + `gift_welded_*.bin` (6) | 선물상자 |
+| `Coupon.gltf` | 쿠폰 |
+| `waterpurifier.gltf` + `waterpurifier_simplified_*.bin` (4) | 정수기 |
+| `basket.glb` | 바구니 |
+| `clock.glb` | 시계 |
+| `librarythumbnail/*.png` (6) | 랜딩 썸네일 |
+
+> 참고: `Botanical_Gardens_2.exr` (83MB)는 과거 S3에 올라간 잔재로, 현재 HTML은 `_quarter.hdr`만 로드하므로 삭제해도 무방하지만 실사용 영향은 없음.
+
+### 5-5. 배포 후 확인
 
 ```bash
-aws s3 cp material-test.html s3://bucketplace-data-static/prod/branddesign/
-aws s3 cp materials.js s3://bucketplace-data-static/prod/branddesign/
+# S3 반영 확인
+aws s3 ls s3://bucketplace-data-static/prod/branddesign/3Dassetlibrary/
+
+# 라이브 URL에서 최신 파일 확인
+open "https://static-contents.datapl.datahou.se/v2/branddesign/3Dassetlibrary/3Dassetlibrary.html"
 ```
 
-### 5-4. 새 에셋 추가 시
+CDN 캐시 때문에 라이브에 반영이 늦을 수 있음 → 강력 새로고침(`Cmd+Shift+R`) 또는 쿼리스트링(`?v=타임스탬프`)으로 우회.
 
-```bash
-# 새 에셋 파일 업로드
-aws s3 cp newAsset.gltf s3://bucketplace-data-static/prod/branddesign/
-aws s3 cp newAsset_1.bin s3://bucketplace-data-static/prod/branddesign/
-# ... (bin 파일이 여러 개면 모두)
+### 5-6. 새 에셋 추가 시
 
-# 코드에 에셋을 등록했으므로 HTML도 업로드
-aws s3 cp material-test.html s3://bucketplace-data-static/prod/branddesign/
-```
-
-### 5-5. 업로드 확인
-
-```bash
-aws s3 ls s3://bucketplace-data-static/prod/branddesign/
-```
+1. 로컬에 `.glb` 또는 `.gltf`+`.bin`을 추가하고 `3Dassetlibrary.html`의 `ASSETS`에 등록
+2. 썸네일 PNG를 `librarythumbnail/<id>.png` 로 저장
+3. 위 5-3의 sync 명령 그대로 실행 — include 패턴이 `*.glb`/`*.gltf`/`*.bin`/`librarythumbnail/*`를 이미 커버하므로 자동 포함됨
+4. 새 확장자(예: `.ktx2`, `.draco`)를 도입한 경우에만 include 패턴에 추가하고 이 문서도 갱신할 것
 
 ---
 
@@ -270,5 +295,5 @@ aws s3 ls s3://bucketplace-data-static/prod/branddesign/
 ```bash
 cd "/Users/luka.jung/Desktop/ai frontire/Ohouse_3D_Asset_Library"
 python3 -m http.server 8765
-open http://localhost:8765/material-test.html
+open http://localhost:8765/3Dassetlibrary.html
 ```

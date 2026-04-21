@@ -18,7 +18,7 @@
 
 ## 2. 해결 방향 — WebGL/Three.js 실시간 렌더
 
-- `MeshPhysicalMaterial`(PBR) + HDR 환경맵(`Botanical_Gardens_2.exr`) + 투과/클리어코트 지원 → **아이콘·숏컷 사이즈에서 오프라인 렌더와 구분이 어려운 품질**
+- `MeshPhysicalMaterial`(PBR) + HDR 환경맵(`Botanical_Gardens_2_quarter.hdr`) + 투과/클리어코트 지원 → **아이콘·숏컷 사이즈에서 오프라인 렌더와 구분이 어려운 품질**
 - 한 번 로드하면 **무한 앵글·무한 컬러 변주가 실시간** → 리소스 모델 자체를 재설계
 - 콘텐츠/마케팅/CRM 등 **각 직무가 자기 문맥에 맞는 컷을 직접 생성**
 
