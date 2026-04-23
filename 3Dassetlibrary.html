@@ -841,6 +841,31 @@
         transition: color .2s;
       ">⚙</button>
     </div>
+
+    <div class="palette-category admin-only" data-category="builtin">
+      <button class="palette-category-header">
+        <span class="cat-thumb" style="background:linear-gradient(180deg,#888,#333);"></span>
+        <span class="arrow">▼</span> 관리자: 내장 재질
+      </button>
+      <div class="palette-category-items">
+        <div class="chip builtin" data-mat="glass" data-mat-type="glass">
+          <button class="swatch"><span class="dot" style="background:linear-gradient(180deg,#fff,#d6eaff);"></span> Glass</button>
+          <button class="gear" title="Settings">⚙</button>
+        </div>
+        <div class="chip builtin" data-mat="chrome" data-mat-type="chrome">
+          <button class="swatch"><span class="dot" style="background:linear-gradient(180deg,#f5f5f7,#9ea2a8);"></span> Chrome</button>
+          <button class="gear" title="Settings">⚙</button>
+        </div>
+        <div class="chip builtin" data-mat="lensGlass" data-mat-type="lensGlass">
+          <button class="swatch"><span class="dot" style="background:linear-gradient(180deg,#fff,#bcd4e9);"></span> Lens Glass</button>
+          <button class="gear" title="Settings">⚙</button>
+        </div>
+        <div class="chip builtin" data-mat="cameraLens" data-mat-type="cameraLens">
+          <button class="swatch"><span class="dot" style="background:linear-gradient(180deg,#3a3a40,#0a0a10);"></span> Camera Lens</button>
+          <button class="gear" title="Settings">⚙</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -861,6 +886,7 @@
   <button class="asset-chip" data-asset="gift">Gift Box</button>
   <button class="asset-chip" data-asset="basket">Basket</button>
   <button class="asset-chip" data-asset="clock">Clock</button>
+  <button class="asset-chip" data-asset="camera">Camera</button>
   <button class="asset-chip" id="exportPng">PNG 출력</button>
 
   <div id="assetSettings" hidden>
@@ -944,11 +970,12 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 import {
   FROSTED_PRESET,
   FROSTED_VARIANTS,
   HARMONY_BY_BODY,
+  HARMONY2_BY_BODY,
   BLACK_FRIDAY_PRESET,
   createFrosted,
   createBlackFriday,
@@ -965,6 +992,10 @@ const IS_ADMIN = new URLSearchParams(window.location.search).has('admin');
 if (!IS_ADMIN) {
   document.querySelectorAll('.gear, .bf-gear').forEach(el => el.style.display = 'none');
   document.getElementById('settings').style.display = 'none';
+  // Built-in material chips are admin tooling only — they expose
+  // material params not meant for end users (camera lens, lens glass,
+  // raw glass/chrome).
+  document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
 }
 
 const app = document.getElementById('app');
@@ -1034,8 +1065,56 @@ const materials = {
 // Built-in material chips — not exposed in the palette UI.
 const tapeMat      = createLuminanceWhite();
 const ribbonGrayMat = createRibbonGray();
+// Harmony 2 — dimmer companion of the active body's ribbon accent.
+// Flat (unlit) so a recessed face reads as a solid tone instead of
+// catching the body's gradient, and double-sided so it works both
+// when assigned as a mesh's direct material (the camera lens-box cap
+// visible through the glass) and as a BackSide inner-wall clone.
+// Color is retinted in setActiveMaterial whenever the body variant
+// changes.
+const harmony2Mat = new THREE.MeshBasicMaterial({
+  color: new THREE.Color('#000000'),
+  side: THREE.DoubleSide,
+  toneMapped: false,
+});
+harmony2Mat.userData.paletteId = 'harmony2';
 const glassMat     = createGlass();
 const chromeMat    = createChrome();
+// Lens-style glass — clearly readable on small camera-lens discs:
+// stronger clearcoat highlight + slightly higher opacity than the
+// purifier-cup glass, which is tuned for a large soft surface.
+const lensGlassMat = new THREE.MeshPhysicalMaterial({
+  color:               0xffffff,
+  roughness:           0.05,
+  metalness:           0.0,
+  transparent:         true,
+  opacity:             0.55,
+  clearcoat:           1.0,
+  clearcoatRoughness:  0.0,
+  envMapIntensity:     2.5,
+  side:                THREE.DoubleSide,
+  depthWrite:          false,
+});
+lensGlassMat.userData.paletteId = 'lensGlass';
+
+// Camera-lens material — a milky neutral-gray coated disc reading as
+// the frosted front element of a stylized lens rather than a dark
+// optical coating. High roughness softens the specular so it sits
+// alongside the frosted body instead of punching through it, while
+// the clearcoat keeps a subtle glossy envelope. `transparent` is on
+// (even at default opacity 1) so the admin opacity slider can fade
+// the disc without needing a material-flag toggle.
+const cameraLensMat = new THREE.MeshPhysicalMaterial({
+  color:               new THREE.Color(0.95, 0.95, 0.95),
+  metalness:           0.25,
+  roughness:           1.00,
+  clearcoat:           0.94,
+  clearcoatRoughness:  0.08,
+  envMapIntensity:     3.18,
+  transparent:         true,
+  opacity:             0.78,
+});
+cameraLensMat.userData.paletteId = 'cameraLens';
 
 // Track which body meshes receive the active material (so we can swap).
 let bodyMeshes = [];
@@ -1171,7 +1250,77 @@ const ASSETS = {
       return 'body';
     },
   },
+  camera: {
+    url: 'camera4.glb',
+    label: 'Camera',
+    rootName: 'camera',
+    recommended: 'frostedDarkBlue',
+    // Tighter framing than the default 2.2 so the camera reads about
+    // 1.2× larger on screen (2.2 / 1.2 ≈ 1.83), matching the
+    // library's visual weight for this asset.
+    frameScale: 1.83,
+    // Drop the whole asset a touch so the body-box midpoint (rather
+    // than the bbox midpoint that includes the off-center shutter
+    // button) lands near the thumbnail's visual center — matches how
+    // the other assets sit in the library grid.
+    yOffset: -0.05,
+    // Small +Z nudge so the camera sits a hair "forward" in the iso
+    // thumbnail crop. The button and lens geometry weight the bbox
+    // toward one side in XZ; this pulls the visible mass back onto
+    // the thumbnail's center line.
+    zOffset: 0.05,
+    // Positive shift biases the gradient toward the lighter top color
+    // so the body reads brighter at mid-height where the lens sits,
+    // matching the designer-tuned value from the admin panel.
+    gradientYShift: 0.13,
+    // Weld co-located vertices on body meshes before normal calc so
+    // the camera body reads smooth across C4D's UV/material seams
+    // instead of showing faceted polygons.
+    weldVertices: true,
+    // Lift the button mesh slightly off the body surface so its base
+    // doesn't intersect/sink into the body shell. The offset is in
+    // glTF source units (cm-scale here), tuned to clear the seam
+    // without floating noticeably.
+    meshOffsets: {
+      button: [0, 0.08, 0],
+    },
+    materialFor(name) {
+      const n = (name || '').toLowerCase();
+      // Front lens disc — dedicated camera-lens material: dark near-
+      // black base + chrome-like reflection, mimicking the coated
+      // optical glass of a real photographic lens.
+      if (n === 'glass') return 'cameraLens';
+      // 'lens-Mat' — the recessed inner lens face authored with its
+      // own material in the source file. Rendered as harmony-2 (a
+      // ~30% dimmer sibling of the ribbon accent) so the recess reads
+      // as a tonal companion of the body.
+      if (n === 'lens-mat') return 'harmony2';
+      // Tape bands wrap the body and lens; treat them like the clock
+      // and basket bands so they pick up the harmony accent color.
+      if (n === 'body-tape' || n === 'lens-tape') return 'ribbonGray';
+      // Shutter button as a flat white accent.
+      if (n === 'button') return 'luminance';
+      return 'body';
+    },
+  },
 };
+
+// ── Weld vertices by position only ─────────────────────────
+// `mergeVertices` from BufferGeometryUtils compares every attribute
+// when deciding which vertices to fuse, so C4D's smoothing-group /
+// UV / material splits (same position, different normal/uv) survive
+// the weld and leave a faceted surface. This helper drops everything
+// but position before welding, so co-located vertices fuse regardless
+// of those splits. The caller is expected to call
+// computeVertexNormals afterwards to regenerate smooth normals.
+function weldByPosition(geometry, tolerance) {
+  const stripped = new THREE.BufferGeometry();
+  stripped.setAttribute('position', geometry.attributes.position.clone());
+  if (geometry.index) stripped.setIndex(geometry.index.clone());
+  const welded = mergeVertices(stripped, tolerance);
+  geometry.dispose();
+  return welded;
+}
 
 // ── Smooth normals by angle — proper smooth-group algorithm ──
 // Computes the true geometric face normal for every triangle,
@@ -1287,6 +1436,37 @@ function loadAsset(assetId) {
     currentRoot = root;
     if (asset.modelScale) root.scale.setScalar(asset.modelScale);
     if (asset.rotationY) root.rotation.y = asset.rotationY;
+    // Per-mesh position nudges (e.g. lift the camera button so its
+    // base doesn't sink into the body shell). Applied before bbox /
+    // material classification so downstream transforms still align.
+    if (asset.meshOffsets) {
+      root.traverse((obj) => {
+        if (!obj.isMesh) return;
+        const off = asset.meshOffsets[obj.name];
+        if (off) obj.position.set(obj.position.x + off[0], obj.position.y + off[1], obj.position.z + off[2]);
+      });
+    }
+    // Inner-wall clones: for each named mesh, drop a back-face copy
+    // of its geometry with a flat color so the inside of an open
+    // shell (e.g. the camera lens cylinder seen through the front
+    // glass) reads as that color instead of empty/back-culled space.
+    // The clone is scaled slightly inward to avoid z-fighting.
+    if (asset.innerWalls) {
+      for (const [meshName, hex] of Object.entries(asset.innerWalls)) {
+        const target = root.getObjectByName(meshName);
+        if (!target || !target.isMesh) continue;
+        const innerMat = new THREE.MeshBasicMaterial({
+          color: new THREE.Color(hex),
+          side: THREE.BackSide,
+          toneMapped: false,
+        });
+        const inner = new THREE.Mesh(target.geometry.clone(), innerMat);
+        inner.position.copy(target.position);
+        inner.rotation.copy(target.rotation);
+        inner.scale.copy(target.scale).multiplyScalar(0.998);
+        target.parent.add(inner);
+      }
+    }
     root.updateMatrixWorld(true);
 
     // Pass 1: compute vertical bounds for the frosted gradient.
@@ -1333,7 +1513,10 @@ function loadAsset(assetId) {
       switch (kind) {
         case 'luminance':  obj.material = tapeMat;        break;
         case 'ribbonGray': obj.material = ribbonGrayMat;  break;
+        case 'harmony2':   obj.material = harmony2Mat;    break;
         case 'glass':      obj.material = glassMat;       break;
+        case 'lensGlass':  obj.material = lensGlassMat;   break;
+        case 'cameraLens': obj.material = cameraLensMat;  break;
         case 'chrome':     obj.material = chromeMat;      break;
         case 'body':
         default:
@@ -1351,6 +1534,17 @@ function loadAsset(assetId) {
       // Single body mesh — use indexed computeVertexNormals (shared
       // vertices guarantee perfectly smooth flat surfaces).
       const obj = bodyToMerge[0];
+      if (asset.weldVertices) {
+        const fSize = fullBox.getSize(new THREE.Vector3());
+        const fMax = Math.max(fSize.x, fSize.y, fSize.z);
+        const tol = Math.max(1e-4, fMax * 0.001);
+        // Strip everything but position before welding so C4D's
+        // smoothing-group / UV / material splits (which keep matching
+        // positions but break normals/uvs) collapse into single shared
+        // indices. computeVertexNormals after creates fresh smooth
+        // normals across what's now a fully merged surface.
+        obj.geometry = weldByPosition(obj.geometry, tol);
+      }
       if (!keepNormals) obj.geometry.computeVertexNormals();
       obj.material = materials[activeVariantId];
       remapUVsToWorldY(obj, yMin, yMax);
@@ -1361,6 +1555,17 @@ function loadAsset(assetId) {
       // Step 2: bake transforms, merge, convert to non-indexed.
       // Step 3: smoothNormalsByAngle to fix seam normals across
       // formerly separate meshes.
+      // Optional pre-step: weld co-located vertices in each piece so
+      // that C4D-authored UV/material splits don't leave faceted seams
+      // when computeVertexNormals averages within shared indices.
+      if (asset.weldVertices) {
+        const fSize = fullBox.getSize(new THREE.Vector3());
+        const fMax = Math.max(fSize.x, fSize.y, fSize.z);
+        const tol = Math.max(1e-4, fMax * 0.001);
+        for (const m of bodyToMerge) {
+          m.geometry = weldByPosition(m.geometry, tol);
+        }
+      }
       if (!keepNormals) {
         for (const m of bodyToMerge) m.geometry.computeVertexNormals();
       }
@@ -1413,7 +1618,21 @@ function loadAsset(assetId) {
         merged.dispose();
         merged = ni;
       }
-      if (!keepNormals) smoothNormalsByAngle(merged);
+      if (asset.weldVertices) {
+        // Treat the merged body as one continuous smooth surface — weld
+        // co-located vertices across the former mesh boundaries, then
+        // recompute vertex normals via shared-index averaging. Strip
+        // attributes other than position before weld so split normals
+        // from the per-mesh pre-weld step don't keep verts apart at
+        // the boundary.
+        const fSize = fullBox.getSize(new THREE.Vector3());
+        const fMax = Math.max(fSize.x, fSize.y, fSize.z);
+        const tol = Math.max(1e-4, fMax * 0.001);
+        merged = weldByPosition(merged, tol);
+        merged.computeVertexNormals();
+      } else if (!keepNormals) {
+        smoothNormalsByAngle(merged);
+      }
       const mergedMesh = new THREE.Mesh(merged, materials[activeVariantId]);
       mergedMesh.castShadow = true;
       mergedMesh.receiveShadow = true;
@@ -1427,6 +1646,7 @@ function loadAsset(assetId) {
     const center = bbox.getCenter(new THREE.Vector3());
     root.position.sub(center);
     if (asset.yOffset) root.position.y += size.y * asset.yOffset;
+    if (asset.zOffset) root.position.z += size.z * asset.zOffset;
     group.add(root);
 
     // Frame camera for this asset. Use the asset's View 1 override if
@@ -1773,6 +1993,24 @@ const CONTROL_SCHEMAS = {
     { key: 'envMapIntensity',     label: 'Env Intensity',   min: 0, max: 5,     step: 0.01 },
     { key: 'emissiveIntensity',   label: 'Emissive',        min: 0, max: 1,     step: 0.01 },
   ],
+  cameraLens: [
+    { key: 'colorR',              label: 'Color Red',       min: 0, max: 1,     step: 0.01, custom: true },
+    { key: 'colorG',              label: 'Color Green',     min: 0, max: 1,     step: 0.01, custom: true },
+    { key: 'colorB',              label: 'Color Blue',      min: 0, max: 1,     step: 0.01, custom: true },
+    { key: 'metalness',           label: 'Metalness',       min: 0, max: 1,     step: 0.01 },
+    { key: 'roughness',           label: 'Roughness',       min: 0, max: 1,     step: 0.01 },
+    { key: 'clearcoat',           label: 'Clearcoat',       min: 0, max: 1,     step: 0.01 },
+    { key: 'clearcoatRoughness',  label: 'Coat Roughness',  min: 0, max: 1,     step: 0.01 },
+    { key: 'envMapIntensity',     label: 'Env Intensity',   min: 0, max: 5,     step: 0.01 },
+    { key: 'opacity',             label: 'Opacity',         min: 0, max: 1,     step: 0.01 },
+  ],
+  lensGlass: [
+    { key: 'opacity',             label: 'Opacity',         min: 0, max: 1, step: 0.01 },
+    { key: 'roughness',           label: 'Roughness',       min: 0, max: 1, step: 0.01 },
+    { key: 'clearcoat',           label: 'Clearcoat',       min: 0, max: 1, step: 0.01 },
+    { key: 'clearcoatRoughness',  label: 'Coat Roughness',  min: 0, max: 1, step: 0.01 },
+    { key: 'envMapIntensity',     label: 'Env Intensity',   min: 0, max: 5, step: 0.01 },
+  ],
   blackFriday: [
     { key: 'roughness',           label: 'Roughness',       min: 0, max: 1,     step: 0.01 },
     { key: 'metalness',           label: 'Metalness',       min: 0, max: 1,     step: 0.01 },
@@ -1801,7 +2039,23 @@ const editableMaterials = {
   blackFriday:     materials.blackFriday,
   glass:           glassMat,
   chrome:          chromeMat,
+  lensGlass:       lensGlassMat,
+  cameraLens:      cameraLensMat,
 };
+
+// Snapshot helper for cameraLens (color stored as RGB components so
+// the slider UI can scrub each channel independently, mirroring the
+// blackFriday admin panel pattern).
+function snapshotCameraLens(mat) {
+  const out = {};
+  for (const c of CONTROL_SCHEMAS.cameraLens) {
+    if (c.key === 'colorR')      out.colorR = mat.color.r;
+    else if (c.key === 'colorG') out.colorG = mat.color.g;
+    else if (c.key === 'colorB') out.colorB = mat.color.b;
+    else out[c.key] = mat[c.key];
+  }
+  return out;
+}
 
 // Per-key state snapshots (so frosted variant switches preserve tuning,
 // and Reset can restore built-ins to their factory values)
@@ -1841,6 +2095,8 @@ const INITIAL_STATE = {
   blackFriday:     snapshotBlackFriday(materials.blackFriday),
   glass:           snapshotMaterial(glassMat,  CONTROL_SCHEMAS.glass),
   chrome:          snapshotMaterial(chromeMat, CONTROL_SCHEMAS.chrome),
+  lensGlass:       snapshotMaterial(lensGlassMat, CONTROL_SCHEMAS.lensGlass),
+  cameraLens:      snapshotCameraLens(cameraLensMat),
 };
 const state = {
   frostedBlue:     { ...INITIAL_STATE.frostedBlue },
@@ -1853,6 +2109,8 @@ const state = {
   blackFriday:     { ...INITIAL_STATE.blackFriday },
   glass:           { ...INITIAL_STATE.glass },
   chrome:          { ...INITIAL_STATE.chrome },
+  lensGlass:       { ...INITIAL_STATE.lensGlass },
+  cameraLens:      { ...INITIAL_STATE.cameraLens },
 };
 
 function snapshotMaterial(mat, schema) {
@@ -1906,6 +2164,8 @@ function setActiveMaterial(id) {
     const harmonyDot = document.querySelector('.chip[data-mat="ribbonGray"] .dot');
     if (harmonyDot) harmonyDot.style.background = harmony;
   }
+  const harmony2 = HARMONY2_BY_BODY[id];
+  if (harmony2) harmony2Mat.color.set(harmony2);
 }
 
 let openMatKey = null;
@@ -1923,6 +2183,8 @@ function openSettingsFor(matKey, matType) {
     blackFriday:     'Purple Chrome',
     glass:           'Glass (Built-in)',
     chrome:          'Chrome (Built-in)',
+    lensGlass:       'Lens Glass (Built-in)',
+    cameraLens:      'Camera Lens (Built-in)',
   };
   settingsTitle.textContent = labelMap[matKey] || matKey;
   renderControls(matKey, matType);

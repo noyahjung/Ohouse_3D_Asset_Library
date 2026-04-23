@@ -260,6 +260,23 @@ export const HARMONY_BY_BODY = {
   blackFriday: '#D7ACF9',
 };
 
+// Harmony 2 — a ~10% dimmer companion of each body's base harmony,
+// derived by multiplying the sRGB channels by 0.9. Used for recessed
+// accents (e.g. the inner lens face on the camera) where the base
+// harmony would sit too close to the body gradient. Kept derived
+// (rather than hand-picked) so every variant picks up the companion
+// tone automatically.
+function darkenHex(hex, factor) {
+  const n = parseInt(hex.slice(1), 16);
+  const r = Math.round(((n >> 16) & 0xff) * factor);
+  const g = Math.round(((n >>  8) & 0xff) * factor);
+  const b = Math.round(( n        & 0xff) * factor);
+  return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
+}
+export const HARMONY2_BY_BODY = Object.fromEntries(
+  Object.entries(HARMONY_BY_BODY).map(([k, v]) => [k, darkenHex(v, 0.9)])
+);
+
 // ── Ribbon Gray (flat luminance accent) ──────────────────────
 /**
  * Flat gray tone for ribbon / accent parts — same shading model as
