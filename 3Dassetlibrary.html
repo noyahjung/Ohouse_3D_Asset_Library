@@ -39,6 +39,27 @@
   }
   #app { position: fixed; inset: 0; }
 
+  #adminBadge {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 101;
+    padding: 4px 12px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: #fff;
+    background: #E07A1F;
+    border-radius: 999px;
+    pointer-events: none;
+    user-select: none;
+    display: none;
+    font-family: 'SFMono-Regular', ui-monospace, Menlo, monospace;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  }
+  #adminBadge.visible { display: block; }
+
   #dragHint {
     position: fixed;
     top: 8%;
@@ -284,6 +305,33 @@
   #exportPng:hover { background: #818cf8; color: #fff; }
   #exportPng.active { background: var(--accent); color: #fff; }
   #exportPng.active::before { display: none; }
+
+  /* Admin mode: collapsible asset chip list so the settings panel gets
+     more vertical breathing room. Section label becomes the toggle. */
+  #assets.admin-collapsible .section-label {
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 6px;
+    border-radius: 6px;
+    transition: background 0.15s;
+  }
+  #assets.admin-collapsible .section-label:hover { background: rgba(0,0,0,0.04); }
+  #assets.admin-collapsible .section-label::after {
+    content: '▾';
+    margin-left: auto;
+    font-size: 9px;
+    color: var(--text-mute);
+    transition: transform 0.2s;
+  }
+  #assets.admin-collapsible.collapsed .section-label::after {
+    transform: rotate(-90deg);
+  }
+  #assets.admin-collapsible.collapsed .asset-chip[data-asset] {
+    display: none;
+  }
 
   #assetSettings {
     margin-top: 14px; padding: 12px 14px;
@@ -715,6 +763,7 @@
 </head>
 <body>
 <div id="app"></div>
+<div id="adminBadge">ADMIN MODE</div>
 <div id="dragHint">마우스를 드래그해 에셋을 돌려보세요</div>
 
 <div id="landing">
@@ -887,6 +936,7 @@
   <button class="asset-chip" data-asset="basket">Basket</button>
   <button class="asset-chip" data-asset="clock">Clock</button>
   <button class="asset-chip" data-asset="camera">Camera</button>
+  <button class="asset-chip" data-asset="packagebox">Package Box</button>
   <button class="asset-chip" id="exportPng">PNG 출력</button>
 
   <div id="assetSettings" hidden>
@@ -989,6 +1039,30 @@ import {
 
 // ── Admin mode: ?admin=true shows gear buttons & settings panel
 const IS_ADMIN = new URLSearchParams(window.location.search).has('admin');
+if (IS_ADMIN) {
+  // Swap the green-circle favicon for a tool emoji so admin tabs are
+  // visually distinguishable from end-user tabs in the browser bar.
+  const adminFavicon = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(
+    `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><text x='4' y='52' font-size='52'>🛠</text></svg>`
+  );
+  document.querySelector('link[rel=icon]').setAttribute('href', adminFavicon);
+  document.getElementById('adminBadge').classList.add('visible');
+
+  // Collapse the asset chip list behind the "Asset" section label so the
+  // long admin settings panel gets the vertical space it needs. Clicking
+  // the label toggles; picking an asset auto-collapses again.
+  const assetsEl = document.getElementById('assets');
+  const assetSectionLabel = assetsEl.querySelector('.section-label');
+  assetsEl.classList.add('admin-collapsible', 'collapsed');
+  assetSectionLabel.addEventListener('click', () => {
+    assetsEl.classList.toggle('collapsed');
+  });
+  assetsEl.querySelectorAll('.asset-chip[data-asset]').forEach(chip => {
+    chip.addEventListener('click', () => {
+      assetsEl.classList.add('collapsed');
+    });
+  });
+}
 if (!IS_ADMIN) {
   document.querySelectorAll('.gear, .bf-gear').forEach(el => el.style.display = 'none');
   document.getElementById('settings').style.display = 'none';
@@ -1106,13 +1180,13 @@ lensGlassMat.userData.paletteId = 'lensGlass';
 // the disc without needing a material-flag toggle.
 const cameraLensMat = new THREE.MeshPhysicalMaterial({
   color:               new THREE.Color(0.95, 0.95, 0.95),
-  metalness:           0.25,
-  roughness:           1.00,
-  clearcoat:           0.94,
-  clearcoatRoughness:  0.08,
-  envMapIntensity:     3.18,
+  metalness:           0.79,
+  roughness:           0.80,
+  clearcoat:           0.89,
+  clearcoatRoughness:  0.11,
+  envMapIntensity:     2.21,
   transparent:         true,
-  opacity:             0.78,
+  opacity:             0.69,
 });
 cameraLensMat.userData.paletteId = 'cameraLens';
 
@@ -1236,9 +1310,6 @@ const ASSETS = {
     recommended: 'frostedViolet',
     keepOriginalNormals: true,
     frameScale: 1.89,
-    // Lift the shadow plane a bit more than the default to close the
-    // white gap between the clock's rounded bottom and the shadow.
-    bevelComp: 0.08,
     materialFor(name) {
       const n = (name || '').toLowerCase();
       // Hands read as pure white signage — flat luminance keeps them
@@ -1303,6 +1374,43 @@ const ASSETS = {
       return 'body';
     },
   },
+  packagebox: {
+    url: 'packagebox.glb',
+    label: 'Package Box',
+    // Source file has the root node name spelled "pakagebox" (missing
+    // the second 'c'); preserve the typo here so the loader resolves.
+    rootName: 'pakagebox',
+    recommended: 'frostedPink',
+    // Weld co-located vertices on body meshes before normal calc so
+    // the box body reads smooth across C4D's UV/material seams instead
+    // of showing faceted polygons at the splits between the outer box
+    // and the recessed inner face.
+    weldVertices: true,
+    // Negative shift biases the gradient toward saturated by extending
+    // the bbox below the visible body, so the bottom never reaches the
+    // lightest end of the gradient — designer-tuned via the admin panel.
+    gradientYShift: -0.17,
+    // Lift the inner cavity's floor off the inner mesh and render it
+    // as harmony-2 (dimmer companion of the body accent), while the
+    // four inner walls keep flowing through 'body'. The split runs on
+    // the geometry's local y_min, so it adapts automatically to the
+    // box's depth without per-asset tuning.
+    bottomFaceSplit: [
+      { meshName: 'box-Blue_transper.4', kind: 'harmony2' },
+    ],
+    materialFor(name, parentName) {
+      const n  = (name || '').toLowerCase();
+      const pn = (parentName || '').toLowerCase();
+      // Percent badge on the front face — flat white luminance so the
+      // mark reads crisp regardless of the active body color. After
+      // gltfpack optimization the named "percent" node is a Group with
+      // an unnamed child Mesh, so we have to match either side.
+      if (n === 'percent' || pn === 'percent') return 'luminance';
+      // Everything else (outer box + inner walls left over after the
+      // bottom-face split) shares the active frosted body color.
+      return 'body';
+    },
+  },
 };
 
 // ── Weld vertices by position only ─────────────────────────
@@ -1320,6 +1428,67 @@ function weldByPosition(geometry, tolerance) {
   const welded = mergeVertices(stripped, tolerance);
   geometry.dispose();
   return welded;
+}
+
+// ── Lift off the bottom face of a geometry into its own piece ──────
+// Splits a mesh into "bottom" (faces whose vertices all sit at y_min)
+// and "walls" (everything else), so the caller can render the bottom
+// face with a different material (e.g. the recessed inner floor of an
+// open box reading darker than the surrounding walls). Returns null
+// if either subset is empty so the caller can fall back gracefully.
+function extractBottomFace(geometry, tolFraction = 0.02) {
+  const positions = geometry.attributes.position;
+  const normals   = geometry.attributes.normal;
+  const indexed   = !!geometry.index;
+  const faceCount = indexed ? geometry.index.count / 3 : positions.count / 3;
+
+  let yMin = Infinity, yMax = -Infinity;
+  for (let i = 0; i < positions.count; i++) {
+    const y = positions.getY(i);
+    if (y < yMin) yMin = y;
+    if (y > yMax) yMax = y;
+  }
+  const tol = Math.max(1e-4, (yMax - yMin) * tolFraction);
+
+  const bottomFaceIdx = [];
+  const wallFaceIdx   = [];
+  for (let f = 0; f < faceCount; f++) {
+    let allAtBottom = true;
+    for (let v = 0; v < 3 && allAtBottom; v++) {
+      const idx = indexed ? geometry.index.getX(f * 3 + v) : f * 3 + v;
+      if (positions.getY(idx) - yMin > tol) allAtBottom = false;
+    }
+    (allAtBottom ? bottomFaceIdx : wallFaceIdx).push(f);
+  }
+  if (bottomFaceIdx.length === 0 || wallFaceIdx.length === 0) return null;
+
+  function buildSubGeom(faceIdx) {
+    const pos = new Float32Array(faceIdx.length * 9);
+    const nrm = normals ? new Float32Array(faceIdx.length * 9) : null;
+    let p = 0, n = 0;
+    for (const f of faceIdx) {
+      for (let v = 0; v < 3; v++) {
+        const idx = indexed ? geometry.index.getX(f * 3 + v) : f * 3 + v;
+        pos[p++] = positions.getX(idx);
+        pos[p++] = positions.getY(idx);
+        pos[p++] = positions.getZ(idx);
+        if (normals) {
+          nrm[n++] = normals.getX(idx);
+          nrm[n++] = normals.getY(idx);
+          nrm[n++] = normals.getZ(idx);
+        }
+      }
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    if (nrm) g.setAttribute('normal', new THREE.BufferAttribute(nrm, 3));
+    return g;
+  }
+
+  return {
+    bottom: buildSubGeom(bottomFaceIdx),
+    walls:  buildSubGeom(wallFaceIdx),
+  };
 }
 
 // ── Smooth normals by angle — proper smooth-group algorithm ──
@@ -1467,6 +1636,43 @@ function loadAsset(assetId) {
         target.parent.add(inner);
       }
     }
+    // Bottom-face split: lift off the named mesh's bottom face into a
+    // sibling mesh with a dedicated material, leaving the walls in the
+    // original mesh to flow through the standard material pipeline.
+    // Used by assets like packagebox where the inner cavity floor must
+    // read darker than the surrounding inner walls without authoring a
+    // separate mesh in the source file.
+    if (asset.bottomFaceSplit) {
+      const matMap = {
+        harmony2:   harmony2Mat,
+        ribbonGray: ribbonGrayMat,
+        luminance:  tapeMat,
+      };
+      for (const cfg of asset.bottomFaceSplit) {
+        const target = root.getObjectByName(cfg.meshName);
+        if (!target) continue;
+        // After gltfpack, the named node may be a Group wrapping the
+        // actual Mesh; resolve to whichever holds the geometry.
+        const targetMesh = target.isMesh
+          ? target
+          : target.children.find(c => c.isMesh);
+        if (!targetMesh) continue;
+        const split = extractBottomFace(targetMesh.geometry);
+        if (!split) continue;
+        const bottomMat = matMap[cfg.kind];
+        if (!bottomMat) continue;
+        const bottomMesh = new THREE.Mesh(split.bottom, bottomMat);
+        bottomMesh.name = '__split_bottom__';
+        // Marker so the material loop below leaves this mesh alone —
+        // it already has its target material assigned at construction.
+        bottomMesh.userData.skipMaterialAssign = true;
+        bottomMesh.castShadow = true;
+        bottomMesh.receiveShadow = true;
+        targetMesh.parent.add(bottomMesh);
+        targetMesh.geometry.dispose();
+        targetMesh.geometry = split.walls;
+      }
+    }
     root.updateMatrixWorld(true);
 
     // Pass 1: compute vertical bounds for the frosted gradient.
@@ -1476,6 +1682,7 @@ function loadAsset(assetId) {
     const fullBox = new THREE.Box3();
     root.traverse((obj) => {
       if (!obj.isMesh) return;
+      if (obj.userData.skipMaterialAssign) return;
       fullBox.expandByObject(obj);
       const kind = asset.materialFor(obj.name, obj.parent?.name);
       // inGradientBox lets an asset narrow the gradient range to a
@@ -1507,6 +1714,7 @@ function loadAsset(assetId) {
     const bodyToMerge = [];
     root.traverse((obj) => {
       if (!obj.isMesh) return;
+      if (obj.userData.skipMaterialAssign) return;
       const kind = asset.materialFor(obj.name, obj.parent?.name);
       obj.castShadow = true;
       obj.receiveShadow = true;
@@ -1678,11 +1886,12 @@ function loadAsset(assetId) {
     // the height. Place the ground plane exactly at that bottom so
     // the shadow starts right at the object's base.
     const objectCenterY = size.y * (asset.yOffset || 0);
-    // Assets have a rounded bottom bevel, so the camera-visible bottom
-    // edge sits above the bbox's true minimum Y. Lift the ground plane
-    // a few percent of height so the shadow meets the visible edge and
-    // there's no white gap under the object.
-    const bevelComp = size.y * (asset.bevelComp ?? 0.03);
+    // Default flush with the bbox bottom — most assets have flat bases,
+    // so any lift shows up as a visible gap between the asset and its
+    // shadow. Assets with a rounded/beveled bottom (e.g. clock) opt in
+    // to a small lift via `bevelComp` to close the white gap that would
+    // otherwise appear under their visible bottom edge.
+    const bevelComp = size.y * (asset.bevelComp ?? 0);
     shadow.position.y = objectCenterY - size.y / 2 + bevelComp;
     // Scale the ground plane to the asset so the shadow footprint
     // always lands on it — glTF scales vary wildly between assets
@@ -1711,6 +1920,9 @@ function loadAsset(assetId) {
     shadowFadeUniforms.uObjectCenter.value.set(0, shadow.position.y, 0);
     shadowFadeUniforms.uFadeInner.value = maxDim * 0.7;
     shadowFadeUniforms.uFadeOuter.value = maxDim * 1.5;
+    // Size the contact-AO ellipse to the asset's XZ footprint so the
+    // penumbra-fill blob hugs the silhouette automatically per asset.
+    shadowFadeUniforms.uContactSize.value.set(size.x * 0.5, size.z * 0.5);
 
     // Frosted (basic) mode: each asset loads in its recommended color.
     // Black Friday mode: keep the BF material across asset switches.
@@ -1912,10 +2124,22 @@ const shadowMat = new THREE.ShadowMaterial({
 });
 // Shared uniform refs so we can update fade params per-asset after
 // the shader has been compiled lazily on first use.
+//
+// The shadow alpha is a composite of two layers:
+//   1) the directional drop shadow (PCF-blurred, long, soft) — gives
+//      the visible cast shadow that signals light direction.
+//   2) a contact AO blob centered under the asset — fills the PCF
+//      penumbra band that would otherwise leak as a thin white halo
+//      right at the contact line. Its extents track the asset's XZ
+//      footprint so the fix is automatic per asset.
 const shadowFadeUniforms = {
-  uObjectCenter: { value: new THREE.Vector3() },
-  uFadeInner:    { value: 1 },
-  uFadeOuter:    { value: 2 },
+  uObjectCenter:    { value: new THREE.Vector3() },
+  uFadeInner:       { value: 1 },
+  uFadeOuter:       { value: 2 },
+  uContactSize:     { value: new THREE.Vector2(1, 1) },
+  uContactInner:    { value: 1.0 },   // solid floor up to the silhouette
+  uContactOuter:    { value: 1.2 },   // faded out by 1.2× footprint
+  uContactStrength: { value: 0.85 },  // < 1.0 keeps deep umbra naturally darker
 };
 shadowMat.onBeforeCompile = (shader) => {
   Object.assign(shader.uniforms, shadowFadeUniforms);
@@ -1932,13 +2156,27 @@ shadowMat.onBeforeCompile = (shader) => {
        uniform vec3 uObjectCenter;
        uniform float uFadeInner;
        uniform float uFadeOuter;
+       uniform vec2  uContactSize;
+       uniform float uContactInner;
+       uniform float uContactOuter;
+       uniform float uContactStrength;
        varying vec3 vShadowWorldPos;`
     )
     .replace(
       'gl_FragColor = vec4( color, opacity * ( 1.0 - getShadowMask() ) );',
-      `float shadowDist = distance(vShadowWorldPos.xz, uObjectCenter.xz);
+      `vec2  d         = vShadowWorldPos.xz - uObjectCenter.xz;
+       float shadowDist = length(d);
        float radialFade = 1.0 - smoothstep(uFadeInner, uFadeOuter, shadowDist);
-       gl_FragColor = vec4( color, opacity * radialFade * ( 1.0 - getShadowMask() ) );`
+       float dropShadow = (1.0 - getShadowMask()) * radialFade;
+       // Contact AO: elliptical blob normalized to the asset's XZ
+       // half-extents. Solid up to uContactInner, fading out to zero
+       // at uContactOuter. Combined via max() so the natural deep
+       // umbra (≥ strength) stays untouched while the penumbra band
+       // gets lifted to a uniform contact darkness.
+       float contactDist = length(d / uContactSize);
+       float contact     = (1.0 - smoothstep(uContactInner, uContactOuter, contactDist))
+                           * uContactStrength;
+       gl_FragColor = vec4( color, opacity * max(dropShadow, contact) );`
     );
 };
 const shadow = new THREE.Mesh(new THREE.PlaneGeometry(50, 50), shadowMat);
@@ -2382,11 +2620,35 @@ function refreshViewOverridesUI() {
     item.querySelector('.capture-full').textContent = full;
     item.querySelector('.capture-btn.reset').disabled = !override;
   }
+  // After repainting saved values, re-apply the live overlay on the
+  // active view so continuous rotation keeps showing current camera.
+  updateActiveViewLiveDisplay();
+}
+
+// Overwrite the active view's short value with the live camera position.
+// Called from the OrbitControls 'change' event in admin mode — keeps the
+// "View N [x, y, z]" label synced with what the designer is seeing, so
+// they don't have to press Save just to preview the numbers.
+function updateActiveViewLiveDisplay() {
+  if (!IS_ADMIN || !currentMaxDim) return;
+  const activeBtn = document.querySelector('#viewSelector .view-btn.active');
+  if (!activeBtn) return;
+  const item = document.querySelector(`.capture-item[data-view="${activeBtn.dataset.view}"]`);
+  if (!item) return;
+  const d = currentMaxDim * 2.0;
+  const x = camera.position.x / d;
+  const y = camera.position.y / d;
+  const z = camera.position.z / d;
+  item.querySelector('.capture-val').textContent =
+    `[${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)}]`;
 }
 
 if (IS_ADMIN) {
   assetSettingsPanel.hidden = false;
   refreshAssetSettings();
+  // Live-update the active view's coordinate label as the user orbits,
+  // so they don't need to press Save just to see the current camera pos.
+  controls.addEventListener('change', updateActiveViewLiveDisplay);
   // Coalesce rapid slider events into one reload per frame so dragging
   // doesn't queue up dozens of full asset rebuilds back-to-back.
   let pendingReload = false;
@@ -2586,6 +2848,14 @@ document.getElementById('resetPreset').addEventListener('click', () => {
 });
 
 // ── PNG 출력 (1080x1080, alpha, 오브젝트만) ────────────────
+// Two-pass composite so the frosted asset doesn't bleed through to the
+// design's background when placed:
+//   pass 1 — silhouette: shadow hidden, scene overrideMaterial set to
+//            opaque white. Captures a white mask shaped like the asset.
+//   pass 2 — normal:     restore shadow + materials, render as before.
+// Composite: silhouette first, normal on top → asset area gets a white
+// backing while the shadow keeps its alpha (so it still blends onto
+// any design background).
 document.getElementById('exportPng').addEventListener('click', () => {
   // When the shadow is on, widen the canvas so the drop shadow has
   // room to breathe and doesn't get cropped at the edge.
@@ -2604,6 +2874,7 @@ document.getElementById('exportPng').addEventListener('click', () => {
   const prevTop    = camera.top;
   const prevBottom = camera.bottom;
   const prevBg = scene.background;
+  const prevShadowVisible = shadow.visible;
 
   renderer.setPixelRatio(1);
   renderer.setSize(SIZE_W, SIZE_H, false);
@@ -2617,8 +2888,29 @@ document.getElementById('exportPng').addEventListener('click', () => {
   scene.background = null;
   renderer.setClearColor(0x000000, 0);
 
+  // Output canvas — we composite the two passes here.
+  const out = document.createElement('canvas');
+  out.width  = SIZE_W;
+  out.height = SIZE_H;
+  const outCtx = out.getContext('2d');
+
+  // Pass 1: silhouette. Hide the shadow plane (otherwise its 50×50
+  // geometry would render as a fullscreen white rect) and override
+  // every remaining material with opaque white.
+  shadow.visible = false;
+  const silhouetteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  scene.overrideMaterial = silhouetteMat;
   renderer.render(scene, camera);
-  const dataUrl = renderer.domElement.toDataURL('image/png');
+  outCtx.drawImage(renderer.domElement, 0, 0);
+  scene.overrideMaterial = null;
+  silhouetteMat.dispose();
+
+  // Pass 2: normal render on top of the white silhouette.
+  shadow.visible = prevShadowVisible;
+  renderer.render(scene, camera);
+  outCtx.drawImage(renderer.domElement, 0, 0);
+
+  const dataUrl = out.toDataURL('image/png');
 
   scene.background = prevBg;
   renderer.setPixelRatio(prevPixelRatio);

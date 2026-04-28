@@ -103,9 +103,13 @@ Reflectivity 0.68 / Sheen 0.36 / Sheen Roughness 0.58
 
 ## 4. 에셋 등록 방법
 
+> **자동 최적화 — 명시 요청 없이 항상 거치는 단계**
+>
+> 새 에셋(`*.gltf` 또는 `*.glb`)이 추가되면 *사용자가 따로 지시하지 않더라도* 아래 4-1·4-2를 무조건 수행한 뒤 4-3 등록으로 넘어간다. "에셋을 추가했어"라는 한 마디면 4-1 → 4-2 → 4-3 → 4-4 전체 흐름을 자동으로 실행한다.
+
 ### 4-1. glTF 파일 준비
 
-- Cinema 4D에서 모델링 후 **glTF (.gltf + .bin)** 또는 **GLB (.glb)** 포맷으로 익스포트 (최근 에셋은 GLB 단일 파일을 사용 — `basket.glb`, `clock.glb`)
+- Cinema 4D에서 모델링 후 **glTF (.gltf + .bin)** 또는 **GLB (.glb)** 포맷으로 익스포트 (최근 에셋은 GLB 단일 파일을 사용 — `basket.glb`, `clock.glb`, `packagebox.glb`)
 - 메시 이름 규칙으로 재질 분류:
   - 바디(컬러 변경 대상) → 별도 명명 불필요 (기본값이 `body`)
   - 리본/액센트 → 이름에 `ribbon` 포함
@@ -113,37 +117,72 @@ Reflectivity 0.68 / Sheen 0.36 / Sheen Roughness 0.58
   - 유리 파츠 → 이름에 `cup` 또는 `glass` 포함
   - 금속 파츠 → 이름에 `cylinder` 포함
 
-### 4-2. ASSETS 레지스트리에 등록
+### 4-2. 파일 용량 최적화 (필수, 자동)
+
+원본 glTF/GLB는 그대로 커밋하지 않고 항상 `gltfpack`으로 한 번 정리해서 단일 GLB로 만든다. 이 단계는 명시 지시가 없어도 4-1 직후 자동으로 실행한다.
+
+```bash
+cd "/Users/luka.jung/Desktop/ai frontire/Ohouse_3D_Asset_Library"
+
+# meshopt 압축 OFF, 노드 이름·머티리얼 이름 보존
+npx -y -p gltfpack@0.20 gltfpack -i <원본>.gltf -o <에셋ID>.glb -kn -km
+
+# 검증: 노드 이름이 살아있는지 (materialFor의 메시 매칭이 이름 기반)
+python3 -c "import json,struct;f=open('<에셋ID>.glb','rb');f.read(12);n=struct.unpack('<I',f.read(4))[0];f.read(4);j=json.loads(f.read(n).decode());print([x.get('name','?') for x in j.get('nodes',[])])"
+```
+
+플래그 의미:
+- `-kn` — 노드 이름 보존. **반드시 켤 것.** 미사용 시 모든 이름이 `?`로 치환되어 `materialFor`의 메시 매칭이 전부 깨진다.
+- `-km` — 머티리얼 이름 보존. 디버깅/추후 매칭에 유용.
+- `-cc` (meshopt 압축) — **사용 금지.** 프로젝트 GLTFLoader에 `MeshoptDecoder`가 연결되어 있지 않아 로드 실패. 추가하려면 별도 작업 필요.
+
+확인 사항:
+- 압축된 GLB가 원본 대비 **50–80% 작아져야 정상**. 거의 변화가 없으면 옵션 점검.
+- 작업이 끝나면 원본 `.gltf`/`.bin`은 삭제하고 `.glb` 단일 파일만 리포에 남긴다.
+- `ASSETS`의 `url`도 새 `.glb` 파일명으로 갱신.
+
+### 4-3. ASSETS 레지스트리에 등록
 
 `3Dassetlibrary.html`의 `ASSETS` 객체에 항목 추가:
 
 ```javascript
 newAsset: {
-  url: 'newAsset.gltf',        // 또는 'newAsset.glb?v=1' — 캐시 버스팅용 쿼리스트링 권장
-  label: 'New Asset',           // UI에 표시할 이름
-  rootName: 'root_node_name',   // glTF 내 루트 노드 이름
-  recommended: 'frostedBlue',   // 추천 컬러 ID
+  url: 'newAsset.glb',           // 4-2에서 최적화해 만든 단일 GLB
+  label: 'New Asset',             // UI에 표시할 이름
+  rootName: 'root_node_name',     // glTF 내 루트 노드 이름
+  recommended: 'frostedBlue',     // 추천 컬러 ID
+
+  // ── 면 정리 (둘 중 하나는 *반드시* 명시) ──
+  weldVertices: true,             // 기본 권장: C4D의 UV/머티리얼 분할로 같은 위치에
+                                  //   생긴 중복 정점을 weld 후 normal 재계산 → 이음새의
+                                  //   faceted 면 자동 제거. 새 에셋은 이걸 켜는 것이 default.
+  // keepOriginalNormals: true,   // C4D에서 normal을 정밀 작성한 케이스(basket·clock).
+                                  //   weldVertices와 충돌하므로 둘 중 하나만.
 
   // ── 선택적 옵션 ──
-  // rotationY: Math.PI,        // 초기 Y축 회전 (라디안)
-  // modelScale: 2.0,           // 모델 스케일 배율
-  // frameScale: 1.8,           // 카메라 프레이밍 (기본 2.2)
-  // yOffset: 0.1,              // 수직 위치 보정 (높이 비율)
-  // useFullGradientBox: true,  // body 외 파츠 포함하여 그라데이션 범위 계산
+  // rotationY: Math.PI,          // 초기 Y축 회전 (라디안)
+  // modelScale: 2.0,             // 모델 스케일 배율
+  // frameScale: 1.8,             // 카메라 프레이밍 (기본 2.2)
+  // yOffset: 0.1,                // 수직 위치 보정 (높이 비율)
+  // bevelComp: 0.04,             // 둥근 바닥 에셋의 그림자 평면 미세 lift (기본 0)
+  // useFullGradientBox: true,    // body 외 파츠 포함하여 그라데이션 범위 계산
   // viewOverrides: { '3': [0.25, 0.05, 1.00] },  // 특정 뷰 각도 오버라이드
 
   materialFor(name, parentName) {
-    const n = (name || '').toLowerCase();
-    // 메시 이름 패턴 매칭으로 재질 유형 반환
-    if (/ribbon/.test(n)) return 'ribbonGray';
-    if (/logo/.test(n))   return 'luminance';
+    const n  = (name || '').toLowerCase();
+    const pn = (parentName || '').toLowerCase();
+    // *반드시* name과 parentName을 함께 검사한다. gltfpack이 최적화 과정에서
+    // 원래 Mesh였던 노드를 Group + 이름 없는 자식 Mesh로 감싸기 때문에,
+    // traverse가 도는 실제 Mesh의 obj.name은 비고 식별 이름은 obj.parent.name에 있다.
+    if (/ribbon/.test(n) || /ribbon/.test(pn)) return 'ribbonGray';
+    if (/logo/.test(n)   || /logo/.test(pn))   return 'luminance';
     return 'body';
-    // 반환 가능 값: 'body' | 'luminance' | 'ribbonGray' | 'glass' | 'chrome'
+    // 반환 가능 값: 'body' | 'luminance' | 'ribbonGray' | 'glass' | 'chrome' | 'cameraLens' | 'harmony2'
   },
 },
 ```
 
-### 4-3. HTML에 에셋 버튼 추가
+### 4-4. HTML에 에셋 버튼 추가
 
 `#assets` 영역에 버튼 추가:
 
@@ -151,14 +190,13 @@ newAsset: {
 <button class="asset-chip" data-asset="newAsset">New Asset</button>
 ```
 
-### 4-4. 면 처리 파이프라인 (자동)
+### 4-5. 면 처리 파이프라인 (자동, 런타임)
 
-새 에셋은 `loadAsset()` 함수에서 자동으로 다음 처리를 받습니다:
+`loadAsset()`이 4-3의 등록 옵션을 보고 자동으로 다음 중 하나를 적용합니다:
 
-1. **단일 바디 메시** → `computeVertexNormals()` (indexed 정점 공유 기반 스무싱)
-2. **다중 바디 메시** → 각 메시 `computeVertexNormals()` → 병합 → `toNonIndexed()` → `smoothNormalsByAngle()` (이음새 스무싱, 75° 이하 평균화 / 90° 하드엣지 보존)
-
-별도 설정 없이 어떤 glTF를 넣어도 동일한 품질로 렌더링됩니다.
+1. **`weldVertices: true`** → 위치 기반 weld(UV/normal/material 분할 무시) → `computeVertexNormals` → `smoothNormalsByAngle`(75° 이하 평균화 / 90° 하드엣지 보존). 이음새의 faceted 면이 사라짐. **새 에셋의 기본 권장 경로.**
+2. **`keepOriginalNormals: true`** → C4D 소스의 normal을 그대로 보존. 정밀 normal 작성된 에셋용.
+3. **둘 다 없음** → 단일 메시면 `computeVertexNormals`만, 다중 메시면 병합 후 `smoothNormalsByAngle`. 이음새가 살짝 각질 수 있음 → 가능하면 (1)을 명시.
 
 ---
 
