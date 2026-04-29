@@ -10,7 +10,7 @@
 
 | 항목 | 내용 |
 |---|---|
-| 엔트리 | `3Dassetlibrary.html` (SPA — 현재 메인). `material-test.html`은 레거시로 유지만 됨 |
+| 엔트리 | `index.html` (docs-shell 메인) + `3Dassetlibrary.html` (3D 라이브러리 커스터마이저) |
 | 기술 스택 | Three.js r160 (CDN), 순수 HTML/CSS/JS |
 | 백엔드 | 없음 — 100% 정적 파일 |
 | 빌드 도구 | 없음 — importmap 기반 ES Module |
@@ -25,33 +25,35 @@
 ```
 Ohouse_3D_Asset_Library/
 │
-├── 3Dassetlibrary.html            ← 엔트리 (UI + 씬 + 로직 전부)
-├── material-test.html             ← 레거시 (배포 제외)
+├── index.html                     ← docs-shell 진입 (Overview)
+├── visual-language.html           ← 조형 원칙 페이지
+├── assets/icon.html               ← Icon 카테고리
+├── assets/2d.html                 ← 2D Assets 카테고리
+├── assets/3d.html                 ← 3D Assets 인트로 (라이브러리로 링크)
+├── assets/motion.html             ← Motion Assets (개발예정 placeholder)
+├── shared/shell.css, shell.js     ← 공통 헤더/사이드바
+├── logo.svg                       ← 브랜드 심볼
+│
+├── 3Dassetlibrary.html            ← 3D 라이브러리 커스터마이저 (UI + 씬 + 로직 전부)
 ├── materials.js                   ← 재질 정의 (프로스티드, 블프, 크롬 등)
 │
 ├── Botanical_Gardens_2_quarter.hdr  ← HDR 환경맵 (8MB, 실사용)
-├── Botanical_Gardens_2.exr          ← 원본 EXR (83MB, 배포 제외 — 참고용)
 │
-├── box.gltf                       ← 이사박스 에셋
-├── box_simplified_1~2.bin
+├── box.gltf + box_simplified_1~2.bin           ← 이사박스
+├── gift.gltf + gift_welded_1~6.bin             ← 선물상자
+├── Coupon.gltf                                  ← 쿠폰
+├── waterpurifier.gltf + waterpurifier_simplified_1~4.bin  ← 정수기
+├── basket3.glb                                  ← 바구니
+├── clock.glb                                    ← 시계
+├── camera6.glb                                  ← 카메라
+├── packagebox.glb                               ← 패키지 박스
+├── lightning.glb                                ← 라이트닝
 │
-├── gift.gltf                      ← 선물상자 에셋
-├── gift_welded_1~6.bin
-│
-├── Coupon.gltf                    ← 쿠폰 에셋
-│
-├── waterpurifier.gltf             ← 정수기 에셋
-├── waterpurifier_simplified_1~4.bin
-│
-├── basket.glb                     ← 바구니 에셋
-├── clock.glb                      ← 시계 에셋
-│
-├── librarythumbnail/*.png         ← 랜딩 썸네일 (6장, 배포 필수)
-├── libraythumbnail/               ← 오타 폴더 (배포 제외)
+├── librarythumbnail/*.png         ← 랜딩 썸네일 (배포 필수)
 │
 ├── CLAUDE.md                      ← Claude Code 설정
 ├── docs/                          ← 문서
-└── *.png, *.c4d, 정수기레퍼런스.png ← 레퍼런스 (배포 불필요)
+└── *.png, *.c4d, 정수기레퍼런스.png, ohousevisuallanguage_ver1.pdf  ← 레퍼런스 (배포 불필요)
 ```
 
 ### 배포 대상 파일
@@ -257,8 +259,7 @@ aws s3 sync . s3://bucketplace-data-static/prod/branddesign/3Dassetlibrary/ \
 
 - `.c4d` 원본 소스, 레퍼런스 PNG (`01.png`, `view01.png`, `정수기레퍼런스.png` 등)
 - `.git/`, `.DS_Store`, `.claude/`, `CLAUDE.md`, `docs/`
-- `libraythumbnail/` (오타 폴더 — HTML이 참조 안 함)
-- `material-test.html` (legacy 엔트리 — 현재 S3에도 없음)
+- `ohousevisuallanguage_ver1.pdf` (Visual Language 레퍼런스 문서)
 
 ### 5-4. 현재 배포 대상 파일 (2026-04-21 기준)
 

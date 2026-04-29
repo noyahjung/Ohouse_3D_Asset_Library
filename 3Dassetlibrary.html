@@ -11,8 +11,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <style>
   :root {
-    --accent: #6366f1;
-    --accent-light: rgba(99,102,241,.1);
+    --accent: #111827;
+    --accent-light: rgba(17,24,39,0.07);
     --bg: #f0f2f5;
     --card: #ffffff;
     --card-hover: #f8f9fb;
@@ -172,7 +172,7 @@
     backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   }
   .chip:hover { background: rgba(255,255,255,.96); }
-  .chip.active { background: rgba(99,102,241,.12); border-color: rgba(99,102,241,.3); }
+  .chip.active { background: rgba(17,24,39,.12); border-color: rgba(17,24,39,.3); }
   .chip.active .swatch { color: var(--text); }
   .chip .swatch {
     flex: 1;
@@ -210,7 +210,7 @@
     margin-right: 6px;
     font-size: 8px; letter-spacing: .1em; font-weight: 600;
     text-transform: uppercase; color: var(--accent);
-    background: var(--accent-light); border: 1px solid rgba(99,102,241,.25);
+    background: var(--accent-light); border: 1px solid rgba(17,24,39,.25);
     border-radius: 3px; padding: 2px 5px; white-space: nowrap;
     pointer-events: none;
   }
@@ -280,7 +280,7 @@
   .asset-chip:hover { background: rgba(255,255,255,.96); color: var(--text); }
   .asset-chip.active {
     background: var(--accent-light); color: var(--accent);
-    border-color: rgba(99,102,241,.3);
+    border-color: rgba(17,24,39,.3);
     position: relative; font-weight: 600;
   }
   .asset-chip.active::before {
@@ -300,9 +300,9 @@
     margin-top: 14px;
     background: var(--accent); color: #fff; border-color: transparent;
     font-weight: 600; text-align: center;
-    box-shadow: 0 4px 14px rgba(99,102,241,.25);
+    box-shadow: 0 4px 14px rgba(17,24,39,.25);
   }
-  #exportPng:hover { background: #818cf8; color: #fff; }
+  #exportPng:hover { background: #374151; color: #fff; }
   #exportPng.active { background: var(--accent); color: #fff; }
   #exportPng.active::before { display: none; }
 
@@ -573,7 +573,7 @@
   }
   #landing .asset-card:hover {
     transform: translateY(-2px);
-    border-color: rgba(99,102,241,.3);
+    border-color: rgba(17,24,39,.3);
     box-shadow: var(--shadow-md);
   }
   #landing .asset-card .thumb {
@@ -602,12 +602,21 @@
   #landing.hidden { display: none; }
 
   #projectBadge {
-    position: fixed; bottom: 14px; right: 18px; z-index: 10;
-    background: rgba(16,185,129,.08); color: #059669;
-    font-size: 10px; letter-spacing: .14em; font-weight: 600;
-    padding: 6px 10px; border-radius: var(--radius-sm);
-    border: 1px solid rgba(16,185,129,.15);
+    position: fixed; top: 18px; left: 18px; z-index: 110;
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.92);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-size: 12px; font-weight: 500; letter-spacing: -0.01em;
+    padding: 8px 14px 8px 12px;
+    border-radius: 999px;
+    text-decoration: none;
+    box-shadow: var(--shadow-sm);
+    transition: background var(--transition), color var(--transition);
   }
+  #projectBadge:hover { background: #fff; color: var(--text); }
+  #projectBadge img { width: 18px; height: 18px; display: block; }
+  #projectBadge .arrow { color: var(--text-mute); }
 
   /* ── Principles mode: hide customizer chrome ────── */
   body.principles-mode #palette,
@@ -617,6 +626,27 @@
   body.principles-mode #bgSelector,
   body.principles-mode #hint,
   body.principles-mode #projectBadge { display: none !important; }
+  /* Embed mode (?embed=principles) — running inside the Visual Language
+   * page's iframe. Drop the back-to-library button (no library to go
+   * back to from inside the parent page) and the page title (parent
+   * provides its own H1). Manual nav arrows + dots remain available. */
+  body.principles-embed { background: #ffffff !important; }
+  body.principles-embed #principlesClose,
+  body.principles-embed #principles .page-title { display: none !important; }
+  /* Until the parent posts `principles:start`, slide 0 is pre-loaded
+   * silently (asset + text positioned) but kept fully transparent so
+   * the iframe reads as a clean white frame with nothing inside.
+   * On start, both the WebGL canvas and the slideshow chrome fade in
+   * together for a single coherent reveal. */
+  body.principles-embed canvas,
+  body.principles-embed #principles {
+    opacity: 0;
+    transition: opacity 0.8s ease;
+  }
+  body.principles-embed.principles-shown canvas,
+  body.principles-embed.principles-shown #principles {
+    opacity: 1;
+  }
 
   /* ── Principles button on landing ──────────────── */
   .principles-btn {
@@ -771,7 +801,6 @@
     <header>
       <h1>3D Asset Library</h1>
       <p class="subtitle">Select an asset to customize</p>
-      <button id="principlesBtn" class="principles-btn">오늘의집 3D 에셋 조형 원칙</button>
     </header>
     <div class="loading">Generating previews…</div>
     <div class="search" hidden>
@@ -937,6 +966,7 @@
   <button class="asset-chip" data-asset="clock">Clock</button>
   <button class="asset-chip" data-asset="camera">Camera</button>
   <button class="asset-chip" data-asset="packagebox">Package Box</button>
+  <button class="asset-chip" data-asset="lightning">Lightning</button>
   <button class="asset-chip" id="exportPng">PNG 출력</button>
 
   <div id="assetSettings" hidden>
@@ -1003,7 +1033,11 @@
     <span class="switch"></span>
   </button>
 </div>
-<div id="projectBadge">OHOUSE · ASSET LIBRARY</div>
+<a id="projectBadge" href="index.html" title="Visual Asset Library 홈으로">
+  <span class="arrow">←</span>
+  <img src="logo.svg" alt="">
+  <span>Visual Asset Library</span>
+</a>
 
 <script type="importmap">
 {
@@ -1179,14 +1213,14 @@ lensGlassMat.userData.paletteId = 'lensGlass';
 // (even at default opacity 1) so the admin opacity slider can fade
 // the disc without needing a material-flag toggle.
 const cameraLensMat = new THREE.MeshPhysicalMaterial({
-  color:               new THREE.Color(0.95, 0.95, 0.95),
-  metalness:           0.79,
-  roughness:           0.80,
-  clearcoat:           0.89,
-  clearcoatRoughness:  0.11,
-  envMapIntensity:     2.21,
+  color:               new THREE.Color(0.35, 0.35, 0.44),
+  metalness:           0.64,
+  roughness:           0.34,
+  clearcoat:           0.58,
+  clearcoatRoughness:  0.13,
+  envMapIntensity:     0.71,
   transparent:         true,
-  opacity:             0.69,
+  opacity:             0.58,
 });
 cameraLensMat.userData.paletteId = 'cameraLens';
 
@@ -1277,9 +1311,14 @@ const ASSETS = {
     },
   },
   basket: {
-    url: 'basket.glb?v=2',
+    url: 'basket3.glb',
     label: 'Basket',
-    rootName: 'basket',
+    // basket3.glb wraps the assembly in a `basket.1` parent group
+    // (sanitized by Three.js to `basket1`), with `basket`, `handle`,
+    // and `handle_mat` as siblings underneath. Use the parent so the
+    // full assembly is loaded — the inner `basket` group only holds
+    // the body mesh.
+    rootName: 'basket1',
     recommended: 'frostedOrange',
     keepOriginalNormals: true,
     frameScale: 1.7,
@@ -1288,20 +1327,35 @@ const ASSETS = {
       '2': [1.299, 0.442, -0.002],
       '3': [1.126, -0.001, 0.303],
     },
-    materialFor() {
+    materialFor(name, parentName) {
+      const norm = (s) => (s || '').toLowerCase().replace(/\s+/g, '_');
+      const n  = norm(name);
+      const pn = norm(parentName);
+      const matches = (key) => {
+        const k = norm(key);
+        return n === k || pn === k;
+      };
+      // The handle's accent strap sits on top of the woven body. It
+      // tracks the body variant's harmony color via the ribbonGray
+      // material — same pattern as the clock and basket bands.
+      if (matches('handle_mat')) return 'ribbonGray';
       return 'body';
     },
     // Exclude the handle so the gradient spans only the basket body's
     // height, keeping the color saturated instead of stretching across
-    // the full bbox up to the handle's top.
-    inGradientBox(name) {
-      return /^basket$/i.test(name);
+    // the full bbox up to the handle's top. Checks both name and
+    // parentName because gltfpack wraps each mesh in a Group, leaving
+    // the recognizable name on the parent.
+    inGradientBox(name, parentName) {
+      const norm = (s) => (s || '').toLowerCase().replace(/\s+/g, '_');
+      const n  = norm(name);
+      const pn = norm(parentName);
+      return n === 'basket' || pn === 'basket';
     },
-    // Negative shift biases the gradient toward saturated by
-    // extending the bbox below the mesh, so the bottom never reaches
-    // the lightest end of the gradient — basket otherwise reads
-    // washed out at default.
-    gradientYShift: -0.25,
+    // No gradient shift — the new basket3 mesh balances saturation
+    // across the full body height on its own, so the default Vertical
+    // Gradient (top→bottom across the body bbox) is the right read.
+    gradientYShift: 0,
   },
   clock: {
     url: 'clock.glb?v=2',
@@ -1322,7 +1376,7 @@ const ASSETS = {
     },
   },
   camera: {
-    url: 'camera.glb',
+    url: 'camera6.glb',
     label: 'Camera',
     rootName: 'camera',
     recommended: 'frostedDarkBlue',
@@ -1348,29 +1402,59 @@ const ASSETS = {
     // the camera body reads smooth across C4D's UV/material seams
     // instead of showing faceted polygons.
     weldVertices: true,
-    // Lift the button mesh slightly off the body surface so its base
-    // doesn't intersect/sink into the body shell. The offset is in
-    // glTF source units (cm-scale here), tuned to clear the seam
-    // without floating noticeably.
+    // Per-mesh position nudges in glTF source units (cm-scale).
+    //   button   — lift slightly so its base doesn't intersect the
+    //              body shell.
+    //   lens spot — push forward along +Z so the spot disc clears
+    //              the lens behind it. The C4D source already sits
+    //              the spot a hair forward, but not enough on its
+    //              own — without this code-side push the chrome
+    //              glass leaks through the white luminance surface
+    //              as flecks.
     meshOffsets: {
       button: [0, 0.08, 0],
+      'lens spot': [0, 0, 5],
     },
-    materialFor(name) {
-      const n = (name || '').toLowerCase();
+    // Smooth the lens cluster (lens-tape + lens-box + glass children)
+    // beyond what the body-merge pipeline reaches: lens-tape and glass
+    // skip the merge because they're assigned ribbonGray / cameraLens
+    // materials directly, so their source normals would otherwise
+    // carry through any C4D UV-split facets.
+    smoothMeshes: ['lens'],
+    materialFor(name, parentName) {
+      // Three.js's GLTFLoader runs every node name through
+      // PropertyBinding.sanitizeNodeName, which replaces whitespace
+      // with `_` (so glTF "lens spot" becomes "lens_spot" by the time
+      // it reaches us). Normalize the candidate keys the same way so
+      // configs can be authored with either form.
+      const norm = (s) => (s || '').toLowerCase().replace(/\s+/g, '_');
+      const n  = norm(name);
+      const pn = norm(parentName);
+      // gltfpack-optimized GLB wraps each mesh in a Group, leaving the
+      // recognizable name on `parentName` while the actual Mesh's name
+      // is blank. Both must be checked for every match below.
+      const matches = (key) => {
+        const k = norm(key);
+        return n === k || pn === k;
+      };
       // Front lens disc — dedicated camera-lens material: dark near-
       // black base + chrome-like reflection, mimicking the coated
       // optical glass of a real photographic lens.
-      if (n === 'glass') return 'cameraLens';
-      // 'lens-Mat' — the recessed inner lens face authored with its
-      // own material in the source file. Rendered as harmony-2 (a
-      // ~30% dimmer sibling of the ribbon accent) so the recess reads
-      // as a tonal companion of the body.
-      if (n === 'lens-mat') return 'harmony2';
-      // Tape bands wrap the body and lens; treat them like the clock
-      // and basket bands so they pick up the harmony accent color.
-      if (n === 'body-tape' || n === 'lens-tape') return 'ribbonGray';
-      // Shutter button as a flat white accent.
-      if (n === 'button') return 'luminance';
+      if (matches('glass')) return 'cameraLens';
+      // Recessed inner lens face — harmony-2 (the dimmer companion of
+      // the body's accent) so the recess reads as a deeper tonal
+      // sibling of the body color. `lens-mat` was the name in the
+      // older camera source; `Disc` plays the same role in camera6.
+      if (matches('lens-mat') || matches('disc')) return 'harmony2';
+      // Tape bands + the shutter button pick up the body variant's
+      // harmony accent color via the ribbonGray material — a tonal
+      // companion of the active body tone.
+      if (matches('body-tape') || matches('lens-tape') || matches('button')) {
+        return 'ribbonGray';
+      }
+      // Flat-white luminance accent — the front `lens spot` highlight
+      // disc reads as a crisp, color-independent mark on the lens.
+      if (matches('lens spot')) return 'luminance';
       return 'body';
     },
   },
@@ -1408,6 +1492,28 @@ const ASSETS = {
       if (n === 'percent' || pn === 'percent') return 'luminance';
       // Everything else (outer box + inner walls left over after the
       // bottom-face split) shares the active frosted body color.
+      return 'body';
+    },
+  },
+  lightning: {
+    url: 'lightning.glb',
+    label: 'Lightning',
+    // Source file ships the root node spelled `ligtning` (missing the
+    // second 'h'); match the actual name so the loader can resolve it.
+    rootName: 'ligtning',
+    recommended: 'frostedRed',
+    // Bring the bolt up to a comparable visual weight with the other
+    // library assets — the source mesh exports a hair small at default
+    // scale, so 1.3× pushes it into the same on-screen footprint.
+    modelScale: 1.3,
+    // Strong negative shift biases the gradient toward the saturated
+    // top color across most of the bolt — the bolt is tall and narrow,
+    // so without this it reads washed out toward the bottom tip.
+    gradientYShift: -0.6,
+    // Weld co-located vertices before normal recompute so the bolt's
+    // bevels read smooth across any C4D UV/material splits.
+    weldVertices: true,
+    materialFor() {
       return 'body';
     },
   },
@@ -1608,12 +1714,62 @@ function loadAsset(assetId) {
     // Per-mesh position nudges (e.g. lift the camera button so its
     // base doesn't sink into the body shell). Applied before bbox /
     // material classification so downstream transforms still align.
+    // Looked up via getObjectByName so it resolves whichever node
+    // carries the recognizable name — usually the gltfpack-emitted
+    // Group rather than the unnamed Mesh inside.
     if (asset.meshOffsets) {
-      root.traverse((obj) => {
-        if (!obj.isMesh) return;
-        const off = asset.meshOffsets[obj.name];
-        if (off) obj.position.set(obj.position.x + off[0], obj.position.y + off[1], obj.position.z + off[2]);
-      });
+      for (const [name, off] of Object.entries(asset.meshOffsets)) {
+        // Three.js sanitizes node names by converting whitespace to
+        // `_`, so look up using the same form to keep author-friendly
+        // keys like 'lens spot' working alongside 'lens_spot'.
+        const sanitized = name.replace(/\s+/g, '_');
+        const target = root.getObjectByName(name) || root.getObjectByName(sanitized);
+        if (!target) continue;
+        target.position.x += off[0];
+        target.position.y += off[1];
+        target.position.z += off[2];
+      }
+    }
+    // Per-mesh visibility toggle. Hides named nodes outright (e.g. an
+    // accent piece designers want to keep authored in the source file
+    // but suppress in the live render). The hidden node still
+    // contributes to the asset's bbox, which is fine — most hide
+    // targets sit inside the existing bbox, so nothing visible shifts.
+    if (asset.hideMeshes) {
+      for (const name of asset.hideMeshes) {
+        const sanitized = name.replace(/\s+/g, '_');
+        const target = root.getObjectByName(name) || root.getObjectByName(sanitized);
+        if (target) target.visible = false;
+      }
+    }
+    // Per-mesh extra smoothing. Walks every Mesh under the named node
+    // and replaces its geometry with a position-welded clone +
+    // recomputed smooth normals. Useful for non-body parts (chrome,
+    // ribbonGray) that bypass the body merge's smoothing pipeline and
+    // would otherwise render with whatever normals the source authored
+    // — including any facet artifacts from C4D's UV/material splits.
+    if (asset.smoothMeshes) {
+      // Use the whole asset's bbox for the weld tolerance so the value
+      // matches what the body-merge pipeline uses — co-located vertices
+      // that the body weld would fuse get fused here too. Followed by a
+      // generous angle-threshold pass (2.5 rad ≈ 143°) so lens-curve
+      // creases that survive welding get averaged into a smooth surface.
+      const rootBox = new THREE.Box3().setFromObject(root);
+      const rSize = rootBox.getSize(new THREE.Vector3());
+      const rMax = Math.max(rSize.x, rSize.y, rSize.z) || 1;
+      const tol = Math.max(1e-4, rMax * 0.001);
+      for (const name of asset.smoothMeshes) {
+        const sanitized = name.replace(/\s+/g, '_');
+        const target = root.getObjectByName(name) || root.getObjectByName(sanitized);
+        if (!target) continue;
+        target.traverse((obj) => {
+          if (!obj.isMesh) return;
+          obj.geometry = weldByPosition(obj.geometry, tol);
+          obj.geometry.computeVertexNormals();
+          obj.geometry = obj.geometry.toNonIndexed();
+          smoothNormalsByAngle(obj.geometry, tol, 2.5);
+        });
+      }
     }
     // Inner-wall clones: for each named mesh, drop a back-face copy
     // of its geometry with a flat color so the inside of an open
@@ -1990,10 +2146,15 @@ async function buildLanding() {
     const v = asset.viewOverrides?.['1'] || VIEW_DIRS['1'];
     const d = currentMaxDim * 2.0;
     camera.position.set(v[0] * d, v[1] * d, v[2] * d);
-    camera.zoom = 1;
+    // Asset reads at ~80% of the frame so the form stays prominent
+    // in the thumbnail while leaving a small margin around it.
+    camera.zoom = 0.8;
     camera.updateProjectionMatrix();
     controls.target.set(0, 0, 0);
     controls.update();
+    // Shadow off during thumbnail capture — clean silhouette on white.
+    shadow.visible = false;
+    shadowLight.castShadow = false;
     await new Promise((r) => requestAnimationFrame(r));
     renderer.render(scene, camera);
     const srcCanvas = renderer.domElement;
@@ -2102,8 +2263,12 @@ const shadowLight = new THREE.DirectionalLight(0xffffff, 0);
 shadowLight.castShadow = true;
 // Lower-angled light → longer drop shadow. Ratio of horizontal to
 // vertical components controls the stretch: the larger the horizontal,
-// the longer the shadow extends from the object's base.
-const SHADOW_LIGHT_DIR = new THREE.Vector3(-2.5, 5, 2).normalize();
+// the longer the shadow extends from the object's base. Rotated 20°
+// around the Y-axis (toward the asset's front, +Z) so the shadow lays
+// out more behind the asset instead of square to its side.
+const SHADOW_LIGHT_DIR = new THREE.Vector3(-2.5, 5, 2)
+  .applyAxisAngle(new THREE.Vector3(0, 1, 0), THREE.MathUtils.degToRad(20))
+  .normalize();
 shadowLight.position.copy(SHADOW_LIGHT_DIR).multiplyScalar(10);
 shadowLight.shadow.mapSize.set(2048, 2048);
 shadowLight.shadow.radius = 10;
@@ -2675,17 +2840,24 @@ if (IS_ADMIN) {
     const v = asset.viewOverrides?.['1'] || VIEW_DIRS['1'];
     const d = currentMaxDim * 2.0;
     camera.position.set(v[0] * d, v[1] * d, v[2] * d);
-    camera.zoom = 1;
+    // Match the landing-page live-render framing exactly so saved PNGs
+    // are visually indistinguishable from the fallback render: ~80%
+    // asset, ground shadow off, white background.
+    camera.zoom = 0.8;
     camera.updateProjectionMatrix();
     controls.target.set(0, 0, 0);
     controls.update();
-    // Force white so the thumbnail matches the library card background
-    // even when the user is currently viewing Black Friday (black bg).
     const prevBg = scene.background;
+    const prevShadowVisible = shadow.visible;
+    const prevShadowCast = shadowLight.castShadow;
     scene.background = new THREE.Color('#ffffff');
+    shadow.visible = false;
+    shadowLight.castShadow = false;
     await new Promise((r) => requestAnimationFrame(r));
     renderer.render(scene, camera);
     scene.background = prevBg;
+    shadow.visible = prevShadowVisible;
+    shadowLight.castShadow = prevShadowCast;
     const srcCanvas = renderer.domElement;
     const sz = Math.min(srcCanvas.width, srcCanvas.height);
     const sx = (srcCanvas.width - sz) / 2;
@@ -3117,7 +3289,26 @@ async function goToPrinciplesSlide(idx) {
   principlesTransitioning = false;
 }
 
-document.getElementById('principlesBtn').addEventListener('click', openPrinciples);
+// Auto-advance through every slide. Used by embed-mode "play" trigger
+// from the parent Visual Language page. Holds each slide for a few
+// seconds after its entrance animation completes before moving on.
+let principlesPlaying = false;
+async function playPrinciplesSequence() {
+  if (principlesPlaying) return;
+  principlesPlaying = true;
+  try {
+    for (let i = 0; i < PRINCIPLES_SLIDES.length; i++) {
+      if (!principlesActive) break;
+      await goToPrinciplesSlide(i);
+      if (i < PRINCIPLES_SLIDES.length - 1 && principlesActive) {
+        await new Promise(r => setTimeout(r, 4500));
+      }
+    }
+  } finally {
+    principlesPlaying = false;
+  }
+}
+
 document.getElementById('principlesClose').addEventListener('click', closePrinciples);
 document.getElementById('principlesPrev').addEventListener('click', () => {
   if (principlesSlideIdx > 0) goToPrinciplesSlide(principlesSlideIdx - 1);
@@ -3162,7 +3353,83 @@ function tick() {
 }
 tick();
 
-buildLanding();
+// ── Embed mode ────────────────────────────────────────────
+// `?embed=principles` boots the page straight into the principles
+// slideshow with library UI suppressed, intended for iframe use from
+// the Visual Language page. The parent posts `principles:play` to
+// trigger auto-advance through all slides.
+const IS_PRINCIPLES_EMBED =
+  new URLSearchParams(window.location.search).get('embed') === 'principles';
+
+// `?autoexport=all` runs every asset through the same render the
+// landing page uses, then exposes the resulting PNGs as base64 on
+// `window.__exportedThumbs` and signals completion via
+// `window.__exportDone`. A puppeteer-driven script polls these and
+// writes the PNGs straight into `librarythumbnail/`, skipping the
+// browser-download → manual-move dance.
+const IS_AUTO_EXPORT =
+  new URLSearchParams(window.location.search).get('autoexport') === 'all';
+
+if (IS_PRINCIPLES_EMBED) {
+  document.body.classList.add('principles-embed');
+  // Skip buildLanding — the asset grid is irrelevant in embed mode and
+  // its thumbnail generation is heavy. The slideshow loads each slide's
+  // asset on demand via loadAsset.
+  //
+  // Silently pre-prepare slide 0: the asset's entrance animation runs
+  // under opacity 0 so by the time the parent triggers the reveal,
+  // everything is already at its rest pose. Manual navigation (arrows
+  // + dots) handles every transition after that — no auto-advance.
+  openPrinciples();
+  window.addEventListener('message', (e) => {
+    if (e.data === 'principles:start') {
+      document.body.classList.add('principles-shown');
+    }
+  });
+} else if (IS_AUTO_EXPORT) {
+  window.__exportedThumbs = {};
+  window.__exportDone = false;
+  window.__exportError = null;
+  (async () => {
+    try {
+      for (const id of Object.keys(ASSETS)) {
+        await loadAsset(id);
+        const asset = ASSETS[id];
+        const v = asset.viewOverrides?.['1'] || VIEW_DIRS['1'];
+        const d = currentMaxDim * 2.0;
+        camera.position.set(v[0] * d, v[1] * d, v[2] * d);
+        camera.zoom = 0.8;
+        camera.updateProjectionMatrix();
+        controls.target.set(0, 0, 0);
+        controls.update();
+        shadow.visible = false;
+        shadowLight.castShadow = false;
+        const prevBg = scene.background;
+        scene.background = new THREE.Color('#ffffff');
+        await new Promise((r) => requestAnimationFrame(r));
+        renderer.render(scene, camera);
+        scene.background = prevBg;
+        const src = renderer.domElement;
+        const sz = Math.min(src.width, src.height);
+        const sx = (src.width - sz) / 2;
+        const sy = (src.height - sz) / 2;
+        const out = document.createElement('canvas');
+        out.width = out.height = 500;
+        const ctx = out.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, 500, 500);
+        ctx.drawImage(src, sx, sy, sz, sz, 0, 0, 500, 500);
+        window.__exportedThumbs[id] = out.toDataURL('image/png').split(',')[1];
+      }
+    } catch (err) {
+      window.__exportError = err && err.message || String(err);
+    } finally {
+      window.__exportDone = true;
+    }
+  })();
+} else {
+  buildLanding();
+}
 </script>
 </body>
 </html>

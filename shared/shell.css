@@ -17,9 +17,9 @@
   --text-dim:     #4b5563;
   --text-mute:    #9ca3af;
 
-  --accent:       #6366f1;
-  --accent-hover: #818cf8;
-  --accent-soft:  rgba(99, 102, 241, 0.08);
+  --accent:       #111827;
+  --accent-hover: #374151;
+  --accent-soft:  rgba(17, 24, 39, 0.06);
 
   --header-h:     64px;
   --sidebar-w:    260px;
@@ -46,6 +46,18 @@ html, body {
 
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
+
+/* Content body links keep an always-on underline so they remain
+ * recognizable now that the accent color matches body text. */
+.shell-content a:not(.cta-btn) {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+  text-decoration-color: var(--text-mute);
+}
+.shell-content a:not(.cta-btn):hover {
+  text-decoration-color: var(--accent);
+}
 
 code {
   font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -254,6 +266,51 @@ code {
   color: var(--text-dim);
   line-height: 1.7;
   margin: 0 0 36px;
+}
+
+/* ── Page banner ──────────────────────────────────────────
+ * Wide horizontal hero image below each Asset category's
+ * intro text. Drop in a real image either as a child
+ * <img class="page-banner-img"> or as a `background-image` on
+ * the container. The placeholder variant displays the target
+ * dimensions until the real asset is ready. */
+.page-banner {
+  width: 100%;
+  aspect-ratio: 8 / 3;
+  margin: 32px 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--bg-soft);
+  background-size: cover;
+  background-position: center;
+}
+.page-banner-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.page-banner--placeholder {
+  border: 1px dashed var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-soft);
+}
+.page-banner-hint {
+  text-align: center;
+  color: var(--text-mute);
+  font-size: 13px;
+  line-height: 1.6;
+  padding: 24px;
+}
+.page-banner-hint strong {
+  display: block;
+  color: var(--text-dim);
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  letter-spacing: -0.005em;
 }
 
 /* ── Placeholder block (used for "content TBD" sections) ── */
