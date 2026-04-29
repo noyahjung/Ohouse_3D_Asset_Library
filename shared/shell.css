@@ -150,6 +150,24 @@ code {
   font-weight: 500;
 }
 
+/* Sub-grouped nav items (e.g. Graphic Assets → Icon / 2D / …)
+ * Subgroup label sits above its leaves, leaves are indented one
+ * step so the hierarchy reads at a glance without losing the
+ * minimal visual style of the rest of the sidebar. */
+.shell-nav-subgroup {
+  margin: 4px 0 6px;
+}
+.shell-nav-subgroup-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-mute);
+  padding: 6px 12px 6px;
+  letter-spacing: -0.01em;
+}
+.shell-nav-subgroup .shell-nav-link {
+  padding-left: 24px;
+}
+
 .shell-nav-tag {
   font-size: 10px;
   font-weight: 500;
@@ -313,6 +331,285 @@ code {
   letter-spacing: -0.005em;
 }
 
+/* ── Overview section block ──────────────────────────────
+ * Wraps Graphic Assets / Photographic Assets so the two
+ * asset families read as distinct chapters of the page
+ * rather than one long stream of headings. */
+.overview-section {
+  margin-top: 64px;
+  padding-top: 48px;
+  border-top: 2px solid var(--border);
+}
+.overview-section:first-of-type {
+  margin-top: 32px;
+  padding-top: 0;
+  border-top: 0;
+}
+.overview-section > h2 {
+  border-top: 0;
+  padding-top: 0;
+  margin-top: 0;
+  font-size: 26px;
+}
+.overview-section > h2 + p {
+  font-size: 15px;
+  color: var(--text-dim);
+  margin-bottom: 32px;
+}
+
+/* ── Asset thumbnail row ─────────────────────────────────
+ * 5-column grid of square placeholders for Overview's
+ * Graphic / Photographic asset listings. Replace each
+ * `.asset-thumb` with an <img> when the real asset image is
+ * ready. */
+.asset-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin: 16px 0 36px;
+}
+.asset-thumb {
+  aspect-ratio: 1;
+  background: var(--bg-soft);
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.asset-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* ── Overview feature: 3-column format grid ──────────────
+ * Layout-only — text styles inherit shell defaults so this
+ * section reads like the rest of the library. Just a 3-up
+ * grid with placeholder image slots underneath the column
+ * headings. */
+.overview-feature-formats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 32px;
+}
+.format-col h3 {
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+.format-col-img {
+  aspect-ratio: 1;
+  background: var(--bg-soft);
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.format-col-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+@media (max-width: 720px) {
+  .overview-feature-formats {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Library grid ────────────────────────────────────────
+ * Card-style thumbnail grid for asset libraries (e.g. Pattern
+ * / Background page). Each card shows a 16:9 cover preview
+ * with the asset name and a download CTA below. */
+.library-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+  margin-top: 40px;
+}
+.library-item {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color var(--transition), transform var(--transition);
+}
+.library-item:hover {
+  border-color: var(--text-mute);
+  transform: translateY(-2px);
+}
+.library-item-thumb {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  background: var(--bg-soft);
+}
+.library-item-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+}
+.library-item-meta h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.005em;
+  border-top: 0;
+  padding-top: 0;
+}
+.library-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 999px;
+  text-decoration: none;
+  transition: background var(--transition);
+  white-space: nowrap;
+}
+.library-download:hover {
+  background: var(--accent-hover);
+  text-decoration: none;
+  color: #fff;
+}
+.library-download svg {
+  display: block;
+}
+
+/* ── Inline status pills for h3 headings ───────────────── */
+.status-tag {
+  display: inline-block;
+  margin-left: 10px;
+  padding: 2px 9px;
+  background: var(--border-soft);
+  color: var(--text-mute);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  border-radius: 999px;
+  vertical-align: middle;
+  position: relative;
+  top: -2px;
+}
+.status-note {
+  color: var(--text-mute);
+  font-size: 13px;
+  margin: -8px 0 32px;
+}
+
+/* ── Usage guide (Do / Don't) ────────────────────────────
+ * Per-asset usage examples. Bullet summary above, two
+ * color-coded panels below: Do (green) / Don't (red). Each
+ * card holds an image slot + caption — author fills these in
+ * post-scaffold. */
+.usage-guide {
+  margin-top: 56px;
+  padding-top: 8px;
+}
+.usage-guide-points {
+  padding-left: 20px;
+  margin: 0 0 32px;
+}
+.usage-guide-points li {
+  margin-bottom: 8px;
+  color: var(--text-dim);
+  line-height: 1.75;
+  font-size: 15px;
+}
+
+/* Each principle = its own row with a paired Do / Don't case */
+.usage-principle {
+  margin-top: 32px;
+}
+.usage-principle:first-of-type {
+  margin-top: 16px;
+}
+.usage-principle-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 14px;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+.usage-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.usage-col {
+  border-radius: 12px;
+  padding: 24px;
+}
+.usage-col--do {
+  background: rgba(0, 161, 255, 0.09); /* Genuine Blue tint */
+}
+.usage-col--dont {
+  background: rgba(239, 68, 68, 0.08);
+}
+.usage-col-label {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 18px;
+}
+.usage-col--do .usage-col-label {
+  background: rgba(0, 161, 255, 0.20);
+  color: #0369a1;
+}
+.usage-col--dont .usage-col-label {
+  background: rgba(239, 68, 68, 0.18);
+  color: #b91c1c;
+}
+
+.usage-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.usage-card {
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-soft);
+}
+.usage-card-img {
+  aspect-ratio: 4 / 3;
+  background: var(--bg-soft);
+  display: block;
+}
+.usage-card-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.usage-card-text {
+  padding: 12px 14px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+
+@media (max-width: 720px) {
+  .usage-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ── Placeholder block (used for "content TBD" sections) ── */
 
 .placeholder-block {
@@ -356,6 +653,40 @@ code {
   transform: translateY(-1px);
 }
 
+/* ── Footer ──────────────────────────────────────────────
+ * Sits below the main content; mirrors the sidebar offset so
+ * its left edge lines up with the page text rather than the
+ * viewport. Two stacked rows: link nav + copyright. */
+.shell-footer {
+  margin-left: var(--sidebar-w);
+  padding: 32px 64px 48px;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+}
+.shell-footer-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 28px;
+  margin-bottom: 20px;
+}
+.shell-footer-nav a {
+  color: var(--text-dim);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color var(--transition);
+}
+.shell-footer-nav a:hover {
+  color: var(--text);
+  text-decoration: none;
+}
+.shell-footer-copy {
+  color: var(--text-mute);
+  font-size: 13px;
+  letter-spacing: -0.005em;
+}
+
 /* ── Responsive (basic) ─────────────────────────────────── */
 
 @media (max-width: 900px) {
@@ -375,5 +706,12 @@ code {
   .shell-main {
     margin-left: 0;
     padding: calc(var(--header-h) + 32px) 20px 56px;
+  }
+  .shell-footer {
+    margin-left: 0;
+    padding: 24px 20px 32px;
+  }
+  .shell-footer-nav {
+    gap: 16px 20px;
   }
 }

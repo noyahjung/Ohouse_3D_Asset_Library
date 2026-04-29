@@ -3,38 +3,148 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Overview · Ohouse Visual Asset Library</title>
+  <title>Visual Language · Ohouse Visual Asset Library</title>
   <link rel="icon" type="image/svg+xml" href="logo.svg">
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
   <link rel="stylesheet" href="shared/shell.css">
+  <style>
+    /* ── Visual Language walkthrough stage ──────────────────
+     * Embeds the existing 3D asset library's principles slideshow
+     * (running in `?embed=principles` mode) inside an iframe at the
+     * top of the content. The Begin-walkthrough button overlays the
+     * iframe; clicking it postMessages the slideshow to auto-advance,
+     * then fades back in once playback finishes so it can be replayed.
+     * Stage content is intentionally the legacy slideshow for now —
+     * it will be replaced when the new Visual Language interactions
+     * are authored. */
+    .vl-stage {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      margin: 32px 0 56px;
+      background: var(--bg-soft);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .vl-stage-frame {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+    }
+    .vl-stage-play {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 22px 14px 20px;
+      background: var(--accent);
+      color: #fff;
+      border: 0;
+      border-radius: 999px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      cursor: pointer;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18), 0 1px 3px rgba(0, 0, 0, 0.08);
+      transition: background 0.15s ease, opacity 0.4s ease, transform 0.15s ease;
+      z-index: 2;
+    }
+    .vl-stage-play:hover {
+      background: var(--accent-hover);
+      transform: translate(-50%, -50%) translateY(-1px);
+    }
+    .vl-stage-play.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .vl-stage-play svg { display: block; }
+  </style>
 </head>
 <body>
-  <main data-page="overview" data-depth="0">
+  <main data-page="visual-language" data-depth="0">
     <div class="shell-content">
-      <div class="shell-breadcrumb"><span>Overview</span></div>
-      <h1>Overview</h1>
+      <div class="shell-breadcrumb"><span>Visual Language</span></div>
+      <h1>Visual Language</h1>
       <p class="lead">
-        Ohouse Visual Asset Library의 기본 체계와 운영 원칙을 정리한 문서입니다.
-        제품 전반에서 사용되는 시각 자산들이 일관된 톤으로 읽히도록 돕는 가이드라인을 제공합니다.
+        오늘의집 비주얼 에셋은 Authenticity(진정성)이라는 브랜드 가치 아래 네 가지 조형 원칙을 따라 만들어집니다. "이렇게 살아보고 싶다는 전세계 사람들의 꿈을 현실로 만든다"는 브랜드 약속을 시각적 언어로 풀어낸 체계입니다.
       </p>
+
+      <section class="vl-stage" aria-label="Visual Language walkthrough">
+        <iframe class="vl-stage-frame"
+                src="3Dassetlibrary.html?embed=principles"
+                loading="lazy"
+                title="Visual Language principles in motion"></iframe>
+        <button class="vl-stage-play" id="vlStagePlay" type="button">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true">
+            <path d="M3 1.5v11l9-5.5z" />
+          </svg>
+          <span>Play Sequence</span>
+        </button>
+      </section>
+
+      <h2>네 가지 원칙</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>원칙</th>
+            <th>의미</th>
+            <th>시각적 표현</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Dream</strong><br><em>(다정함)</em></td>
+            <td>유저의 꿈과 영감을 담아내고, 이를 다정한 시선으로 바라보는 정서를 은은한 그라디언트를 가진 질감으로 표현합니다.</td>
+            <td>은은한 Vertical Gradient + 몽환적인 질감</td>
+          </tr>
+          <tr>
+            <td><strong>Clarity</strong><br><em>(명확성)</em></td>
+            <td>유저의 꿈을 분명한 현실로 실현해내는 의지를 군더더기 없는 실루엣과 단순한 매스로 표현합니다.</td>
+            <td>군더더기 없는 명확한 실루엣, 단순한 매스</td>
+          </tr>
+          <tr>
+            <td><strong>Stability</strong><br><em>(안정감)</em></td>
+            <td>유저의 꿈을 진중하게 실현해 나가는 자세를 표현합니다. 이는 지면에 안정적으로 붙은 그림자와 단계별로 정돈된 에셋 구조를 통해 시각적으로 드러납니다.</td>
+            <td>지면에 안정적으로 붙은 그림자(Ground Shadow) + 단계별로 정돈된 에셋 구조 (Icon · Asset Small · Asset Large)</td>
+          </tr>
+          <tr>
+            <td><strong>Smoothing Line</strong><br><em>(부드러움)</em></td>
+            <td>브랜드 심볼의 외형을 닮은 곡선으로, 에셋에 부분적으로 풀어내는 조형적이고 부드러운 라운딩으로 표현합니다.</td>
+            <td>모서리·면의 라운딩, 각진 단면 지양</td>
+          </tr>
+        </tbody>
+      </table>
 
       <div class="placeholder-block">
-        <strong>본문 작성 예정</strong>
-        Notion의 Visual System 페이지 콘텐츠가 여기에 텍스트 형태로 정리됩니다.
+        <strong>각 원칙별 세부 페이지 예정</strong>
+        Dream · Clarity · Stability · Smoothing Line 각각의 의미·예시·적용 가이드가 별도 페이지로 분리되어 정리될 예정입니다.
       </div>
-
-      <h2>구성</h2>
-      <p>
-        Library는 세 갈래로 정리됩니다.
-      </p>
-      <ul>
-        <li><a href="visual-language.html">Visual Language</a> — Authenticity를 잇는 네 가지 조형 원칙(Softness · Dream · Clarity · Stability)</li>
-        <li><a href="assets/icon.html">Assets</a> — Icon · 2D · 3D · Motion 네 가지 포맷의 그래픽 자산</li>
-        <li>이 페이지(Overview) — 위 둘을 어떻게 함께 운영하는지에 대한 안내</li>
-      </ul>
     </div>
   </main>
   <script type="module" src="shared/shell.js"></script>
+  <script>
+    // Wire the Play Sequence button: posts `principles:start` into
+    // the iframe, which fades the pre-prepared slideshow in from the
+    // white background. After fade-in, the user navigates manually
+    // with the iframe's arrows / dots — no auto-advance.
+    (function () {
+      const btn = document.getElementById('vlStagePlay');
+      const frame = document.querySelector('.vl-stage-frame');
+      if (!btn || !frame) return;
+      btn.addEventListener('click', () => {
+        if (!frame.contentWindow) return;
+        frame.contentWindow.postMessage('principles:start', '*');
+        btn.classList.add('hidden');
+      });
+    })();
+  </script>
 </body>
 </html>
