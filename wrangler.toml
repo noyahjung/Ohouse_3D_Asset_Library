@@ -1,7 +1,9 @@
 name = "ohouse-3d-asset-library"
+main = "worker.js"
 compatibility_date = "2025-01-01"
 
-# Static assets at the repo root (HTML, JS, CSS, GLB, HDR, PNG).
-# No Worker handler — Cloudflare serves the directory directly.
+# Repo root is served as static assets. The Worker below just hands
+# every request to the asset binding (no custom routing logic).
 [assets]
-directory = "./"
+directory = "."
+binding = "ASSETS"
