@@ -1055,6 +1055,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
+import { PRINCIPLES_SLIDES } from './principles/slides.js';
 import {
   FROSTED_PRESET,
   FROSTED_VARIANTS,
@@ -3118,12 +3119,10 @@ window.addEventListener('resize', () => {
 });
 
 // ── Principles slideshow ──────────────────────────────────
-const PRINCIPLES_SLIDES = [
-  { asset: 'box',      color: 'frostedBlue', view: '2', rotate: false, shadow: false },
-  { asset: 'gift',     color: 'frostedRed',  view: '3', rotate: true,  shadow: false },
-  { asset: 'box',      color: 'frostedBlue', view: '2', rotate: false, shadow: false, mockUI: true },
-  { asset: 'box',      color: 'frostedBlue', view: '2', rotate: false, shadow: true  },
-];
+// Slide content lives in principles/slides.js — that folder is
+// the workspace for the Visual Language interaction's content
+// (slides, principle-only GLBs, overlays). See the module's
+// header comment for how to add new slides / assets.
 let principlesActive = false;
 let principlesSlideIdx = 0;
 let principlesRotating = false;
