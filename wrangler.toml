@@ -1,0 +1,7 @@
+name = "ohouse-3d-asset-library"
+compatibility_date = "2025-01-01"
+
+# Static assets at the repo root (HTML, JS, CSS, GLB, HDR, PNG).
+# No Worker handler — Cloudflare serves the directory directly.
+[assets]
+directory = "./"
