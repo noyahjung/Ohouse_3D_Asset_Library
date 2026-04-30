@@ -20,13 +20,31 @@
      * are authored. */
     .vl-stage {
       position: relative;
-      width: 100%;
-      aspect-ratio: 16 / 10;
+      /* Break out of the 800px content column on wide screens so the
+       * 16:9 (1920×1080) stage gets a comfortable size. Width tracks
+       * the available main area (viewport − sidebar − padding) and
+       * caps at 1280px. The stage keeps its left edge aligned with
+       * the surrounding text column and overflows to the right of
+       * `.shell-content`. */
+      width: min(calc(100vw - var(--sidebar-w) - 128px), 1280px);
+      aspect-ratio: 16 / 9;
       margin: 32px 0 56px;
       background: var(--bg-soft);
       border: 1px solid var(--border);
       border-radius: 12px;
       overflow: hidden;
+    }
+    @media (max-width: 900px) {
+      .vl-stage {
+        /* shell-main padding shrinks to 32px each side at this break */
+        width: min(calc(100vw - var(--sidebar-w) - 64px), 1280px);
+      }
+    }
+    @media (max-width: 640px) {
+      .vl-stage {
+        /* sidebar hidden, shell-main padding 20px each side */
+        width: 100%;
+      }
     }
     .vl-stage-frame {
       position: absolute;
@@ -101,6 +119,11 @@
         </thead>
         <tbody>
           <tr>
+            <td><strong>Smoothing Line</strong><br><em>(부드러움)</em></td>
+            <td>브랜드 심볼의 외형을 닮은 곡선으로, 에셋에 부분적으로 풀어내는 조형적이고 부드러운 라운딩으로 표현합니다.</td>
+            <td>모서리·면의 라운딩, 각진 단면 지양</td>
+          </tr>
+          <tr>
             <td><strong>Dream</strong><br><em>(다정함)</em></td>
             <td>유저의 꿈과 영감을 담아내고, 이를 다정한 시선으로 바라보는 정서를 은은한 그라디언트를 가진 질감으로 표현합니다.</td>
             <td>은은한 Vertical Gradient + 몽환적인 질감</td>
@@ -114,11 +137,6 @@
             <td><strong>Stability</strong><br><em>(안정감)</em></td>
             <td>유저의 꿈을 진중하게 실현해 나가는 자세를 표현합니다. 이는 지면에 안정적으로 붙은 그림자와 단계별로 정돈된 에셋 구조를 통해 시각적으로 드러납니다.</td>
             <td>지면에 안정적으로 붙은 그림자(Ground Shadow) + 단계별로 정돈된 에셋 구조 (Icon · Asset Small · Asset Large)</td>
-          </tr>
-          <tr>
-            <td><strong>Smoothing Line</strong><br><em>(부드러움)</em></td>
-            <td>브랜드 심볼의 외형을 닮은 곡선으로, 에셋에 부분적으로 풀어내는 조형적이고 부드러운 라운딩으로 표현합니다.</td>
-            <td>모서리·면의 라운딩, 각진 단면 지양</td>
           </tr>
         </tbody>
       </table>

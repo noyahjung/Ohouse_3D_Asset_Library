@@ -1506,6 +1506,11 @@ const ASSETS = {
     // library assets — the source mesh exports a hair small at default
     // scale, so 1.3× pushes it into the same on-screen footprint.
     modelScale: 1.3,
+    // Tighter framing than the default 2.2 to render the bolt about
+    // 1.4× larger on screen (2.2 / 1.4 ≈ 1.57). modelScale alone
+    // can't grow the on-screen footprint — the frustum auto-scales
+    // with maxDim — so the tightening has to live in frameScale.
+    frameScale: 1.57,
     // Strong negative shift biases the gradient toward the saturated
     // top color across most of the bolt — the bolt is tall and narrow,
     // so without this it reads washed out toward the bottom tip.
