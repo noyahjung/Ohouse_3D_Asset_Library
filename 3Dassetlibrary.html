@@ -772,7 +772,27 @@
     font-size: 11px;
     letter-spacing: -0.005em;
   }
-  .variants-row.is-color { grid-template-columns: 96px 1fr; }
+  .variants-row.is-color { grid-template-columns: 96px 36px 1fr; }
+  .variants-row .variants-color-swatch {
+    width: 36px;
+    padding: 0;
+  }
+  .variants-row .variants-hex-input {
+    height: 26px;
+    padding: 0 8px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: #fff;
+    color: var(--text);
+    font: inherit;
+    font-size: 11px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    outline: none;
+  }
+  .variants-row .variants-hex-input:focus {
+    border-color: var(--accent);
+  }
   .variants-row input[type="range"] {
     width: 100%;
     accent-color: var(--accent);
@@ -1007,17 +1027,6 @@
   <div class="variants-subtitle">재질 5종 × Blue/Red 두 컬러를 커스터마이즈</div>
 
   <div class="variants-group">
-    <div class="variants-group-label">Asset</div>
-    <div class="variants-chip-row" id="variantsAssetRow">
-      <button class="variants-chip active" data-asset="box">이사박스</button>
-      <button class="variants-chip" data-asset="coupon">쿠폰</button>
-      <button class="variants-chip" data-asset="gift">선물상자</button>
-      <button class="variants-chip" data-asset="clock">시계</button>
-      <button class="variants-chip" data-asset="camera">카메라</button>
-    </div>
-  </div>
-
-  <div class="variants-group">
     <div class="variants-group-label">Variant</div>
     <div class="variants-chip-row" id="variantsKeyRow">
       <button class="variants-chip active" data-variant="A">A재질</button>
@@ -1041,17 +1050,13 @@
     <div class="variants-controls" id="variantsControls"></div>
   </div>
 
-  <div class="variants-group">
-    <div class="variants-group-label" id="variantsAdjustLabel">이사박스 — Per-asset Tuning</div>
-    <div class="variants-controls" id="variantsAdjustControls"></div>
-  </div>
-
   <div class="variants-actions">
     <button id="variantsSet" class="variants-action variants-action--primary" type="button">Set as default</button>
     <div class="variants-actions-row">
       <button id="variantsReset" class="variants-action" type="button">Reset</button>
       <button id="variantsRestore" class="variants-action" type="button">원래대로</button>
     </div>
+    <button id="variantsExport" class="variants-action" type="button">현재 재질 PNG 다운로드</button>
   </div>
 </div>
 
@@ -3675,36 +3680,58 @@ const VARIANT_FIELDS = [
 const VARIANT_KEYS   = ['A', 'B', 'C', 'D', 'E'];
 const VARIANT_COLORS = ['blue', 'red'];
 
-// Pull defaults straight from the library presets so variants mode
-// starts with the canonical Blue / Red look. Hardcoding diverged
-// (Red's gradientStrength was 0.45 in code vs 0.50 in the preset),
-// so derived from the source of truth keeps them in sync.
+// Per-variant defaults. A keeps the canonical FROSTED_VARIANTS preset
+// as the baseline; B → E walk transmission up (0.80 → 1.00) with the
+// gradient top progressively darkening toward the bottom (lighter ─►
+// fully saturated at E). Same progression applies to both Blue and
+// Red sides so toggling Color compares matched-tone slots.
+const BLUE_BOTTOM = '#00A1FF';
+const RED_BOTTOM  = '#FF4747';
+const BLUE_VARIANT_OVERRIDES = {
+  A: null, // canonical frostedBlue preset
+  B: { gradientTop: '#B3D4FF', gradientBottom: BLUE_BOTTOM, transmission: 0.80 },
+  C: { gradientTop: '#9BC5FD', gradientBottom: BLUE_BOTTOM, transmission: 0.85 },
+  D: { gradientTop: '#81B7FD', gradientBottom: BLUE_BOTTOM, transmission: 0.90 },
+  E: { gradientTop: BLUE_BOTTOM, gradientBottom: BLUE_BOTTOM, transmission: 1.00 },
+};
+const RED_VARIANT_OVERRIDES = {
+  A: null, // canonical frostedRed preset
+  B: { gradientTop: '#FFC6AD', gradientBottom: RED_BOTTOM, transmission: 0.80 },
+  C: { gradientTop: '#FFB899', gradientBottom: RED_BOTTOM, transmission: 0.85 },
+  D: { gradientTop: '#FD9F77', gradientBottom: RED_BOTTOM, transmission: 0.90 },
+  E: { gradientTop: RED_BOTTOM, gradientBottom: RED_BOTTOM, transmission: 1.00 },
+};
+const BLUE_BASE = {
+  gradientTop:    FROSTED_VARIANTS.frostedBlue.top,
+  gradientBottom: FROSTED_VARIANTS.frostedBlue.bottom,
+  ...FROSTED_VARIANTS.frostedBlue.preset,
+};
+const RED_BASE = {
+  gradientTop:    FROSTED_VARIANTS.frostedRed.top,
+  gradientBottom: FROSTED_VARIANTS.frostedRed.bottom,
+  ...FROSTED_VARIANTS.frostedRed.preset,
+};
 const VARIANT_DEFAULTS = {
-  blue: {
-    gradientTop:    FROSTED_VARIANTS.frostedBlue.top,
-    gradientBottom: FROSTED_VARIANTS.frostedBlue.bottom,
-    ...FROSTED_VARIANTS.frostedBlue.preset,
-  },
-  red: {
-    gradientTop:    FROSTED_VARIANTS.frostedRed.top,
-    gradientBottom: FROSTED_VARIANTS.frostedRed.bottom,
-    ...FROSTED_VARIANTS.frostedRed.preset,
-  },
+  A: { blue: { ...BLUE_BASE, ...(BLUE_VARIANT_OVERRIDES.A || {}) }, red: { ...RED_BASE, ...(RED_VARIANT_OVERRIDES.A || {}) } },
+  B: { blue: { ...BLUE_BASE, ...BLUE_VARIANT_OVERRIDES.B },          red: { ...RED_BASE, ...RED_VARIANT_OVERRIDES.B } },
+  C: { blue: { ...BLUE_BASE, ...BLUE_VARIANT_OVERRIDES.C },          red: { ...RED_BASE, ...RED_VARIANT_OVERRIDES.C } },
+  D: { blue: { ...BLUE_BASE, ...BLUE_VARIANT_OVERRIDES.D },          red: { ...RED_BASE, ...RED_VARIANT_OVERRIDES.D } },
+  E: { blue: { ...BLUE_BASE, ...BLUE_VARIANT_OVERRIDES.E },          red: { ...RED_BASE, ...RED_VARIANT_OVERRIDES.E } },
 };
 
 const COLOR_LABELS = { blue: 'Blue', red: 'Red' };
 
-// Storage key bumped again (_v3) because the previous _v2 saves may
-// have stale values from before defaults were re-sourced from the
-// FROSTED_VARIANTS presets — easiest reset is a fresh key.
-const VARIANTS_STORAGE_KEY = 'ohouseVariantsSavedDefaults_v3';
+// Storage key bumped to _v5 because Red B→E now have distinct tones
+// matching the Blue progression. Old _v4 snapshots would override the
+// new Red defaults — fresh key forces a reset.
+const VARIANTS_STORAGE_KEY = 'ohouseVariantsSavedDefaults_v5';
 
 function freshDefaults() {
   const out = {};
   for (const k of VARIANT_KEYS) {
     out[k] = {};
     for (const c of VARIANT_COLORS) {
-      out[k][c] = { ...VARIANT_DEFAULTS[c] };
+      out[k][c] = { ...VARIANT_DEFAULTS[k][c] };
     }
   }
   return out;
@@ -3719,10 +3746,10 @@ function loadVariantSavedDefaults() {
     for (const k of VARIANT_KEYS) {
       for (const c of VARIANT_COLORS) {
         if (parsed?.[k]?.[c] && typeof parsed[k][c] === 'object') {
-          // Merge with VARIANT_DEFAULTS[c] so any newly-added field
-          // falls back to its default tone instead of becoming
+          // Merge with the per-key default so newly-added fields fall
+          // back to the slot's default value instead of becoming
           // `undefined` and crashing the slider.
-          out[k][c] = { ...VARIANT_DEFAULTS[c], ...parsed[k][c] };
+          out[k][c] = { ...VARIANT_DEFAULTS[k][c], ...parsed[k][c] };
         }
       }
     }
@@ -3798,9 +3825,10 @@ function renderVariantControls() {
     const v = params[f.key];
     if (f.type === 'color') {
       return `
-        <div class="variants-row is-color">
+        <div class="variants-row is-color" data-key="${f.key}">
           <label>${f.label}</label>
-          <input type="color" data-key="${f.key}" value="${v}">
+          <input type="color" class="variants-color-swatch" data-key="${f.key}" value="${v}">
+          <input type="text" class="variants-hex-input" data-key="${f.key}" value="${String(v).toUpperCase()}" maxlength="7" spellcheck="false">
         </div>`;
     }
     return `
@@ -3811,15 +3839,55 @@ function renderVariantControls() {
       </div>`;
   }).join('');
 
-  container.querySelectorAll('input').forEach((input) => {
+  // Range sliders: live-update the param + the value readout.
+  container.querySelectorAll('input[type="range"]').forEach((input) => {
     input.addEventListener('input', (e) => {
       const k = e.target.dataset.key;
-      const raw = e.target.value;
-      const val = e.target.type === 'color' ? raw : parseFloat(raw);
+      const val = parseFloat(e.target.value);
       variantStore[activeVariantKey][activeVariantColor][k] = val;
       const valSpan = e.target.parentElement.querySelector('.variants-value');
-      if (valSpan) valSpan.textContent = Number(val).toFixed(2);
+      if (valSpan) valSpan.textContent = val.toFixed(2);
       applyVariant();
+    });
+  });
+
+  // Color rows: swatch ↔ hex text mirror each other so the user can
+  // either pick visually via the native picker or type/paste a hex
+  // string directly. Hex input only commits when it parses as a valid
+  // 3- or 6-digit hex (with or without leading #) — partial typing
+  // doesn't fire applyVariant.
+  const HEX_RE = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i;
+  const normalizeHex = (raw) => {
+    const m = raw.trim().match(HEX_RE);
+    if (!m) return null;
+    const body = m[1];
+    const full = body.length === 3
+      ? body.split('').map((c) => c + c).join('')
+      : body;
+    return '#' + full.toUpperCase();
+  };
+  container.querySelectorAll('.variants-row.is-color').forEach((row) => {
+    const k = row.dataset.key;
+    const swatch = row.querySelector('.variants-color-swatch');
+    const hex    = row.querySelector('.variants-hex-input');
+    swatch.addEventListener('input', () => {
+      const val = swatch.value;
+      variantStore[activeVariantKey][activeVariantColor][k] = val;
+      hex.value = val.toUpperCase();
+      applyVariant();
+    });
+    hex.addEventListener('input', () => {
+      const norm = normalizeHex(hex.value);
+      if (!norm) return;
+      variantStore[activeVariantKey][activeVariantColor][k] = norm;
+      swatch.value = norm;
+      applyVariant();
+    });
+    // On blur, snap the text to the canonical uppercase #RRGGBB form
+    // so half-typed entries don't linger.
+    hex.addEventListener('blur', () => {
+      const norm = normalizeHex(hex.value);
+      hex.value = norm || variantStore[activeVariantKey][activeVariantColor][k].toUpperCase();
     });
   });
 
@@ -3961,9 +4029,6 @@ if (IS_PRINCIPLES_EMBED) {
       // Force every body to point at the same frosted material so a
       // single applyVariant updates all cells at once.
       setActiveMaterial('frostedBlue');
-      // Capture the merged body mesh produced by loadAsset so the
-      // per-asset tuning slider can re-remap its gradient UVs live.
-      slot.bodyMesh = bodyMeshes[bodyMeshes.length - 1] || null;
       const root = currentRoot;
       const maxDim = currentMaxDim;
       group.remove(root);
@@ -3977,63 +4042,7 @@ if (IS_PRINCIPLES_EMBED) {
 
     renderVariantControls();
     applyVariant();
-    renderPerAssetAdjust();
   })();
-
-  // ── Per-asset tuning ───────────────────────────────────
-  // The Asset chip row picks which slot the bottom panel adjusts.
-  // Currently this exposes gradientYShift only — coupon has a
-  // geometric quirk (flat body that sits in the dark half of the
-  // shared gradient), so the designer needs to bias it back toward
-  // the lighter end without touching the other four slots. Sliders
-  // mutate ASSETS[id].gradientYShift live and re-remap the slot's
-  // body UVs so the change shows immediately.
-  let activeAdjustAsset = 'box';
-
-  function reapplyGradientForSlot(assetId) {
-    const slot = variantSlots.find((s) => s.id === assetId);
-    if (!slot || !slot.bodyMesh) return;
-    const asset = ASSETS[assetId];
-    slot.bodyMesh.updateMatrixWorld(true);
-    const bodyBox = new THREE.Box3().setFromObject(slot.bodyMesh);
-    const span = Math.max(1e-6, bodyBox.max.y - bodyBox.min.y);
-    const shift = asset.gradientYShift || 0;
-    const yMin = shift < 0 ? bodyBox.min.y + shift * span : bodyBox.min.y;
-    const yMax = shift > 0 ? bodyBox.max.y + shift * span : bodyBox.max.y;
-    remapUVsToWorldY(slot.bodyMesh, yMin, yMax);
-  }
-
-  function renderPerAssetAdjust() {
-    const label = document.getElementById('variantsAdjustLabel');
-    const container = document.getElementById('variantsAdjustControls');
-    if (!label || !container) return;
-    label.textContent = `${VARIANT_LABELS[activeAdjustAsset]} — Per-asset Tuning`;
-    const shift = ASSETS[activeAdjustAsset].gradientYShift || 0;
-    container.innerHTML = `
-      <div class="variants-row">
-        <label>Y Shift</label>
-        <input type="range" data-key="gradientYShift" min="-0.5" max="0.5" step="0.01" value="${shift}">
-        <span class="variants-value">${shift.toFixed(2)}</span>
-      </div>
-    `;
-    const input = container.querySelector('input');
-    const valSpan = container.querySelector('.variants-value');
-    input.addEventListener('input', (e) => {
-      const val = parseFloat(e.target.value);
-      valSpan.textContent = val.toFixed(2);
-      ASSETS[activeAdjustAsset].gradientYShift = val;
-      reapplyGradientForSlot(activeAdjustAsset);
-    });
-  }
-
-  document.querySelectorAll('#variantsAssetRow .variants-chip').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('#variantsAssetRow .variants-chip')
-        .forEach((b) => b.classList.toggle('active', b === btn));
-      activeAdjustAsset = btn.dataset.asset;
-      renderPerAssetAdjust();
-    });
-  });
 
   // Variant chips — switch the active slot. Each slot stores its own
   // parameter set (initial = VARIANT_DEFAULTS), so swapping is instant
@@ -4090,16 +4099,114 @@ if (IS_PRINCIPLES_EMBED) {
 
   // 원래대로 — full factory restore for the active (key, color) slot.
   // Wipes both the live edits AND the persisted saved layer back to
-  // the original VARIANT_DEFAULTS for that color (Blue stock or Red
-  // stock), so Reset also points back to factory from here.
+  // the per-key VARIANT_DEFAULTS for that color, so Reset also points
+  // back to factory from here.
   document.getElementById('variantsRestore').addEventListener('click', () => {
-    const stock = VARIANT_DEFAULTS[activeVariantColor];
+    const stock = VARIANT_DEFAULTS[activeVariantKey][activeVariantColor];
     variantStore[activeVariantKey][activeVariantColor]         = { ...stock };
     variantSavedDefaults[activeVariantKey][activeVariantColor] = { ...stock };
     persistVariantSavedDefaults();
     renderVariantControls();
     applyVariant();
   });
+
+  // ── PNG export ─────────────────────────────────────────
+  // Each PNG is rendered at a fixed square (EXPORT_SIZE) using the
+  // slot's own renderer, so the PMREM-bound HDR / chrome / frosted
+  // materials look correct (they're tied to the slot's GL context).
+  // Two-pass composite mirrors the main library's exportPng:
+  //   pass 1 — overrideMaterial = white silhouette (alpha cleared)
+  //   pass 2 — normal render on top of the white backing
+  // → asset area becomes opaque white-backed; ground shadow keeps its
+  // alpha so the file drops cleanly onto any design surface.
+  const EXPORT_SIZE = 1080;
+
+  async function exportSlotPng(slot, filename) {
+    const r = slot.renderer;
+    const cam = slot.camera;
+    const sceneRef = slot.scene;
+
+    const prevPx = r.getPixelRatio();
+    const prevW  = r.domElement.width  / prevPx;
+    const prevH  = r.domElement.height / prevPx;
+    const prevLeft = cam.left, prevRight = cam.right;
+    const prevTop  = cam.top,  prevBottom = cam.bottom;
+    const prevZoom = cam.zoom;
+    const prevBg = sceneRef.background;
+
+    r.setPixelRatio(1);
+    r.setSize(EXPORT_SIZE, EXPORT_SIZE, false);
+    // Square frustum so framing matches the canvas aspect.
+    const asset = ASSETS[slot.id];
+    const frustum = slot.maxDim * (asset.frameScale ?? 2.2);
+    cam.left = -frustum / 2;
+    cam.right =  frustum / 2;
+    cam.top    =  frustum / 2;
+    cam.bottom = -frustum / 2;
+    cam.zoom = 0.85;
+    cam.updateProjectionMatrix();
+    sceneRef.background = null;
+    r.setClearColor(0x000000, 0);
+
+    const out = document.createElement('canvas');
+    out.width = EXPORT_SIZE;
+    out.height = EXPORT_SIZE;
+    const ctx = out.getContext('2d');
+
+    // Pass 1: silhouette
+    const silMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    sceneRef.overrideMaterial = silMat;
+    r.render(sceneRef, cam);
+    ctx.drawImage(r.domElement, 0, 0);
+    sceneRef.overrideMaterial = null;
+    silMat.dispose();
+
+    // Pass 2: normal
+    r.render(sceneRef, cam);
+    ctx.drawImage(r.domElement, 0, 0);
+
+    await new Promise((resolve) => out.toBlob((blob) => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      // Delay revoke so the browser actually starts the download
+      // before the blob URL is invalidated.
+      setTimeout(() => { URL.revokeObjectURL(url); resolve(); }, 80);
+    }, 'image/png'));
+
+    // Restore slot state
+    sceneRef.background = prevBg;
+    r.setPixelRatio(prevPx);
+    r.setSize(prevW, prevH, false);
+    cam.left = prevLeft; cam.right = prevRight;
+    cam.top  = prevTop;  cam.bottom = prevBottom;
+    cam.zoom = prevZoom;
+    cam.updateProjectionMatrix();
+    // Breather between downloads so Chrome doesn't batch / block them.
+    await new Promise((res) => setTimeout(res, 120));
+  }
+
+  async function exportCurrentSet() {
+    const btn = document.getElementById('variantsExport');
+    btn.disabled = true;
+    const prevLabel = btn.textContent;
+    try {
+      for (const slot of variantSlots) {
+        const name = `${slot.id}_${activeVariantKey}_${activeVariantColor}.png`;
+        btn.textContent = `${slot.id} 다운로드 중…`;
+        await exportSlotPng(slot, name);
+      }
+    } finally {
+      btn.textContent = prevLabel;
+      btn.disabled = false;
+    }
+  }
+
+  document.getElementById('variantsExport').addEventListener('click', exportCurrentSet);
 
   // Resize — re-frame every slot's camera + renderer to its cell's
   // current pixel size. (Cells flex with the viewport via CSS grid.)
