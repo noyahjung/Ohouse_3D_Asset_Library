@@ -648,6 +648,195 @@
     opacity: 1;
   }
 
+  /* ── Variants mode (?mode=variants) — temporary tone-comparison
+     view used for team alignment on material direction. Hides every
+     piece of the customizer / landing chrome and pins a compact panel
+     to the right edge with asset, color, and tone selectors. ───── */
+  body.variants-mode #landing,
+  body.variants-mode #palette,
+  body.variants-mode #assets,
+  body.variants-mode #settings,
+  body.variants-mode #viewSelector,
+  body.variants-mode #bgSelector,
+  body.variants-mode #hint,
+  body.variants-mode #dragHint,
+  body.variants-mode #projectBadge,
+  body.variants-mode #principles,
+  body.variants-mode #app { display: none !important; }
+
+  /* Multi-asset stage: 2 cells on top, 3 cells on bottom. Each cell
+     hosts its own renderer/scene/camera; all share the global frosted
+     material so slider edits propagate to every cell at once. */
+  #variantsStage { display: none; }
+  body.variants-mode #variantsStage {
+    display: grid;
+    position: fixed;
+    top: 24px;
+    left: 24px;
+    bottom: 24px;
+    right: 332px;
+    grid-template-columns: repeat(6, 1fr);
+    grid-template-rows: 1fr 1fr;
+    gap: 12px;
+    z-index: 5;
+  }
+  body.variants-mode #variantsStage > .variants-stage-cell {
+    position: relative;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  body.variants-mode #variantsStage > .variants-stage-cell:nth-child(1) { grid-column: 1 / 4; grid-row: 1; }
+  body.variants-mode #variantsStage > .variants-stage-cell:nth-child(2) { grid-column: 4 / 7; grid-row: 1; }
+  body.variants-mode #variantsStage > .variants-stage-cell:nth-child(3) { grid-column: 1 / 3; grid-row: 2; }
+  body.variants-mode #variantsStage > .variants-stage-cell:nth-child(4) { grid-column: 3 / 5; grid-row: 2; }
+  body.variants-mode #variantsStage > .variants-stage-cell:nth-child(5) { grid-column: 5 / 7; grid-row: 2; }
+  .variants-stage-cell canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+  }
+  .variants-stage-label {
+    position: absolute;
+    top: 12px;
+    left: 14px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  #variantsPanel { display: none; }
+  body.variants-mode #variantsPanel {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    bottom: 24px;
+    width: 280px;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: saturate(180%) blur(8px);
+    -webkit-backdrop-filter: saturate(180%) blur(8px);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px;
+    z-index: 100;
+    overflow-y: auto;
+    box-shadow: var(--shadow-md);
+  }
+  .variants-title {
+    font-size: 14px; font-weight: 700; color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .variants-subtitle {
+    font-size: 12px; color: var(--text-mute);
+    margin-top: -14px;
+  }
+  .variants-group { display: flex; flex-direction: column; gap: 8px; }
+  .variants-group-label {
+    font-size: 10px; font-weight: 700;
+    color: var(--text-mute); text-transform: uppercase;
+    letter-spacing: 0.10em;
+  }
+  .variants-chip-row { display: flex; flex-wrap: wrap; gap: 5px; }
+  .variants-chip {
+    padding: 6px 12px; border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.92);
+    border-radius: 999px;
+    font-family: inherit; font-size: 12px;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition), border-color var(--transition);
+  }
+  .variants-chip:hover { background: #fff; color: var(--text); }
+  .variants-chip.active {
+    background: var(--accent); color: #fff;
+    border-color: var(--accent);
+  }
+  .variants-controls { display: flex; flex-direction: column; gap: 9px; }
+  .variants-row {
+    display: grid;
+    grid-template-columns: 96px 1fr 36px;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+  }
+  .variants-row label {
+    color: var(--text-dim);
+    font-size: 11px;
+    letter-spacing: -0.005em;
+  }
+  .variants-row.is-color { grid-template-columns: 96px 1fr; }
+  .variants-row input[type="range"] {
+    width: 100%;
+    accent-color: var(--accent);
+  }
+  .variants-row input[type="color"] {
+    width: 100%;
+    height: 26px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: #fff;
+    cursor: pointer;
+    padding: 1px;
+  }
+  .variants-row .variants-value {
+    font-size: 11px;
+    color: var(--text-mute);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .variants-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 4px;
+  }
+  .variants-actions-row {
+    display: flex;
+    gap: 6px;
+  }
+  .variants-actions-row .variants-action {
+    flex: 1;
+  }
+  .variants-action {
+    flex: 1;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.92);
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-dim);
+    transition: background var(--transition), color var(--transition), border-color var(--transition);
+  }
+  .variants-action:hover {
+    background: #fff;
+    color: var(--text);
+  }
+  .variants-action--primary {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .variants-action--primary:hover {
+    background: var(--accent-hover);
+    color: #fff;
+    border-color: var(--accent-hover);
+  }
+  .variants-action[disabled] {
+    opacity: 0.7;
+    cursor: default;
+  }
+
   /* ── Principles button on landing ──────────────── */
   .principles-btn {
     display: inline-flex; align-items: center; gap: 6px;
@@ -812,6 +1001,53 @@
     <div class="empty" hidden>No matching assets.</div>
   </div>
 </div>
+
+<div id="variantsPanel">
+  <div class="variants-title">Tone Variants</div>
+  <div class="variants-subtitle">5개의 재질 톤을 직접 커스터마이즈</div>
+
+  <div class="variants-group">
+    <div class="variants-group-label">Asset</div>
+    <div class="variants-chip-row" id="variantsAssetRow">
+      <button class="variants-chip active" data-asset="box">이사박스</button>
+      <button class="variants-chip" data-asset="coupon">쿠폰</button>
+      <button class="variants-chip" data-asset="gift">선물상자</button>
+      <button class="variants-chip" data-asset="clock">시계</button>
+      <button class="variants-chip" data-asset="camera">카메라</button>
+    </div>
+  </div>
+
+  <div class="variants-group">
+    <div class="variants-group-label">Variant</div>
+    <div class="variants-chip-row" id="variantsKeyRow">
+      <button class="variants-chip active" data-variant="A">A재질</button>
+      <button class="variants-chip" data-variant="B">B재질</button>
+      <button class="variants-chip" data-variant="C">C재질</button>
+      <button class="variants-chip" data-variant="D">D재질</button>
+      <button class="variants-chip" data-variant="E">E재질</button>
+    </div>
+  </div>
+
+  <div class="variants-group">
+    <div class="variants-group-label" id="variantsControlsLabel">A재질 — Material Settings</div>
+    <div class="variants-controls" id="variantsControls"></div>
+  </div>
+
+  <div class="variants-group">
+    <div class="variants-group-label" id="variantsAdjustLabel">이사박스 — Per-asset Tuning</div>
+    <div class="variants-controls" id="variantsAdjustControls"></div>
+  </div>
+
+  <div class="variants-actions">
+    <button id="variantsSet" class="variants-action variants-action--primary" type="button">Set as default</button>
+    <div class="variants-actions-row">
+      <button id="variantsReset" class="variants-action" type="button">Reset</button>
+      <button id="variantsRestore" class="variants-action" type="button">원래대로</button>
+    </div>
+  </div>
+</div>
+
+<div id="variantsStage"></div>
 
 <div id="principles">
   <span class="page-title">오늘의집 3D 에셋 조형 원칙</span>
@@ -1265,10 +1501,20 @@ const ASSETS = {
     label: 'Coupon',
     rootName: 'coupon',
     recommended: 'frostedPink',
-    modelScale: 6.3,
+    // Source body extent ~392×283×36. Old modelScale 6.3 inflated the
+    // body to ~2470×1786×227 world units — way bigger than the other
+    // assets (~300 cubic) and breaking transmission rendering on a
+    // shared material because absorption is path-length based. Use
+    // 1.5 so coupon's body lands near the same magnitude as its
+    // neighbors while frameScale keeps it filling the cell at the
+    // same on-screen size.
+    modelScale: 1.5,
     frameScale: 1.6,
     useFullGradientBox: true,
     viewOverrides: { '3': [0.25, 0.05, 1.00] },
+    // Weld co-located vertices before normal calc so any UV/material
+    // splits in the source don't leave faceted normals on the body.
+    weldVertices: true,
     materialFor(name, parentName) {
       const n = (name || '').toLowerCase();
       if (/percent/.test(n)) return 'luminance';
@@ -3352,7 +3598,16 @@ function tick() {
     group.rotation.y = 0;
   }
   controls.update();
-  renderer.render(scene, camera);
+  // In variants mode the main canvas is hidden — drive the per-slot
+  // mini-renderers from this same animation frame so all five
+  // assets stay in sync.
+  if (window.__variantSlots) {
+    for (const slot of window.__variantSlots) {
+      if (slot.root) slot.renderer.render(slot.scene, slot.camera);
+    }
+  } else {
+    renderer.render(scene, camera);
+  }
   requestAnimationFrame(tick);
 }
 tick();
@@ -3374,6 +3629,156 @@ const IS_PRINCIPLES_EMBED =
 const IS_AUTO_EXPORT =
   new URLSearchParams(window.location.search).get('autoexport') === 'all';
 
+// `?mode=variants` boots into the temporary tone-comparison view —
+// hides the customizer chrome, shows a side panel with Asset selector,
+// 5 customizable variant slots (A–E), and a slider stack for the
+// frosted-body parameters. Designers tune each slot independently to
+// land on a direction the team can align on.
+const IS_VARIANTS_MODE =
+  new URLSearchParams(window.location.search).get('mode') === 'variants';
+
+// Field schema mirrors the admin's frosted controls so the value
+// ranges are consistent with what designers already work with.
+const VARIANT_FIELDS = [
+  { key: 'gradientTop',         label: 'Gradient Top',      type: 'color' },
+  { key: 'gradientBottom',      label: 'Gradient Bottom',   type: 'color' },
+  { key: 'transmission',        label: 'Transmission',      type: 'range', min: 0,   max: 1,     step: 0.01 },
+  { key: 'roughness',           label: 'Roughness',         type: 'range', min: 0,   max: 1,     step: 0.01 },
+  { key: 'thickness',           label: 'Thickness',         type: 'range', min: 0,   max: 4,     step: 0.01 },
+  { key: 'ior',                 label: 'IOR',               type: 'range', min: 1,   max: 2.333, step: 0.01 },
+  { key: 'clearcoat',           label: 'Clearcoat',         type: 'range', min: 0,   max: 1,     step: 0.01 },
+  { key: 'clearcoatRoughness',  label: 'Coat Roughness',    type: 'range', min: 0,   max: 1,     step: 0.01 },
+  { key: 'attenuationDistance', label: 'Attenuation',       type: 'range', min: 0.2, max: 8,     step: 0.01 },
+  { key: 'gradientStrength',    label: 'Gradient Strength', type: 'range', min: 0,   max: 1,     step: 0.01 },
+];
+
+// Default = current frostedBlue values (matches FROSTED_VARIANTS.frostedBlue.preset
+// + FROSTED_VARIANTS.frostedBlue.top / .bottom). Every A–E slot starts
+// from this so designers can iterate from the live default.
+const VARIANT_DEFAULTS = {
+  gradientTop:         FROSTED_VARIANTS.frostedBlue.top,
+  gradientBottom:      FROSTED_VARIANTS.frostedBlue.bottom,
+  transmission:        0.70,
+  roughness:           0.60,
+  thickness:           2.30,
+  ior:                 1.70,
+  clearcoat:           0.39,
+  clearcoatRoughness:  0.50,
+  attenuationDistance: 4.50,
+  gradientStrength:    0.45,
+};
+
+// Two-layer state: `variantSavedDefaults` is the persisted "this is
+// what slot X looks like" target (Set button writes into this and
+// localStorage); `variantStore` is the live, currently-edited values
+// (slider input writes here, Reset copies the saved layer back over).
+const VARIANTS_STORAGE_KEY = 'ohouseVariantsSavedDefaults_v1';
+
+function freshDefaults() {
+  return {
+    A: { ...VARIANT_DEFAULTS },
+    B: { ...VARIANT_DEFAULTS },
+    C: { ...VARIANT_DEFAULTS },
+    D: { ...VARIANT_DEFAULTS },
+    E: { ...VARIANT_DEFAULTS },
+  };
+}
+
+function loadVariantSavedDefaults() {
+  try {
+    const raw = localStorage.getItem(VARIANTS_STORAGE_KEY);
+    if (!raw) return freshDefaults();
+    const parsed = JSON.parse(raw);
+    const out = freshDefaults();
+    for (const k of ['A', 'B', 'C', 'D', 'E']) {
+      if (parsed && parsed[k] && typeof parsed[k] === 'object') {
+        // Merge so a missing key (e.g. if VARIANT_FIELDS gains one
+        // later) falls back to VARIANT_DEFAULTS.
+        out[k] = { ...VARIANT_DEFAULTS, ...parsed[k] };
+      }
+    }
+    return out;
+  } catch {
+    return freshDefaults();
+  }
+}
+
+function persistVariantSavedDefaults() {
+  try {
+    localStorage.setItem(VARIANTS_STORAGE_KEY, JSON.stringify(variantSavedDefaults));
+  } catch {}
+}
+
+const variantSavedDefaults = loadVariantSavedDefaults();
+const variantStore = {
+  A: { ...variantSavedDefaults.A },
+  B: { ...variantSavedDefaults.B },
+  C: { ...variantSavedDefaults.C },
+  D: { ...variantSavedDefaults.D },
+  E: { ...variantSavedDefaults.E },
+};
+
+let activeVariantKey = 'A';
+
+// Apply the slot's params to the shared frosted material. Now that
+// every variant asset is registered at a comparable world size
+// (modelScale chosen so each body lands in the ~300 unit ballpark),
+// transmission absorption is consistent across the five slots and
+// per-asset compensation is unnecessary — one mutation propagates.
+function applyVariant(key) {
+  const params = variantStore[key];
+  if (!params) return;
+  const mat = materials.frostedBlue;
+  if (!mat) return;
+  mat.transmission        = params.transmission;
+  mat.roughness           = params.roughness;
+  mat.thickness           = params.thickness;
+  mat.ior                 = params.ior;
+  mat.clearcoat           = params.clearcoat;
+  mat.clearcoatRoughness  = params.clearcoatRoughness;
+  mat.attenuationDistance = params.attenuationDistance;
+  if (mat.map) mat.map.dispose();
+  mat.map = makeVerticalGradient(params.gradientTop, params.gradientBottom, params.gradientStrength);
+  mat.needsUpdate = true;
+}
+
+function renderVariantControls() {
+  const container = document.getElementById('variantsControls');
+  if (!container) return;
+  const params = variantStore[activeVariantKey];
+  container.innerHTML = VARIANT_FIELDS.map((f) => {
+    const v = params[f.key];
+    if (f.type === 'color') {
+      return `
+        <div class="variants-row is-color">
+          <label>${f.label}</label>
+          <input type="color" data-key="${f.key}" value="${v}">
+        </div>`;
+    }
+    return `
+      <div class="variants-row">
+        <label>${f.label}</label>
+        <input type="range" data-key="${f.key}" min="${f.min}" max="${f.max}" step="${f.step}" value="${v}">
+        <span class="variants-value">${Number(v).toFixed(2)}</span>
+      </div>`;
+  }).join('');
+
+  container.querySelectorAll('input').forEach((input) => {
+    input.addEventListener('input', (e) => {
+      const k = e.target.dataset.key;
+      const raw = e.target.value;
+      const val = e.target.type === 'color' ? raw : parseFloat(raw);
+      variantStore[activeVariantKey][k] = val;
+      const valSpan = e.target.parentElement.querySelector('.variants-value');
+      if (valSpan) valSpan.textContent = Number(val).toFixed(2);
+      applyVariant(activeVariantKey);
+    });
+  });
+
+  const label = document.getElementById('variantsControlsLabel');
+  if (label) label.textContent = `${activeVariantKey}재질 — Material Settings`;
+}
+
 if (IS_PRINCIPLES_EMBED) {
   document.body.classList.add('principles-embed');
   // Skip buildLanding — the asset grid is irrelevant in embed mode and
@@ -3390,6 +3795,246 @@ if (IS_PRINCIPLES_EMBED) {
       document.body.classList.add('principles-shown');
     }
   });
+} else if (IS_VARIANTS_MODE) {
+  document.body.classList.add('variants-mode');
+  // Visual identity for the variants tab: title becomes "재질모드"
+  // and the favicon swaps to a palette emoji so the browser tab is
+  // instantly distinguishable from the main library tab.
+  document.title = '재질모드';
+  const variantsFavicon = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><text y="52" font-size="56">🎨</text></svg>`
+  );
+  document.querySelector('link[rel=icon]').setAttribute('href', variantsFavicon);
+
+  // ── Multi-slot stage ─────────────────────────────────────
+  // Show all 5 assets in one screen (2 on top, 3 on bottom) so the
+  // material change applies to every asset simultaneously. Each slot
+  // gets its own renderer / scene / camera, but every asset's body
+  // shares the global `materials.frostedBlue` so a single applyVariant
+  // call updates all five at once.
+  const VARIANT_ASSETS = ['box', 'coupon', 'gift', 'clock', 'camera'];
+  const VARIANT_LABELS = {
+    box: '이사박스', coupon: '쿠폰', gift: '선물상자',
+    clock: '시계', camera: '카메라',
+  };
+  const variantSlots = [];
+
+  function addSlotLights(slotScene) {
+    slotScene.add(new THREE.AmbientLight(0xffffff, 0.55));
+    const k = new THREE.DirectionalLight(0xffffff, 1.8);  k.position.set(3, 5, 4);  slotScene.add(k);
+    const f = new THREE.DirectionalLight(0xdceaff, 0.75); f.position.set(-4, 2, -3); slotScene.add(f);
+    const r = new THREE.DirectionalLight(0xffffff, 0.4);  r.position.set(0, 3, -5);  slotScene.add(r);
+  }
+
+  function frameSlotCamera(slot) {
+    const asset = ASSETS[slot.id];
+    const v = asset.viewOverrides?.['1'] || VIEW_DIRS['1'];
+    const d = slot.maxDim * 2.0;
+    slot.camera.position.set(v[0] * d, v[1] * d, v[2] * d);
+    const frustum = slot.maxDim * (asset.frameScale ?? 2.2);
+    const w = Math.max(1, slot.cell.clientWidth);
+    const h = Math.max(1, slot.cell.clientHeight);
+    const aspect = w / h;
+    // Pull the framing in a touch (zoom 1 / 1.18) so each cell reads
+    // tight against the asset without bleeding into the cell edges.
+    slot.camera.left   = -frustum * aspect / 2;
+    slot.camera.right  =  frustum * aspect / 2;
+    slot.camera.top    =  frustum / 2;
+    slot.camera.bottom = -frustum / 2;
+    slot.camera.near = -slot.maxDim * 10;
+    slot.camera.far  =  slot.maxDim * 10;
+    slot.camera.zoom = 0.85;
+    slot.camera.updateProjectionMatrix();
+    slot.camera.lookAt(0, 0, 0);
+    slot.renderer.setSize(w, h, false);
+  }
+
+  const stageEl = document.getElementById('variantsStage');
+
+  // Normalize per-asset gradient settings so the gradient maps to the
+  // body bbox identically across all 5 cells. Without this, coupon's
+  // `useFullGradientBox` (which expands the bbox to include the
+  // percent symbol) drops the visible body into the dark half of the
+  // gradient and reads way more saturated than its neighbors. We also
+  // zero out `gradientYShift` so box/camera-specific biases don't
+  // skew the comparison.
+  for (const id of VARIANT_ASSETS) {
+    ASSETS[id].useFullGradientBox = false;
+    ASSETS[id].gradientYShift = 0;
+  }
+
+  (async () => {
+    // Build cells + per-slot Three.js worlds, then sequentially load
+    // each asset and relocate `currentRoot` into the slot's scene so
+    // we end up with five live assets sharing one frosted material.
+    for (const id of VARIANT_ASSETS) {
+      const cell = document.createElement('div');
+      cell.className = 'variants-stage-cell';
+      cell.innerHTML = `<span class="variants-stage-label">${VARIANT_LABELS[id]}</span>`;
+      stageEl.appendChild(cell);
+
+      const slotRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+      slotRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      slotRenderer.toneMapping        = renderer.toneMapping;
+      slotRenderer.toneMappingExposure = renderer.toneMappingExposure;
+      slotRenderer.outputColorSpace   = renderer.outputColorSpace;
+      slotRenderer.setClearColor(0xffffff, 1);
+      cell.appendChild(slotRenderer.domElement);
+
+      const slotScene = new THREE.Scene();
+      slotScene.background = new THREE.Color(0xffffff);
+      slotScene.environment = scene.environment;
+      addSlotLights(slotScene);
+
+      const slotCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, -10, 10);
+
+      variantSlots.push({ id, cell, renderer: slotRenderer, scene: slotScene, camera: slotCamera, root: null, maxDim: 1 });
+    }
+
+    // Sequential loadAsset → relocate each root before the next call,
+    // and force `currentRoot = null` so the next loadAsset doesn't
+    // strip the geometry we just moved into a slot scene.
+    for (const slot of variantSlots) {
+      await loadAsset(slot.id);
+      // Force every body to point at the same frosted material so a
+      // single applyVariant updates all cells at once.
+      setActiveMaterial('frostedBlue');
+      // Capture the merged body mesh produced by loadAsset so the
+      // per-asset tuning slider can re-remap its gradient UVs live.
+      slot.bodyMesh = bodyMeshes[bodyMeshes.length - 1] || null;
+      const root = currentRoot;
+      const maxDim = currentMaxDim;
+      group.remove(root);
+      slot.scene.add(root);
+      slot.root = root;
+      slot.maxDim = maxDim;
+      frameSlotCamera(slot);
+      // Detach so the next loadAsset doesn't try to dispose this root.
+      currentRoot = null;
+    }
+
+    renderVariantControls();
+    applyVariant(activeVariantKey);
+    renderPerAssetAdjust();
+  })();
+
+  // ── Per-asset tuning ───────────────────────────────────
+  // The Asset chip row picks which slot the bottom panel adjusts.
+  // Currently this exposes gradientYShift only — coupon has a
+  // geometric quirk (flat body that sits in the dark half of the
+  // shared gradient), so the designer needs to bias it back toward
+  // the lighter end without touching the other four slots. Sliders
+  // mutate ASSETS[id].gradientYShift live and re-remap the slot's
+  // body UVs so the change shows immediately.
+  let activeAdjustAsset = 'box';
+
+  function reapplyGradientForSlot(assetId) {
+    const slot = variantSlots.find((s) => s.id === assetId);
+    if (!slot || !slot.bodyMesh) return;
+    const asset = ASSETS[assetId];
+    slot.bodyMesh.updateMatrixWorld(true);
+    const bodyBox = new THREE.Box3().setFromObject(slot.bodyMesh);
+    const span = Math.max(1e-6, bodyBox.max.y - bodyBox.min.y);
+    const shift = asset.gradientYShift || 0;
+    const yMin = shift < 0 ? bodyBox.min.y + shift * span : bodyBox.min.y;
+    const yMax = shift > 0 ? bodyBox.max.y + shift * span : bodyBox.max.y;
+    remapUVsToWorldY(slot.bodyMesh, yMin, yMax);
+  }
+
+  function renderPerAssetAdjust() {
+    const label = document.getElementById('variantsAdjustLabel');
+    const container = document.getElementById('variantsAdjustControls');
+    if (!label || !container) return;
+    label.textContent = `${VARIANT_LABELS[activeAdjustAsset]} — Per-asset Tuning`;
+    const shift = ASSETS[activeAdjustAsset].gradientYShift || 0;
+    container.innerHTML = `
+      <div class="variants-row">
+        <label>Y Shift</label>
+        <input type="range" data-key="gradientYShift" min="-0.5" max="0.5" step="0.01" value="${shift}">
+        <span class="variants-value">${shift.toFixed(2)}</span>
+      </div>
+    `;
+    const input = container.querySelector('input');
+    const valSpan = container.querySelector('.variants-value');
+    input.addEventListener('input', (e) => {
+      const val = parseFloat(e.target.value);
+      valSpan.textContent = val.toFixed(2);
+      ASSETS[activeAdjustAsset].gradientYShift = val;
+      reapplyGradientForSlot(activeAdjustAsset);
+    });
+  }
+
+  document.querySelectorAll('#variantsAssetRow .variants-chip').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#variantsAssetRow .variants-chip')
+        .forEach((b) => b.classList.toggle('active', b === btn));
+      activeAdjustAsset = btn.dataset.asset;
+      renderPerAssetAdjust();
+    });
+  });
+
+  // Variant chips — switch the active slot. Each slot stores its own
+  // parameter set (initial = VARIANT_DEFAULTS), so swapping is instant
+  // and round-tripping through other slots preserves edits.
+  document.querySelectorAll('#variantsKeyRow .variants-chip').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#variantsKeyRow .variants-chip')
+        .forEach((b) => b.classList.toggle('active', b === btn));
+      activeVariantKey = btn.dataset.variant;
+      renderVariantControls();
+      applyVariant(activeVariantKey);
+    });
+  });
+
+  // Set as default — promote the slot's current edits into its
+  // persisted "default" layer and write to localStorage so reloading
+  // the page brings it back. Brief in-button confirmation so the
+  // designer knows the save landed.
+  document.getElementById('variantsSet').addEventListener('click', (e) => {
+    variantSavedDefaults[activeVariantKey] = { ...variantStore[activeVariantKey] };
+    persistVariantSavedDefaults();
+    const btn = e.currentTarget;
+    const original = btn.textContent;
+    btn.textContent = 'Saved ✓';
+    btn.disabled = true;
+    setTimeout(() => {
+      btn.textContent = original;
+      btn.disabled = false;
+    }, 1100);
+  });
+
+  // Reset — roll back the active slot's live edits to its last-saved
+  // default (or the original VARIANT_DEFAULTS if Set was never used).
+  // Other slots are untouched.
+  document.getElementById('variantsReset').addEventListener('click', () => {
+    variantStore[activeVariantKey] = { ...variantSavedDefaults[activeVariantKey] };
+    renderVariantControls();
+    applyVariant(activeVariantKey);
+  });
+
+  // 원래대로 — full factory restore for the active slot. Wipes both
+  // the live edits AND the persisted "saved default" back to the
+  // original VARIANT_DEFAULTS (frostedBlue stock values), so Reset
+  // also points back to the stock state from this point.
+  document.getElementById('variantsRestore').addEventListener('click', () => {
+    variantStore[activeVariantKey]         = { ...VARIANT_DEFAULTS };
+    variantSavedDefaults[activeVariantKey] = { ...VARIANT_DEFAULTS };
+    persistVariantSavedDefaults();
+    renderVariantControls();
+    applyVariant(activeVariantKey);
+  });
+
+  // Resize — re-frame every slot's camera + renderer to its cell's
+  // current pixel size. (Cells flex with the viewport via CSS grid.)
+  window.addEventListener('resize', () => {
+    for (const slot of variantSlots) {
+      if (slot.root) frameSlotCamera(slot);
+    }
+  });
+
+  // Expose slots so the main `tick()` can render them in place of the
+  // (now hidden) main canvas.
+  window.__variantSlots = variantSlots;
 } else if (IS_AUTO_EXPORT) {
   window.__exportedThumbs = {};
   window.__exportDone = false;

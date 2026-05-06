@@ -143,6 +143,35 @@ python3 -c "import json,struct;f=open('<에셋ID>.glb','rb');f.read(12);n=struct
 - 작업이 끝나면 원본 `.gltf`/`.bin`은 삭제하고 `.glb` 단일 파일만 리포에 남긴다.
 - `ASSETS`의 `url`도 새 `.glb` 파일명으로 갱신.
 
+#### body 크기 점검 — modelScale 보정 필요 여부
+
+기존 자산(box, gift, clock, camera 등)의 body 메시는 소스 좌표에서 **maxDim ~300 단위 큐브** 안팎이다 (예: `box.Cube` 323 × 291 × 308). 새 에셋의 소스가 이 범위에서 크게 벗어나면 `modelScale`로 보정해야 한다 — body의 world 크기가 다른 자산과 다르면 `MeshPhysicalMaterial`의 `transmission`/`attenuationDistance`가 path-length 기반이라 같은 머티리얼 설정에서도 톤이 어긋나 보인다.
+
+```bash
+# body 메시의 소스 extent 확인
+python3 -c "
+import json
+with open('<에셋ID>.gltf') as f: j = json.load(f)
+for m in j.get('meshes', []):
+    name = m.get('name','?')
+    for p in m.get('primitives', []):
+        ai = p['attributes'].get('POSITION')
+        if ai is None: continue
+        a = j['accessors'][ai]
+        mn, mx = a.get('min'), a.get('max')
+        if mn and mx:
+            print(f'{name:14s}  X={mx[0]-mn[0]:.1f}  Y={mx[1]-mn[1]:.1f}  Z={mx[2]-mn[2]:.1f}')
+"
+```
+
+기준점:
+- maxDim이 100~500 단위 → `modelScale: 1` (또는 미설정, 기본값)
+- maxDim이 1000~3000 → `modelScale: 0.1~0.3` (소스가 큼)
+- maxDim이 30~100 → `modelScale: 3~10` (소스가 작음)
+- 실제 사례: `coupon` body 392 × 283 × 36 (납작) → `modelScale: 1.5`
+
+> 시각 사이즈는 `frameScale`이 maxDim 기반 카메라 프러스텀으로 자동 보정하므로, modelScale을 줄여도 셀에 채워지는 크기는 비슷하게 유지된다.
+
 ### 4-3. ASSETS 레지스트리에 등록
 
 `3Dassetlibrary.html`의 `ASSETS` 객체에 항목 추가:
@@ -163,7 +192,15 @@ newAsset: {
 
   // ── 선택적 옵션 ──
   // rotationY: Math.PI,          // 초기 Y축 회전 (라디안)
-  // modelScale: 2.0,             // 모델 스케일 배율
+  // modelScale: 1.5,             // 모델 스케일 배율 — *world 크기 정규화*용.
+                                  //   기존 자산(box, gift, clock, camera)의 body가
+                                  //   ~300 단위(소스 좌표) 큐브 정도라 modelScale 1로
+                                  //   적정. 새 에셋의 소스 메시가 훨씬 작거나 크면
+                                  //   body의 maxDim이 ~300 단위가 되도록 modelScale을
+                                  //   조정해야 transmission 흡수가 다른 자산과 같은
+                                  //   톤으로 떨어진다. 흔한 케이스: C4D에서 미터/cm
+                                  //   스케일 차이로 익스포트된 메시. (예: coupon은
+                                  //   소스 크기 392×283×36 → modelScale 1.5)
   // frameScale: 1.8,             // 카메라 프레이밍 (기본 2.2)
   // yOffset: 0.1,                // 수직 위치 보정 (높이 비율)
   // bevelComp: 0.04,             // 둥근 바닥 에셋의 그림자 평면 미세 lift (기본 0)
