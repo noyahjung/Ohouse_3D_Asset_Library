@@ -1004,7 +1004,7 @@
 
 <div id="variantsPanel">
   <div class="variants-title">Tone Variants</div>
-  <div class="variants-subtitle">5개의 재질 톤을 직접 커스터마이즈</div>
+  <div class="variants-subtitle">재질 5종 × Blue/Red 두 컬러를 커스터마이즈</div>
 
   <div class="variants-group">
     <div class="variants-group-label">Asset</div>
@@ -1029,7 +1029,15 @@
   </div>
 
   <div class="variants-group">
-    <div class="variants-group-label" id="variantsControlsLabel">A재질 — Material Settings</div>
+    <div class="variants-group-label">Color</div>
+    <div class="variants-chip-row" id="variantsColorRow">
+      <button class="variants-chip active" data-color="blue">Blue</button>
+      <button class="variants-chip" data-color="red">Red</button>
+    </div>
+  </div>
+
+  <div class="variants-group">
+    <div class="variants-group-label" id="variantsControlsLabel">A재질 · Blue — Material Settings</div>
     <div class="variants-controls" id="variantsControls"></div>
   </div>
 
@@ -1363,13 +1371,18 @@ const pmrem = new THREE.PMREMGenerator(renderer);
 scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.02).texture;
 scene.environmentIntensity = 1.0;
 
-// Load the Botanical Gardens HDR and promote it to the primary environment.
-// Original: EXRLoader + Botanical_Gardens_2.exr (79.5 MB)
-// Optimized: RGBELoader + quarter-res HDR (7.6 MB)
+// Keep the raw equirect HDR alive (no `hdr.dispose()`) so variants
+// mode can re-generate PMREMs in its per-slot renderers — PMREM
+// textures are bound to the GL context they were generated in, so
+// the main renderer's PMREM can't be sampled correctly from the
+// slot renderers (visible as a blue cast on transmissive bodies).
+let loadedHdrTexture = null;
+const slotPmremCallbacks = [];
+
 new RGBELoader().load('Botanical_Gardens_2_quarter.hdr', (hdr) => {
   hdr.mapping = THREE.EquirectangularReflectionMapping;
+  loadedHdrTexture = hdr;
   const envTex = pmrem.fromEquirectangular(hdr).texture;
-  hdr.dispose();
   // Previous room env → dispose to reclaim GPU memory.
   scene.environment?.dispose?.();
   scene.environment = envTex;
@@ -1378,6 +1391,10 @@ new RGBELoader().load('Botanical_Gardens_2_quarter.hdr', (hdr) => {
   chromeMat.needsUpdate = true;
   materials.blackFriday.envMap = envTex;
   materials.blackFriday.needsUpdate = true;
+  // Variants mode slots may have already initialized with a fallback
+  // env (PMREM'd RoomEnvironment) — let them swap in the HDR PMREM
+  // now that it's available.
+  while (slotPmremCallbacks.length) slotPmremCallbacks.shift()(hdr);
 }, undefined, (err) => console.error('HDR load failed', err));
 
 
@@ -3652,36 +3669,45 @@ const VARIANT_FIELDS = [
   { key: 'gradientStrength',    label: 'Gradient Strength', type: 'range', min: 0,   max: 1,     step: 0.01 },
 ];
 
-// Default = current frostedBlue values (matches FROSTED_VARIANTS.frostedBlue.preset
-// + FROSTED_VARIANTS.frostedBlue.top / .bottom). Every A–E slot starts
-// from this so designers can iterate from the live default.
+// Each variant slot now holds two color sub-slots (Blue / Red) so a
+// designer can lock in a paired palette per A–E slot. Defaults pull
+// from the existing frostedBlue / frostedRed library tones.
+const VARIANT_KEYS   = ['A', 'B', 'C', 'D', 'E'];
+const VARIANT_COLORS = ['blue', 'red'];
+
+// Pull defaults straight from the library presets so variants mode
+// starts with the canonical Blue / Red look. Hardcoding diverged
+// (Red's gradientStrength was 0.45 in code vs 0.50 in the preset),
+// so derived from the source of truth keeps them in sync.
 const VARIANT_DEFAULTS = {
-  gradientTop:         FROSTED_VARIANTS.frostedBlue.top,
-  gradientBottom:      FROSTED_VARIANTS.frostedBlue.bottom,
-  transmission:        0.70,
-  roughness:           0.60,
-  thickness:           2.30,
-  ior:                 1.70,
-  clearcoat:           0.39,
-  clearcoatRoughness:  0.50,
-  attenuationDistance: 4.50,
-  gradientStrength:    0.45,
+  blue: {
+    gradientTop:    FROSTED_VARIANTS.frostedBlue.top,
+    gradientBottom: FROSTED_VARIANTS.frostedBlue.bottom,
+    ...FROSTED_VARIANTS.frostedBlue.preset,
+  },
+  red: {
+    gradientTop:    FROSTED_VARIANTS.frostedRed.top,
+    gradientBottom: FROSTED_VARIANTS.frostedRed.bottom,
+    ...FROSTED_VARIANTS.frostedRed.preset,
+  },
 };
 
-// Two-layer state: `variantSavedDefaults` is the persisted "this is
-// what slot X looks like" target (Set button writes into this and
-// localStorage); `variantStore` is the live, currently-edited values
-// (slider input writes here, Reset copies the saved layer back over).
-const VARIANTS_STORAGE_KEY = 'ohouseVariantsSavedDefaults_v1';
+const COLOR_LABELS = { blue: 'Blue', red: 'Red' };
+
+// Storage key bumped again (_v3) because the previous _v2 saves may
+// have stale values from before defaults were re-sourced from the
+// FROSTED_VARIANTS presets — easiest reset is a fresh key.
+const VARIANTS_STORAGE_KEY = 'ohouseVariantsSavedDefaults_v3';
 
 function freshDefaults() {
-  return {
-    A: { ...VARIANT_DEFAULTS },
-    B: { ...VARIANT_DEFAULTS },
-    C: { ...VARIANT_DEFAULTS },
-    D: { ...VARIANT_DEFAULTS },
-    E: { ...VARIANT_DEFAULTS },
-  };
+  const out = {};
+  for (const k of VARIANT_KEYS) {
+    out[k] = {};
+    for (const c of VARIANT_COLORS) {
+      out[k][c] = { ...VARIANT_DEFAULTS[c] };
+    }
+  }
+  return out;
 }
 
 function loadVariantSavedDefaults() {
@@ -3690,11 +3716,14 @@ function loadVariantSavedDefaults() {
     if (!raw) return freshDefaults();
     const parsed = JSON.parse(raw);
     const out = freshDefaults();
-    for (const k of ['A', 'B', 'C', 'D', 'E']) {
-      if (parsed && parsed[k] && typeof parsed[k] === 'object') {
-        // Merge so a missing key (e.g. if VARIANT_FIELDS gains one
-        // later) falls back to VARIANT_DEFAULTS.
-        out[k] = { ...VARIANT_DEFAULTS, ...parsed[k] };
+    for (const k of VARIANT_KEYS) {
+      for (const c of VARIANT_COLORS) {
+        if (parsed?.[k]?.[c] && typeof parsed[k][c] === 'object') {
+          // Merge with VARIANT_DEFAULTS[c] so any newly-added field
+          // falls back to its default tone instead of becoming
+          // `undefined` and crashing the slider.
+          out[k][c] = { ...VARIANT_DEFAULTS[c], ...parsed[k][c] };
+        }
       }
     }
     return out;
@@ -3710,42 +3739,61 @@ function persistVariantSavedDefaults() {
 }
 
 const variantSavedDefaults = loadVariantSavedDefaults();
-const variantStore = {
-  A: { ...variantSavedDefaults.A },
-  B: { ...variantSavedDefaults.B },
-  C: { ...variantSavedDefaults.C },
-  D: { ...variantSavedDefaults.D },
-  E: { ...variantSavedDefaults.E },
-};
+// Deep clone so the live store and the saved snapshot are independent.
+const variantStore = JSON.parse(JSON.stringify(variantSavedDefaults));
 
-let activeVariantKey = 'A';
+let activeVariantKey   = 'A';
+let activeVariantColor = 'blue';
+
+function getActiveParams() {
+  return variantStore[activeVariantKey][activeVariantColor];
+}
+function getActiveSavedParams() {
+  return variantSavedDefaults[activeVariantKey][activeVariantColor];
+}
 
 // Apply the slot's params to the shared frosted material. Now that
 // every variant asset is registered at a comparable world size
 // (modelScale chosen so each body lands in the ~300 unit ballpark),
 // transmission absorption is consistent across the five slots and
 // per-asset compensation is unnecessary — one mutation propagates.
-function applyVariant(key) {
-  const params = variantStore[key];
+function applyVariant(key = activeVariantKey, color = activeVariantColor) {
+  const params = variantStore[key]?.[color];
   if (!params) return;
   const mat = materials.frostedBlue;
-  if (!mat) return;
-  mat.transmission        = params.transmission;
-  mat.roughness           = params.roughness;
-  mat.thickness           = params.thickness;
-  mat.ior                 = params.ior;
-  mat.clearcoat           = params.clearcoat;
-  mat.clearcoatRoughness  = params.clearcoatRoughness;
-  mat.attenuationDistance = params.attenuationDistance;
-  if (mat.map) mat.map.dispose();
-  mat.map = makeVerticalGradient(params.gradientTop, params.gradientBottom, params.gradientStrength);
-  mat.needsUpdate = true;
+  if (mat) {
+    mat.transmission        = params.transmission;
+    mat.roughness           = params.roughness;
+    mat.thickness           = params.thickness;
+    mat.ior                 = params.ior;
+    mat.clearcoat           = params.clearcoat;
+    mat.clearcoatRoughness  = params.clearcoatRoughness;
+    mat.attenuationDistance = params.attenuationDistance;
+    // attenuationColor tints transmissive light. The body material was
+    // built as frostedBlue (blue attenuation baked in), so swapping only
+    // the gradient map left a blue cast on the lower body in Red mode.
+    // Track the bottom hex so transmitted light matches the gradient.
+    mat.attenuationColor.set(params.gradientBottom);
+    if (mat.map) mat.map.dispose();
+    mat.map = makeVerticalGradient(params.gradientTop, params.gradientBottom, params.gradientStrength);
+    mat.needsUpdate = true;
+  }
+  // Sync harmony accents (ribbonGray + harmony2) with the active color
+  // direction so meshes like lens-tape, body-tape, Disc, handle_mat
+  // pick up the matching tonal companion when the user toggles
+  // Blue ↔ Red. We map the variant color to the corresponding library
+  // preset (frostedBlue / frostedRed) and pull both harmony hexes.
+  const bodyPresetKey = color === 'red' ? 'frostedRed' : 'frostedBlue';
+  const harmony  = HARMONY_BY_BODY[bodyPresetKey];
+  const harmony2 = HARMONY2_BY_BODY[bodyPresetKey];
+  if (harmony)  ribbonGrayMat.color.set(harmony);
+  if (harmony2) harmony2Mat.color.set(harmony2);
 }
 
 function renderVariantControls() {
   const container = document.getElementById('variantsControls');
   if (!container) return;
-  const params = variantStore[activeVariantKey];
+  const params = getActiveParams();
   container.innerHTML = VARIANT_FIELDS.map((f) => {
     const v = params[f.key];
     if (f.type === 'color') {
@@ -3768,15 +3816,17 @@ function renderVariantControls() {
       const k = e.target.dataset.key;
       const raw = e.target.value;
       const val = e.target.type === 'color' ? raw : parseFloat(raw);
-      variantStore[activeVariantKey][k] = val;
+      variantStore[activeVariantKey][activeVariantColor][k] = val;
       const valSpan = e.target.parentElement.querySelector('.variants-value');
       if (valSpan) valSpan.textContent = Number(val).toFixed(2);
-      applyVariant(activeVariantKey);
+      applyVariant();
     });
   });
 
   const label = document.getElementById('variantsControlsLabel');
-  if (label) label.textContent = `${activeVariantKey}재질 — Material Settings`;
+  if (label) {
+    label.textContent = `${activeVariantKey}재질 · ${COLOR_LABELS[activeVariantColor]} — Material Settings`;
+  }
 }
 
 if (IS_PRINCIPLES_EMBED) {
@@ -3822,7 +3872,7 @@ if (IS_PRINCIPLES_EMBED) {
   function addSlotLights(slotScene) {
     slotScene.add(new THREE.AmbientLight(0xffffff, 0.55));
     const k = new THREE.DirectionalLight(0xffffff, 1.8);  k.position.set(3, 5, 4);  slotScene.add(k);
-    const f = new THREE.DirectionalLight(0xdceaff, 0.75); f.position.set(-4, 2, -3); slotScene.add(f);
+    const f = new THREE.DirectionalLight(0xDCEAFF, 0.75); f.position.set(-4, 2, -3); slotScene.add(f);
     const r = new THREE.DirectionalLight(0xffffff, 0.4);  r.position.set(0, 3, -5);  slotScene.add(r);
   }
 
@@ -3883,8 +3933,20 @@ if (IS_PRINCIPLES_EMBED) {
 
       const slotScene = new THREE.Scene();
       slotScene.background = new THREE.Color(0xffffff);
-      slotScene.environment = scene.environment;
       addSlotLights(slotScene);
+
+      // PMREM textures are bound to the GL context they were generated
+      // in, so each slot needs its own PMREM. Use a per-slot
+      // PMREMGenerator over RoomEnvironment as a fallback, then swap to
+      // the HDR PMREM when the equirect texture finishes loading.
+      const slotPmrem = new THREE.PMREMGenerator(slotRenderer);
+      slotScene.environment = slotPmrem.fromScene(new RoomEnvironment(), 0.02).texture;
+      const swapToHdr = (hdr) => {
+        slotScene.environment?.dispose?.();
+        slotScene.environment = slotPmrem.fromEquirectangular(hdr).texture;
+      };
+      if (loadedHdrTexture) swapToHdr(loadedHdrTexture);
+      else slotPmremCallbacks.push(swapToHdr);
 
       const slotCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, -10, 10);
 
@@ -3914,7 +3976,7 @@ if (IS_PRINCIPLES_EMBED) {
     }
 
     renderVariantControls();
-    applyVariant(activeVariantKey);
+    applyVariant();
     renderPerAssetAdjust();
   })();
 
@@ -3982,16 +4044,30 @@ if (IS_PRINCIPLES_EMBED) {
         .forEach((b) => b.classList.toggle('active', b === btn));
       activeVariantKey = btn.dataset.variant;
       renderVariantControls();
-      applyVariant(activeVariantKey);
+      applyVariant();
     });
   });
 
-  // Set as default — promote the slot's current edits into its
-  // persisted "default" layer and write to localStorage so reloading
-  // the page brings it back. Brief in-button confirmation so the
-  // designer knows the save landed.
+  // Color chips — toggle the active sub-slot between Blue / Red. Each
+  // (key, color) pair has its own param set, so flipping color swaps
+  // the entire material direction without touching the other slot.
+  document.querySelectorAll('#variantsColorRow .variants-chip').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#variantsColorRow .variants-chip')
+        .forEach((b) => b.classList.toggle('active', b === btn));
+      activeVariantColor = btn.dataset.color;
+      renderVariantControls();
+      applyVariant();
+    });
+  });
+
+  // Set as default — promote the (key, color) slot's current edits
+  // into its persisted "default" layer and write to localStorage so
+  // reloading the page brings them back. Brief in-button confirmation
+  // so the designer knows the save landed.
   document.getElementById('variantsSet').addEventListener('click', (e) => {
-    variantSavedDefaults[activeVariantKey] = { ...variantStore[activeVariantKey] };
+    variantSavedDefaults[activeVariantKey][activeVariantColor] =
+      { ...variantStore[activeVariantKey][activeVariantColor] };
     persistVariantSavedDefaults();
     const btn = e.currentTarget;
     const original = btn.textContent;
@@ -4003,25 +4079,26 @@ if (IS_PRINCIPLES_EMBED) {
     }, 1100);
   });
 
-  // Reset — roll back the active slot's live edits to its last-saved
-  // default (or the original VARIANT_DEFAULTS if Set was never used).
-  // Other slots are untouched.
+  // Reset — roll back the active (key, color) slot's live edits to
+  // its last-saved default. Other slots / colors are untouched.
   document.getElementById('variantsReset').addEventListener('click', () => {
-    variantStore[activeVariantKey] = { ...variantSavedDefaults[activeVariantKey] };
+    variantStore[activeVariantKey][activeVariantColor] =
+      { ...variantSavedDefaults[activeVariantKey][activeVariantColor] };
     renderVariantControls();
-    applyVariant(activeVariantKey);
+    applyVariant();
   });
 
-  // 원래대로 — full factory restore for the active slot. Wipes both
-  // the live edits AND the persisted "saved default" back to the
-  // original VARIANT_DEFAULTS (frostedBlue stock values), so Reset
-  // also points back to the stock state from this point.
+  // 원래대로 — full factory restore for the active (key, color) slot.
+  // Wipes both the live edits AND the persisted saved layer back to
+  // the original VARIANT_DEFAULTS for that color (Blue stock or Red
+  // stock), so Reset also points back to factory from here.
   document.getElementById('variantsRestore').addEventListener('click', () => {
-    variantStore[activeVariantKey]         = { ...VARIANT_DEFAULTS };
-    variantSavedDefaults[activeVariantKey] = { ...VARIANT_DEFAULTS };
+    const stock = VARIANT_DEFAULTS[activeVariantColor];
+    variantStore[activeVariantKey][activeVariantColor]         = { ...stock };
+    variantSavedDefaults[activeVariantKey][activeVariantColor] = { ...stock };
     persistVariantSavedDefaults();
     renderVariantControls();
-    applyVariant(activeVariantKey);
+    applyVariant();
   });
 
   // Resize — re-frame every slot's camera + renderer to its cell's
