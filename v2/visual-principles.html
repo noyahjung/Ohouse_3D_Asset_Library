@@ -132,25 +132,5 @@
     </div>
   </main>
   <script type="module" src="../shared/shell-v2.js"></script>
-  <script>
-    // Auto-start the walkthrough as soon as the iframe finishes
-    // loading. The slideshow then sits on slide 0 and waits for the
-    // user to advance via its built-in arrow controls — no auto-
-    // advance, no Play button.
-    (function () {
-      const frame = document.querySelector('.vl-stage-frame');
-      if (!frame) return;
-      const start = () => {
-        if (frame.contentWindow) frame.contentWindow.postMessage('principles:start', '*');
-      };
-      // If the iframe already loaded before this script ran, fire
-      // immediately; otherwise wait for the load event.
-      if (frame.contentDocument && frame.contentDocument.readyState === 'complete') {
-        start();
-      } else {
-        frame.addEventListener('load', start, { once: true });
-      }
-    })();
-  </script>
 </body>
 </html>

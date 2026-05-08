@@ -3433,7 +3433,11 @@ function openPrinciples() {
   controls.enabled = false;
   shadow.visible = false;
   shadowLight.castShadow = false;
-  goToPrinciplesSlide(0);
+  // Return the slide-0 promise so embed mode can wait for the
+  // first slide to actually finish loading before revealing the
+  // canvas, instead of relying on a parent postMessage handshake
+  // that races the iframe load event.
+  return goToPrinciplesSlide(0);
 }
 
 function closePrinciples() {
@@ -3911,15 +3915,25 @@ if (IS_PRINCIPLES_EMBED) {
   // its thumbnail generation is heavy. The slideshow loads each slide's
   // asset on demand via loadAsset.
   //
-  // Silently pre-prepare slide 0: the asset's entrance animation runs
-  // under opacity 0 so by the time the parent triggers the reveal,
-  // everything is already at its rest pose. Manual navigation (arrows
-  // + dots) handles every transition after that — no auto-advance.
-  openPrinciples();
+  // Self-reveal as soon as slide 0 finishes its entrance animation:
+  // the iframe no longer waits for a parent postMessage. This avoids
+  // a race where the parent fires `principles:start` against the
+  // about:blank stage before the iframe has booted, which left the
+  // walkthrough stuck in opacity-0 limbo on first page load.
+  // Manual navigation (arrows + dots) handles every transition from
+  // there — no auto-advance.
+  const reveal = () => document.body.classList.add('principles-shown');
+  openPrinciples().then(reveal, reveal);
+  // Safety net in case the slide-0 promise never settles for any
+  // reason (bad asset URL, etc.) — at least show the stage so the
+  // user isn't staring at an empty box.
+  setTimeout(reveal, 3000);
+  // Backwards compatibility: still honor a parent `principles:start`
+  // message so existing wiring (e.g. a manual Play button elsewhere)
+  // keeps working. Reveal is idempotent — re-adding the class is a
+  // no-op.
   window.addEventListener('message', (e) => {
-    if (e.data === 'principles:start') {
-      document.body.classList.add('principles-shown');
-    }
+    if (e.data === 'principles:start') reveal();
   });
 } else if (IS_VARIANTS_MODE) {
   document.body.classList.add('variants-mode');
