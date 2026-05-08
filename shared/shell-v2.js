@@ -65,7 +65,7 @@ function renderHeader(depth) {
   header.innerHTML = `
     <a href="${rel('v2/index.html', depth)}" class="shell-header-brand">
       <img src="${rel('logo.svg', depth)}" alt="Ohouse">
-      <span>Ohouse Brand Asset Library</span>
+      <span>Ohouse Brand Book</span>
     </a>
     <div class="shell-header-version">
       <span class="shell-header-version-current">v2</span>
