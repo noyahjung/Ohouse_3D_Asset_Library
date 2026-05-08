@@ -12,7 +12,9 @@
   <style>
     /* Stage shares the .about-banner footprint (content-max wide,
      * 16:9, soft border) so the page opens with the same surface
-     * size as the About / Tone of Voice hero images. */
+     * size as the About / Tone of Voice hero images. The walkthrough
+     * starts automatically on iframe load — the slideshow's own
+     * arrow controls handle slide-to-slide navigation from there. */
     .vl-stage {
       position: relative;
       width: 100%;
@@ -32,31 +34,6 @@
       border: 0;
       display: block;
     }
-    .vl-stage-play {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 12px 22px;
-      background: var(--accent);
-      color: #fff;
-      border: 0;
-      border-radius: 999px;
-      font-family: inherit;
-      font-size: 14px;
-      font-weight: 600;
-      letter-spacing: -0.005em;
-      cursor: pointer;
-      transition: background var(--transition), transform var(--transition);
-    }
-    .vl-stage-play:hover {
-      background: var(--accent-hover);
-      transform: translate(-50%, -50%) scale(1.04);
-    }
-    .vl-stage-play.is-hidden { opacity: 0; pointer-events: none; transition: opacity .35s ease; }
-    .vl-stage-play svg { display: block; }
   </style>
 </head>
 <body>
@@ -67,12 +44,6 @@
                 src="../3Dassetlibrary.html?embed=principles"
                 loading="eager"
                 title="Visual Language principles in motion"></iframe>
-        <button class="vl-stage-play" id="vlStagePlay" type="button">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true">
-            <path d="M3 1.5v11l9-5.5z" />
-          </svg>
-          <span>Play Sequence</span>
-        </button>
       </section>
 
       <div class="shell-breadcrumb">
@@ -162,18 +133,23 @@
   </main>
   <script type="module" src="../shared/shell-v2.js"></script>
   <script>
+    // Auto-start the walkthrough as soon as the iframe finishes
+    // loading. The slideshow then sits on slide 0 and waits for the
+    // user to advance via its built-in arrow controls — no auto-
+    // advance, no Play button.
     (function () {
-      const btn   = document.getElementById('vlStagePlay');
       const frame = document.querySelector('.vl-stage-frame');
-      if (!btn || !frame) return;
-      btn.addEventListener('click', () => {
-        if (!frame.contentWindow) return;
-        frame.contentWindow.postMessage('principles:start', '*');
-        btn.classList.add('is-hidden');
-      });
-      window.addEventListener('message', (e) => {
-        if (e.data === 'principles:end') btn.classList.remove('is-hidden');
-      });
+      if (!frame) return;
+      const start = () => {
+        if (frame.contentWindow) frame.contentWindow.postMessage('principles:start', '*');
+      };
+      // If the iframe already loaded before this script ran, fire
+      // immediately; otherwise wait for the load event.
+      if (frame.contentDocument && frame.contentDocument.readyState === 'complete') {
+        start();
+      } else {
+        frame.addEventListener('load', start, { once: true });
+      }
     })();
   </script>
 </body>
