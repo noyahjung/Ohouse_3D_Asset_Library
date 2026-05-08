@@ -168,10 +168,14 @@
   margin: 0 0 40px;
 }
 
+/* Showcase grid is a fixed 5×2 placeholder layout — every tile is
+ * an empty 1:1 slot that later gets `<img>` injected when real
+ * assets are ready. Keep the tile count at 10 so the silhouette
+ * stays consistent across asset types. */
 .showcase-gallery {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
   margin: 0 0 56px;
 }
 .showcase-tile {
@@ -184,14 +188,6 @@
   align-items: center;
   justify-content: center;
 }
-.showcase-tile.is-wide {
-  grid-column: span 2;
-  aspect-ratio: 2 / 1;
-}
-.showcase-tile.is-tall {
-  grid-row: span 2;
-  aspect-ratio: 1 / 2;
-}
 .showcase-tile img {
   width: 100%;
   height: 100%;
@@ -199,16 +195,11 @@
   display: block;
 }
 
-@media (max-width: 720px) {
-  .showcase-gallery {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .showcase-tile.is-wide,
-  .showcase-tile.is-tall {
-    grid-column: auto;
-    grid-row: auto;
-    aspect-ratio: 1 / 1;
-  }
+@media (max-width: 900px) {
+  .showcase-gallery { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 560px) {
+  .showcase-gallery { grid-template-columns: repeat(2, 1fr); }
 }
 
 /* ── Showcase note (small editorial caption beneath gallery) ── */
