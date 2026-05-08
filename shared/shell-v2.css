@@ -71,7 +71,6 @@
   font-size: 19px;
   line-height: 1.65;
   color: var(--text);
-  max-width: 680px;
   margin: 0 0 56px;
 }
 
@@ -101,7 +100,6 @@
   font-size: 16px;
   line-height: 1.7;
   color: var(--text);
-  max-width: 680px;
   margin: 0 0 14px;
 }
 .about-section p:last-child {
@@ -160,7 +158,6 @@
   font-size: 16px;
   line-height: 1.7;
   margin: 0 0 12px;
-  max-width: 640px;
 }
 .principle-row-body .principle-expression {
   margin-top: 16px;
@@ -184,7 +181,6 @@
   font-size: 17px;
   line-height: 1.65;
   color: var(--text);
-  max-width: 680px;
   margin: 0 0 40px;
 }
 
@@ -228,7 +224,6 @@
   font-size: 14px;
   color: var(--text-dim);
   line-height: 1.7;
-  max-width: 640px;
   padding: 16px 18px;
   background: var(--bg-soft);
   border-radius: var(--radius-sm);
@@ -260,7 +255,6 @@
 .asset-section p {
   font-size: 16px;
   line-height: 1.7;
-  max-width: 680px;
   margin: 0 0 14px;
 }
 
@@ -334,7 +328,7 @@
   display: grid;
   gap: 12px;
   margin-top: 16px;
-  max-width: 720px;
+  max-width: var(--content-max);
 }
 .asset-workflow-step {
   display: grid;
@@ -373,7 +367,7 @@
   grid-template-columns: 160px 1fr;
   gap: 12px 24px;
   margin-top: 16px;
-  max-width: 720px;
+  max-width: var(--content-max);
   font-size: 14px;
 }
 .asset-spec dt {
