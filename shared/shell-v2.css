@@ -36,13 +36,15 @@
   text-decoration: none;
 }
 
-/* About hero banner — wide 16:9 image that breaks out of the 800px
- * content column on large viewports, mirroring the .vl-stage break-
- * out pattern. Sits above the .about-hero text on the About page. */
+/* About hero banner — sits at the very top of the About page.
+ * Constrained to the 800px content column so it aligns with the
+ * breadcrumb and hero text that follow, instead of breaking out
+ * the way .vl-stage does. */
 .about-banner {
-  width: min(calc(100vw - var(--sidebar-w) - 128px), 1280px);
+  width: 100%;
+  max-width: var(--content-max);
   aspect-ratio: 16 / 9;
-  margin: 24px 0 48px;
+  margin: 0 0 32px;
   background: var(--bg-soft);
   border-radius: 12px;
   overflow: hidden;
@@ -52,12 +54,6 @@
   height: 100%;
   object-fit: cover;
   display: block;
-}
-@media (max-width: 900px) {
-  .about-banner { width: min(calc(100vw - var(--sidebar-w) - 64px), 1280px); }
-}
-@media (max-width: 640px) {
-  .about-banner { width: 100%; }
 }
 
 /* ── About / Mission editorial layout ───────────────────── */
