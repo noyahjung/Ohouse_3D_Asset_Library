@@ -244,34 +244,69 @@
   margin: 0 0 14px;
 }
 
-/* Tenets — formal principles unique to one asset type. */
+/* Form Principles — formal decisions unique to one asset type.
+ * Each principle is a horizontal row: text on the left (title +
+ * short rule + body) and an image placeholder on the right. The
+ * placeholder accepts an inline <img> when real visuals land.
+ * Rows are separated by hairline dividers; no card backgrounds. */
 .asset-tenets {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
   margin-top: 16px;
 }
 .asset-tenet {
-  padding: 24px;
-  background: var(--bg-soft);
-  border-radius: var(--radius);
-  border: 1px solid var(--border-soft);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  padding: 40px 0;
+  border-top: 1px solid var(--border-soft);
+  align-items: start;
 }
-.asset-tenet h3 {
-  font-size: 17px;
+.asset-tenet:last-child {
+  border-bottom: 1px solid var(--border-soft);
+}
+.asset-tenet-content h3 {
+  font-size: 22px;
   font-weight: 600;
-  letter-spacing: -0.01em;
-  margin: 0 0 8px;
+  letter-spacing: -0.015em;
+  line-height: 1.3;
+  margin: 0 0 14px;
 }
-.asset-tenet p {
-  font-size: 14px;
-  line-height: 1.65;
-  color: var(--text-dim);
+.asset-tenet-rule {
+  width: 32px;
+  height: 1px;
+  border: 0;
+  background: var(--text);
+  margin: 0 0 16px;
+}
+.asset-tenet-content p {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--text);
   margin: 0;
   max-width: none;
 }
+.asset-tenet-image {
+  aspect-ratio: 4 / 3;
+  background: var(--bg-soft);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.asset-tenet-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 @media (max-width: 720px) {
-  .asset-tenets { grid-template-columns: 1fr; }
+  .asset-tenet {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 28px 0;
+  }
 }
 
 /* Workflow — ordered production steps. */
