@@ -16,9 +16,9 @@
 
 const NAV = [
   {
-    title: 'About',
+    title: '',
     items: [
-      { id: 'v2-mission', label: 'Mission', href: 'v2/index.html' },
+      { id: 'v2-about', label: 'About', href: 'v2/index.html' },
     ],
   },
   {
