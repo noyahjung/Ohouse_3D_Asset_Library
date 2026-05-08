@@ -36,6 +36,88 @@
   text-decoration: none;
 }
 
+/* ── Color stage — animated palette composition ─────────────
+ * Shares the same footprint as .about-banner (content-max wide,
+ * 16:9, soft border) so the Color page opens with the same
+ * surface size as the other Brand-tier hero images. The stage
+ * is a non-interactive motion piece: photos pop in first
+ * (z-index 1), then color chips on top (z-index 10) so the
+ * chips are never covered. After each layer settles, every item
+ * drifts gently in place. Two transforms (entry translateY,
+ * continuous float) live on different DOM levels so they don't
+ * stomp each other.
+ *
+ * Honours `prefers-reduced-motion`: animations resolve to the
+ * final state immediately for users who opt out. */
+.color-stage {
+  position: relative;
+  width: 100%;
+  max-width: var(--content-max);
+  aspect-ratio: 16 / 9;
+  margin: 0 0 32px;
+  background: #f5f5f7;
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.color-stage-canvas {
+  position: absolute;
+  inset: 0;
+}
+.color-item {
+  position: absolute;
+  opacity: 0;
+  transform: translateY(28px);
+  animation: color-pop 0.9s cubic-bezier(.2,.8,.2,1) var(--delay, 0s) forwards;
+  will-change: transform, opacity;
+}
+.color-item-float {
+  animation: color-float 5.5s ease-in-out var(--float-delay, 0s) infinite;
+  will-change: transform;
+}
+.color-item-float img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+.color-photo { z-index: 1; }
+.color-chip  { z-index: 10; }
+.color-chip .color-item-float img {
+  border-radius: 8px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+@keyframes color-pop {
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes color-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-5px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .color-item       { opacity: 1; transform: none; animation: none; }
+  .color-item-float { animation: none; }
+}
+
+/* Per-element positions, tuned to mirror the layout in
+ * assets/overview_asset/color_pic/guide.png. Coordinates are
+ * percentages of the 16:9 stage so they scale with viewport. */
+[data-color-item="sky"]      { top:  8%; left:  4%; width: 26%; }
+[data-color-item="lamp"]     { top: 26%; left: 33%; width: 24%; }
+[data-color-item="tomatoes"] { top:  4%; left: 60%; width: 18%; }
+[data-color-item="green"]    { top: 50%; left: 16%; width: 22%; }
+[data-color-item="figs"]     { top: 48%; left: 64%; width: 30%; }
+
+[data-color-item="c1"]       { top:  8%; left: 80%; width: 13%; }
+[data-color-item="c2"]       { top:  3%; left: 32%; width: 13%; }
+[data-color-item="c3"]       { top: 28%; left: 22%; width: 13%; }
+[data-color-item="c4"]       { top: 18%; left: 50%; width: 13%; }
+[data-color-item="c5"]       { top: 60%; left:  4%; width: 13%; }
+[data-color-item="c6"]       { top: 78%; left: 40%; width: 13%; }
+
 /* About hero banner — sits at the very top of the About page.
  * Constrained to the 800px content column so it aligns with the
  * breadcrumb and hero text that follow, instead of breaking out

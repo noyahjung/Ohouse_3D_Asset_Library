@@ -27,6 +27,7 @@ const NAV = [
       { id: 'v2-symbol',             label: 'Symbol',             href: 'v2/symbol.html' },
       { id: 'v2-visual-principles',  label: 'Visual Principles',  href: 'v2/visual-principles.html' },
       { id: 'v2-tone-of-voice',      label: 'Tone of Voice',      href: 'v2/tone-of-voice.html' },
+      { id: 'v2-color',              label: 'Color',              href: 'v2/color.html' },
     ],
   },
   {
