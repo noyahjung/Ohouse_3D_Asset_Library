@@ -36,6 +36,30 @@
   text-decoration: none;
 }
 
+/* About hero banner — wide 16:9 image that breaks out of the 800px
+ * content column on large viewports, mirroring the .vl-stage break-
+ * out pattern. Sits above the .about-hero text on the About page. */
+.about-banner {
+  width: min(calc(100vw - var(--sidebar-w) - 128px), 1280px);
+  aspect-ratio: 16 / 9;
+  margin: 24px 0 48px;
+  background: var(--bg-soft);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.about-banner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+@media (max-width: 900px) {
+  .about-banner { width: min(calc(100vw - var(--sidebar-w) - 64px), 1280px); }
+}
+@media (max-width: 640px) {
+  .about-banner { width: 100%; }
+}
+
 /* ── About / Mission editorial layout ───────────────────── */
 
 .about-hero {
