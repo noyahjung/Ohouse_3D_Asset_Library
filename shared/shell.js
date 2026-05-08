@@ -25,19 +25,25 @@ const NAV = [
   {
     title: 'Assets',
     items: [
+      { id: 'asset-symbol',        label: 'Symbol',                       href: 'assets/symbol.html' },
       {
         kind: 'subgroup',
         label: 'Graphic Assets',
         items: [
-          { id: 'asset-icon',   label: 'Icon',          href: 'assets/icon.html' },
-          { id: 'asset-2d',     label: '2D Assets',     href: 'assets/2d.html' },
-          { id: 'asset-3d',     label: '3D Assets',     href: 'assets/3d.html' },
-          { id: 'asset-motion', label: 'Motion Assets', href: 'assets/motion.html', tag: '개발예정' },
+          { id: 'asset-icon',    label: 'Icon',                       href: 'assets/icon.html' },
+          { id: 'asset-2d',      label: '2D Assets',                  href: 'assets/2d.html' },
+          { id: 'asset-3d',      label: '3D Assets',                  href: 'assets/3d.html' },
+          { id: 'asset-motion',  label: 'Motion Assets',              href: 'assets/motion.html', tag: '개발예정' },
+          { id: 'asset-pattern', label: 'Pattern / Background Assets', href: 'assets/pattern.html', tag: '개발예정' },
         ],
       },
-      { id: 'asset-photographic',  label: 'Photographic Assets',          href: 'assets/photographic.html' },
-      { id: 'asset-pattern',       label: 'Pattern / Background Assets',  href: 'assets/pattern.html' },
-      { id: 'asset-symbol',        label: 'Symbol',                       href: 'assets/symbol.html' },
+      {
+        kind: 'subgroup',
+        label: 'Image Assets',
+        items: [
+          { id: 'asset-photographic', label: 'Photographic Assets', href: 'assets/photographic.html' },
+        ],
+      },
     ],
   },
 ];

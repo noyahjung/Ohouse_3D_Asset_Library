@@ -115,15 +115,17 @@ code {
 }
 
 .shell-nav-section + .shell-nav-section {
-  margin-top: 20px;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-soft);
 }
 .shell-nav-section-title {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-mute);
-  padding: 8px 12px 8px;
+  letter-spacing: 0.1em;
+  color: var(--text);
+  padding: 4px 12px 12px;
   margin: 0;
 }
 
@@ -151,18 +153,21 @@ code {
 }
 
 /* Sub-grouped nav items (e.g. Graphic Assets → Icon / 2D / …)
- * Subgroup label sits above its leaves, leaves are indented one
- * step so the hierarchy reads at a glance without losing the
- * minimal visual style of the rest of the sidebar. */
+ * Subgroup label is a non-clickable category divider that sits
+ * one tier below the section title (ASSETS) but one tier above
+ * its own leaves. Uppercase + muted color reads as "this is a
+ * group, not a link"; leaves indent so the parent/child relation
+ * is visible at a glance. */
 .shell-nav-subgroup {
-  margin: 4px 0 6px;
+  margin: 8px 0 4px;
 }
 .shell-nav-subgroup-title {
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 11px;
+  font-weight: 600;
   color: var(--text-mute);
-  padding: 6px 12px 6px;
-  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 10px 12px 6px;
 }
 .shell-nav-subgroup .shell-nav-link {
   padding-left: 24px;
@@ -375,11 +380,16 @@ code {
   border-radius: 8px;
   overflow: hidden;
 }
+.asset-thumb:has(img) {
+  background: #fff;
+  border: 1px solid var(--border-soft);
+}
 .asset-thumb img {
   width: 100%;
   height: 100%;
   object-fit: contain;
   display: block;
+  padding: 18%;
 }
 
 /* ── Overview feature: 3-column format grid ──────────────

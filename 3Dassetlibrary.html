@@ -1046,6 +1046,14 @@
   </div>
 
   <div class="variants-group">
+    <div class="variants-group-label">그림자</div>
+    <div class="variants-chip-row" id="variantsShadowRow">
+      <button class="variants-chip active" data-shadow="off">Off</button>
+      <button class="variants-chip" data-shadow="on">On</button>
+    </div>
+  </div>
+
+  <div class="variants-group">
     <div class="variants-group-label" id="variantsControlsLabel">A재질 · Blue — Material Settings</div>
     <div class="variants-controls" id="variantsControls"></div>
   </div>
@@ -3997,11 +4005,37 @@ if (IS_PRINCIPLES_EMBED) {
       slotRenderer.toneMappingExposure = renderer.toneMappingExposure;
       slotRenderer.outputColorSpace   = renderer.outputColorSpace;
       slotRenderer.setClearColor(0xffffff, 1);
+      slotRenderer.shadowMap.enabled = true;
+      slotRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
       cell.appendChild(slotRenderer.domElement);
 
       const slotScene = new THREE.Scene();
       slotScene.background = new THREE.Color(0xffffff);
       addSlotLights(slotScene);
+
+      // Per-slot shadow caster: zero-intensity directional light (matches
+      // main scene trick) + ShadowMaterial plane. Each slot needs its own
+      // because shadow maps are renderer-bound. Default off.
+      const slotShadowLight = new THREE.DirectionalLight(0xffffff, 0);
+      slotShadowLight.castShadow = false;
+      slotShadowLight.position.copy(SHADOW_LIGHT_DIR).multiplyScalar(10);
+      slotShadowLight.shadow.mapSize.set(1024, 1024);
+      slotShadowLight.shadow.radius = 8;
+      slotShadowLight.shadow.blurSamples = 20;
+      slotShadowLight.shadow.bias = -0.0005;
+      slotScene.add(slotShadowLight);
+      slotScene.add(slotShadowLight.target);
+
+      const slotShadowMat = new THREE.ShadowMaterial({
+        color: new THREE.Color(0x000000),
+        transparent: true,
+        opacity: 0.18,
+      });
+      const slotShadow = new THREE.Mesh(new THREE.PlaneGeometry(50, 50), slotShadowMat);
+      slotShadow.rotation.x = -Math.PI / 2;
+      slotShadow.receiveShadow = true;
+      slotShadow.visible = false;
+      slotScene.add(slotShadow);
 
       // PMREM textures are bound to the GL context they were generated
       // in, so each slot needs its own PMREM. Use a per-slot
@@ -4018,7 +4052,12 @@ if (IS_PRINCIPLES_EMBED) {
 
       const slotCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, -10, 10);
 
-      variantSlots.push({ id, cell, renderer: slotRenderer, scene: slotScene, camera: slotCamera, root: null, maxDim: 1 });
+      variantSlots.push({
+        id, cell,
+        renderer: slotRenderer, scene: slotScene, camera: slotCamera,
+        root: null, maxDim: 1,
+        shadow: slotShadow, shadowLight: slotShadowLight,
+      });
     }
 
     // Sequential loadAsset → relocate each root before the next call,
@@ -4036,6 +4075,31 @@ if (IS_PRINCIPLES_EMBED) {
       slot.root = root;
       slot.maxDim = maxDim;
       frameSlotCamera(slot);
+
+      // Position per-slot shadow plane + retarget shadow light, mirroring
+      // main loadAsset's logic. Compute bbox from the relocated root so
+      // yOffset/centering is already baked in.
+      const asset = ASSETS[slot.id];
+      const bbox = new THREE.Box3().setFromObject(root);
+      const size = bbox.getSize(new THREE.Vector3());
+      const objectCenterY = bbox.getCenter(new THREE.Vector3()).y;
+      const bevelComp = size.y * (asset.bevelComp ?? 0);
+      slot.shadow.position.y = bbox.min.y + bevelComp;
+      slot.shadow.scale.setScalar(maxDim);
+
+      slot.shadowLight.position.copy(SHADOW_LIGHT_DIR).multiplyScalar(maxDim * 5);
+      slot.shadowLight.position.y += objectCenterY;
+      slot.shadowLight.target.position.set(0, objectCenterY, 0);
+      slot.shadowLight.target.updateMatrixWorld();
+      const shadowExtent = maxDim * 3;
+      slot.shadowLight.shadow.camera.left   = -shadowExtent;
+      slot.shadowLight.shadow.camera.right  =  shadowExtent;
+      slot.shadowLight.shadow.camera.top    =  shadowExtent;
+      slot.shadowLight.shadow.camera.bottom = -shadowExtent;
+      slot.shadowLight.shadow.camera.near   = 0.1;
+      slot.shadowLight.shadow.camera.far    = maxDim * 20;
+      slot.shadowLight.shadow.camera.updateProjectionMatrix();
+
       // Detach so the next loadAsset doesn't try to dispose this root.
       currentRoot = null;
     }
@@ -4067,6 +4131,21 @@ if (IS_PRINCIPLES_EMBED) {
       activeVariantColor = btn.dataset.color;
       renderVariantControls();
       applyVariant();
+    });
+  });
+
+  // Shadow chips — flip ground shadow visibility across every slot at
+  // once. Mirrors the main view's shadowToggle (visibility + castShadow
+  // gated together so the shadow map stops rendering when off).
+  document.querySelectorAll('#variantsShadowRow .variants-chip').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#variantsShadowRow .variants-chip')
+        .forEach((b) => b.classList.toggle('active', b === btn));
+      const on = btn.dataset.shadow === 'on';
+      for (const slot of variantSlots) {
+        if (slot.shadow) slot.shadow.visible = on;
+        if (slot.shadowLight) slot.shadowLight.castShadow = on;
+      }
     });
   });
 
@@ -4153,13 +4232,17 @@ if (IS_PRINCIPLES_EMBED) {
     out.height = EXPORT_SIZE;
     const ctx = out.getContext('2d');
 
-    // Pass 1: silhouette
+    // Pass 1: silhouette. Hide the shadow plane so the white override
+    // doesn't paint the whole ground plane area as an opaque slab.
+    const prevShadowVisible = slot.shadow ? slot.shadow.visible : false;
+    if (slot.shadow) slot.shadow.visible = false;
     const silMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
     sceneRef.overrideMaterial = silMat;
     r.render(sceneRef, cam);
     ctx.drawImage(r.domElement, 0, 0);
     sceneRef.overrideMaterial = null;
     silMat.dispose();
+    if (slot.shadow) slot.shadow.visible = prevShadowVisible;
 
     // Pass 2: normal
     r.render(sceneRef, cam);
