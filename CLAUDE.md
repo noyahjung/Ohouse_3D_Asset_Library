@@ -1,13 +1,16 @@
 # Project Scope — Ohouse_3D_Asset_Library
 
-This folder is the **Ohouse_3D_Asset_Library** project.
+This folder is the **Ohouse_3D_Asset_Library** project — the designer-facing 3D customizer + variants mode. Internal-only (사내 S3 배포 전용).
 - GitHub: `https://github.com/noyahjung/Ohouse_3D_Asset_Library`
 - Dev server port convention: **8765**
 - Visual marker: green badge `OHOUSE · ASSET LIBRARY`, green favicon
-- Entry: `3Dassetlibrary.html` (3D library customizer); `index.html` is the docs-shell entry
+- Entry: `3Dassetlibrary.html` (customizer). Root `index.html` is a redirect shim to the entry. `?mode=variants` opens the tone-comparison view.
 
-## Sibling project (DO NOT MIX)
-A separate project lives at `/Users/noyahjung/Desktop/desktop.nosync/3d_graphic_customize_test` with its own git remote (`3d_graphic_customize_test`). Never copy, reference, edit, or commit files across the two projects without explicit instruction from the user.
+## Sibling project — Ohouse Brand Book (DO NOT MIX)
+The public-facing Brand Book lives in a separate repo at `../ohouse-brand-book/` with its own git remote (`noyahjung/ohouse-brand-book`, public, GitHub Pages live at <https://noyahjung.github.io/ohouse-brand-book/>). Brand Book code, Visual Principles, Tone of Voice, Color, walkthrough, etc. are owned by that project, NOT this one. Never copy, reference, edit, or commit Brand Book files into this folder.
+
+## Other sibling experiment (DO NOT MIX)
+A separate experiment lives at `/Users/noyahjung/Desktop/desktop.nosync/3d_graphic_customize_test` with its own git remote (`3d_graphic_customize_test`). Same rule — never cross-edit without explicit instruction.
 
 ## Asset addition auto-flow (no separate command needed)
 When the user says any variant of "에셋을 추가했어" / "added a new asset" with a `*.gltf` or `*.glb` in the repo root, run the full pipeline in [docs/project-guide.md §4](docs/project-guide.md) without asking for individual confirmations:
