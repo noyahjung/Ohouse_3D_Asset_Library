@@ -14,19 +14,16 @@
 
 ### What — 그리고 무엇이 아닌가
 
-Brand Book은 프로덕트 팀의 컴포넌트 매뉴얼과 다른 결의 출판물입니다.
+Brand Book은 프로덕트 팀의 컴포넌트 매뉴얼과 다른 결의 출판물입니다. 두 문서 모두 외부에 공개되어 PR의 성격을 갖지만, 다루는 내용과 읽히는 방식이 다릅니다.
 
-| 비교 항목 | 프로덕트 컴포넌트 매뉴얼 (사내) | Brand Book (외부 공개) |
+| 비교 항목 | 프로덕트 컴포넌트 매뉴얼 | Brand Book |
 | --- | --- | --- |
 | 무엇을 다루는가 | 컴포넌트의 사양·구현·사용 규칙 | 브랜드의 정체성·시선·원칙·결정의 맥락 |
-| 누가 보는가 | 사내 빌더 (디자이너·엔지니어) | 브랜드팀 + 외부 (업계·지원자·파트너) |
-| 어떻게 읽히는가 | 처방형 매뉴얼 (이렇게 쓰세요) | 진술형 출판물 (우리는 이렇게 봅니다) |
-| 참조 결 | Material Design · Atlassian DS | eBay Playbook · Seed Design |
+| 어떻게 읽히는가 | 처방형 (이렇게 쓰세요) | 진술형 (우리는 이렇게 봅니다) |
 
 - Authenticity(진정성)라는 브랜드 가치를 비주얼·버벌·색·심볼 네 축으로 변환하는 진술의 묶음
-- 디자이너·엔지니어가 같은 언어로 작업할 수 있도록 코드·자산·가이드·인터랙션이 함께 제공되는 살아있는 출판물
-- 처방형 Do/Don't 항목은 의도적으로 사내 매뉴얼로 분리. 외부판에는 원칙·시선·결과물만 큐레이션
-- 컴포넌트 스펙과의 통합은 후속 Phase의 영역. 현재는 정체성 출판물에 집중
+- 처방형 Do/Don't 항목은 의도적으로 컴포넌트 매뉴얼로 분리. Brand Book에는 원칙·시선·결과물만 큐레이션
+- 컴포넌트 스펙과의 통합은 후속 단계의 영역. 현재는 정체성 출판물에 집중
 
 3D 에셋 라이브러리는 **별도 프로젝트**로 운영되며, Brand Book의 Visual Principles 페이지(iframe 임베드)와 Assets/3D Assets 페이지(링크)에서만 참조됩니다.
 
@@ -90,114 +87,50 @@ Assets
 | 03 Clarity | 명확성 | 유저의 꿈을 분명한 현실로 실현해내는 의지를 군더더기 없는 실루엣과 단순한 매스로 표현 | 군더더기 없는 명확한 실루엣, 단순한 매스 |
 | 04 Stability | 안정감 | 유저의 꿈을 진중하게 실현해 나가는 자세를 표현. 지면에 안정적으로 붙은 그림자와 단계별로 정돈된 에셋 구조 | 지면 그림자(Ground Shadow) + 단계별 에셋 구조 (Icon · Asset Small · Asset Large) |
 
-### 버벌 4원칙 — Authenticity의 언어화 (Tone of Voice)
+### 버벌 4원칙 — Tone of Voice · 정리 예정
+
+언어 축의 4원칙은 아직 정해지지 않았습니다. 페이지 콘텐츠 정리 단계에서 결정됩니다.
 
 | 원칙 | 의미 | 말의 결 |
 | --- | --- | --- |
-| 01 Everyday | 일상의 언어로. 전문 용어보다 누구나 쓰는 말이 강하다 | 전문 용어·영업적 표현·군더더기 지양 |
-| 02 Warmth | 다정한 거리. 차갑지도, 무리하게 가깝지도 않은 결 | 격식 < 환대, 친근 < 진심 |
-| 03 Clarity | 분명한 약속. 모호함은 신뢰를 흐트러뜨린다 | 구체 > 추상, 약속 > 다짐 |
-| 04 Encouragement | 응원하는 시선. 안내자가 아니라 일상을 함께 만드는 동료 | 명령 < 제안, 평가 < 응원 |
+| 01 |   |   |
+| 02 |   |   |
+| 03 |   |   |
+| 04 |   |   |
 
-Visual·Verbal 두 축은 사이드바 Brand 카테고리 안에서 동등한 위계로 배치되어 있습니다.
+Visual·Verbal 두 축은 사이드바 Brand 카테고리 안에서 동등한 위계로 배치됩니다.
 
 ---
 
 ## 3. 제작 과정
 
-브랜드 북 자체가 만들어지는 흐름을 7단계로 정리합니다. 1–4단계는 완료, 5단계가 현재 진행 중, 6–7단계는 예정입니다.
+브랜드 북은 현재 **웹 기획 단계의 드래프트** 상태입니다. 외부 공개 가능한 형태가 되기까지 큰 흐름은 다음과 같습니다.
 
-### Phase 1 — 포지셔닝 정립 · 완료
+| 단계 | 내용 | 상태 |
+| --- | --- | --- |
+| 1 | 포지셔닝 정립 — 출판물의 결·대상자·톤 기준 | 완료 |
+| 2 | 정보 구조 설계 — 사이드바 IA, Brand 4축, 자산 분류 | 완료 |
+| 3 | 페이지 골격·시각 자산 1차 배치 (드래프트) | 완료 |
+| 4 | 콘텐츠 정리 — 페이지별 담당자 지정 후 본문·자산 채움 | 현재 단계 |
+| 5 | 디자인 통합 — 페이지 간 시각 일관성을 단일 레이아웃으로 정리 | 예정 |
+| 6 | 컴포넌트 스펙 통합 — 프로덕트 컴포넌트 매뉴얼과 cross-link | 후속 |
 
-목표: Brand Book이 무엇이고 무엇이 아닌지를 명확히 정의.
+### 현재 단계 — 페이지별 콘텐츠 담당자 (지정 예정)
 
-- 사내 컴포넌트 매뉴얼과의 결의 차이 정립 — 처방형 매뉴얼 vs 진술형 출판물
-- 참조 사례 정립 — eBay Playbook, Seed Design
-- 톤·결의 기준 — 시선·관점이 먼저, 사양·규칙은 후순위. 처방형 Do/Don't는 외부판에서 제외
-- 대상자 정의 — 브랜드팀 owner / 대외 PR + 내부 정체성 강화 이중 역할
-
-### Phase 2 — 정보 구조 설계 · 완료
-
-목표: 외부 관람자가 따라가기 쉬운 위계로 콘텐츠 배치.
-
-- 사이드바 IA 설계 — About / Brand / Assets 3단 구조 (여기어때 디자인 라이브러리 패턴 참조)
-- Brand 카테고리 4축 정의 — Symbol / Visual Principles / Tone of Voice / Color
-- 자산 분류 체계 정립 — Brand → Graphic → Image 위계
-- Symbol을 자산 카테고리가 아닌 정체성 코어로 승격
-- 자산 페이지의 섹션 구조 정립 — Overview → Form Principles → Workflow → Specs
-
-### Phase 3 — 셸 + 페이지 골격 구축 · 완료
-
-목표: 모든 페이지가 같은 골격 위에서 작동하도록 셸과 페이지 골격 만들기.
-
-- v2 셸 신설 — 헤더(Ohouse Brand Book), 사이드바, 콘텐츠 영역
-- About 페이지 신설 — Mission 진입점
-- Brand 카테고리 4 페이지 신설 — Symbol, Visual Principles, Tone of Voice, Color
-- Asset 페이지 7종 골격 작성 — Icon, 2D, 3D, Motion, Pattern, Photographic, (Symbol)
-- Overview 페이지 — 전체 자산 분류 인덱스
-- 페이지 간 일관된 hero footprint — 16:9, content-max 800px, soft border, 12px radius
-- 루트 URL을 v2로 자동 redirect — 공유 URL 진입점 통일
-
-### Phase 4 — 시각 자산 통합 · 완료
-
-목표: 페이지에 들어갈 1차 시각 자산을 가벼운 무게로 준비.
-
-- Brand 4 페이지의 hero 시각 자산 배치
-    - About — 정적 풍경 이미지 (박공 지붕 + 노을)
-    - Symbol — 심볼 마크
-    - Visual Principles — 별도 운영 중인 3D 에셋 라이브러리를 iframe으로 임베드, 자동 재생
-    - Tone of Voice — 정적 풍경 이미지 (편지 쓰는 손)
-    - Color — 인터랙션 모션 스테이지 (적층식 무드보드)
-- 이미지 파이프라인 — PNG → WebP 일괄 변환. 평균 90% 이상 용량 절감
-- Visual Principles iframe 콜드 로드 안정화 — race condition 수정으로 첫 진입 시 빈 박스 문제 해결
-- Asset 페이지 Form Principles — 2-컬럼 행 구조 (좌측 본문 + 우측 이미지 placeholder, 4:3)
-- Asset 페이지 Showcase — 5×2 placeholder 갤러리 (실 자산 이미지를 끼울 자리)
-- 본문 텍스트 폭을 hero 이미지와 정렬 (640–680px 캡 제거)
-- GitHub Pages 자동 배포 라인 정립 — [https://noyahjung.github.io/Ohouse_3D_Asset_Library/](https://noyahjung.github.io/Ohouse_3D_Asset_Library/)
-
-### Phase 5 — 콘텐츠 정리 · 현재 단계
-
-목표: 골격만 있는 각 페이지에 실 본문·시각 자산을 채우기.
-
-진행 절차:
-
-1. 개발 상황 공유 — 현재 페이지 골격·placeholder 상태와 톤·결의 기준을 팀에 공유
-2. 페이지별 담당자 지정 — 아래 페이지의 콘텐츠 정리 책임자를 배정
+각 페이지의 본문·자산 정리를 책임질 담당자를 배정한 뒤 작업을 분담합니다.
 
 | 페이지 | 채워야 할 콘텐츠 | 담당 |
 | --- | --- | --- |
-| Symbol | 외부 공개용 사양의 추상 레이어, 4 결정의 실 본문·이미지 | TBD |
-| Visual Principles | 4원칙(Smoothing Line/Dream/Clarity/Stability)별 세부 페이지, 카피 검수 | TBD |
-| Tone of Voice | 톤 예시 카드의 실 카피·컨텍스트 검수, 4원칙 본문 보강 | TBD |
-| Color | 4 색 원칙의 본문, 실 색 결정 시선 정리 | TBD |
-| Icon | Form Principles 4 tenet 본문·이미지, Showcase 자산 | TBD |
-| 2D Assets | Form Principles 4 tenet 본문·이미지, Showcase 자산 | TBD |
-| 3D Assets | Form Principles 4 tenet 본문·이미지, Showcase 자산 | TBD |
-| Photographic Assets | 사진 매체 고유의 결로 본문 검수, Showcase 자산 | TBD |
-| Motion / Pattern | 개발예정. 4 tenet의 placeholder 톤 유지, 정리 시점에 본문 작성 | TBD |
-| About / Overview | Mission 본문 검수, Overview 카피의 신규 분류 체계 반영 | TBD |
-
-3. 담당자별 콘텐츠 채움 — 본문 카피, 예시 자산, 이미지 placeholder 교체
-4. 검수 라운드 — 톤 일관성, 사실 관계, 외부 공개 적절성 검수
-
-### Phase 6 — 디자인 통합 · 예정
-
-목표: 콘텐츠가 채워진 후, 페이지 간 시각적 일관성을 단일 레이아웃으로 정리.
-
-- 페이지 간 시각 차이 점검 — 타이포 위계, 컬러 사용, 간격, 인터랙션 패턴
-- 단일 레이아웃 시스템으로 정렬 — 헤로 비주얼, 본문, 이미지 모듈의 통일된 사양
-- 사용자 흐름 검수 — 외부 관람자가 자연스럽게 페이지를 이동하는 경험 점검
-- 반응형 대응 점검 — 모바일·태블릿
-- 외부 공개 직전 일관성 사후 점검
-
-### Phase 7 — 컴포넌트 스펙 통합 · 후속
-
-목표: 프로덕트 팀이 운영하는 컴포넌트 매뉴얼을 Brand Book의 원칙·시선과 cross-link.
-
-- Brand Book의 원칙 레이어와 컴포넌트 사양의 구현 레이어를 단일 레퍼런스로 묶기
-- 사내 컴포넌트 매뉴얼은 그대로 유지하되, 어떤 원칙을 어떤 결정으로 구현했는지 Brand Book에서 인덱싱
-- 외부판에서는 원칙·결과만 노출. 사내 토큰에 한해 매뉴얼로 연결되는 링크 레이어 제공
-- 진입 시점 — Phase 6 (외부 공개 가능 상태) 완성 이후
+| Symbol | 외부 공개용 사양의 추상 레이어, 본문·이미지 |   |
+| Visual Principles | 4원칙(Smoothing Line/Dream/Clarity/Stability)별 본문·세부 페이지 |   |
+| Tone of Voice | 버벌 4원칙 정의, 톤 예시 카드의 실 카피 |   |
+| Color | 색 원칙·실 색 결정의 시선 정리 |   |
+| Icon | Form Principles 본문·이미지, Showcase 자산 |   |
+| 2D Assets | Form Principles 본문·이미지, Showcase 자산 |   |
+| 3D Assets | Form Principles 본문·이미지, Showcase 자산 |   |
+| Photographic Assets | 사진 매체의 결로 본문 정리, Showcase 자산 |   |
+| Motion / Pattern | 개발예정 상태 유지, 정리 시점에 본문 작성 |   |
+| About / Overview | Mission 본문 검수, Overview 카피 갱신 |   |
 
 ---
 
@@ -235,33 +168,30 @@ Visual·Verbal 두 축은 사이드바 Brand 카테고리 안에서 동등한 �
 
 | 시점 | 마일스톤 |
 | --- | --- |
-| 2026 Q2 마감 | Asset 페이지 그래픽 영역의 콘텐츠 정리 완료 (Form Principles 이미지·5×2 갤러리·본문) |
-| 2026 Q3 마감 | Brand Book 전체 외부 공개 가능 상태 — About + Brand 4 페이지 본문·시각 자산까지 마감 + 디자인 통합(Phase 6) 완료 |
-| 2026 Q4 이후 | 컴포넌트 스펙 통합(Phase 7) 진입 |
+| 2026 Q2 마감 | Asset 페이지 그래픽 영역의 콘텐츠 정리 완료 (단계 4의 일부) |
+| 2026 Q3 마감 | Brand Book 전체 외부 공개 가능 상태 — Brand 4 페이지 본문·자산 마감 + 디자인 통합(단계 5) 완료 |
+| 2026 Q4 이후 | 컴포넌트 스펙 통합(단계 6) 진입 |
 
-### Q2 안 — Phase 5의 그래픽 자산 영역 마감
+### Q2 안 — 그래픽 자산 영역 콘텐츠 마감
 
 - [ ]  페이지별 담당자 지정 완료
-- [ ]  Asset 페이지 Form Principles 4 tenet의 이미지 placeholder를 실 이미지로 교체
-- [ ]  Asset 페이지 5×2 갤러리에 실 자산 이미지 또는 큐레이션 컷 채우기
-- [ ]  Visual Principles 4원칙별 세부 페이지 분리 (Dream · Clarity · Stability · Smoothing Line)
-- [ ]  Asset (Small) 2D SVG 시리즈 본격 정의
-- [ ]  Photographic Assets 본문 검수 (현재 일반론 placeholder)
+- [ ]  Asset 페이지 Form Principles 이미지·본문 채움
+- [ ]  Asset 페이지 5×2 갤러리에 실 자산 이미지 채움
+- [ ]  Visual Principles 4원칙별 세부 페이지 분리
+- [ ]  Photographic Assets 본문 검수
 
-### Q3 안 — Phase 5 마감 + Phase 6 디자인 통합
+### Q3 안 — 콘텐츠 정리 마감 + 디자인 통합
 
-- [ ]  Color 4원칙을 실제 색 결정의 시선으로 채우기
-- [ ]  Tone of Voice 톤 예시 카드의 실 카피·컨텍스트 검수, 본문 보강
+- [ ]  Color 4원칙·실 색 결정 시선 채움
+- [ ]  Tone of Voice 버벌 4원칙 정의·본문 채움
 - [ ]  Symbol 외부 공개용 사용 사양 정리
-- [ ]  Motion Assets 브랜드 모션 원칙 수립 (Large 그래픽 / Icon 그래픽 두 트랙)
-- [ ]  Pattern / Background 에셋 종류·활용 가이드 정리
-- [ ]  Overview 카피를 신규 분류(Brand → Graphic → Image) 체계에 맞게 갱신
-- [ ]  Visual Principles 명칭 후보 재검토 (Way of Seeing / Principles of Vision 등)
-- [ ]  Phase 6 — 페이지 간 시각 차이 점검·정렬, 반응형 대응
+- [ ]  Motion / Pattern 본문 작성
+- [ ]  Overview 카피를 신규 분류 체계로 갱신
+- [ ]  페이지 간 시각 일관성 점검·정렬, 반응형 대응
 - [ ]  외부 공개 전 일관성 사후 점검 (타이포·여백·톤)
 
-### Q4 이후 — Phase 7 (컴포넌트 통합)
+### Q4 이후 — 컴포넌트 통합 (단계 6)
 
 - [ ]  프로덕트 컴포넌트 스펙과 Brand Book의 단일 레퍼런스 통합 모델 설계
-- [ ]  사내 매뉴얼과 Brand Book의 cross-link 방식 정의 (외부판은 링크 레이어만 노출)
-- [ ]  Brand Book과 사내 컴포넌트 매뉴얼의 owner·운영 책임 분담 명문화
+- [ ]  컴포넌트 매뉴얼과 Brand Book의 cross-link 방식 정의
+- [ ]  Brand Book과 컴포넌트 매뉴얼의 owner·운영 책임 분담 명문화
