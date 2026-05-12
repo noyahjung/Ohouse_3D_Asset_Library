@@ -9,7 +9,7 @@ import * as THREE from 'three';
 // ── Color tokens ─────────────────────────────────────────────
 export const COLORS = {
   // Frosted Blue — top (cool white) → bottom (saturated blue)
-  frostedBlueTop: '#cce2ff',
+  frostedBlueTop: '#9bc5fd',
   frostedBlueBottom: '#00a1ff',
 
   // Frosted Green — mirrored curve with a fresh mint→green
@@ -45,129 +45,63 @@ export const COLORS = {
 
 // ── Frozen preset: the tuned physical parameters shared by every
 // "Frosted ___" material. Only the gradient colors differ per variant.
+// Values match the C variant from the variants-mode tone study and
+// are the canonical default for every frosted body across normal +
+// admin modes.
 export const FROSTED_PRESET = Object.freeze({
-  roughness: 0.53,
+  roughness: 0.60,
   metalness: 0.0,
-  transmission: 0.34,
-  thickness: 2.23,
-  ior: 1.45,
-  attenuationDistance: 2.56,
+  transmission: 0.85,
+  thickness: 2.30,
+  ior: 1.70,
+  attenuationDistance: 4.50,
   clearcoat: 0.39,
-  clearcoatRoughness: 0.51,
+  clearcoatRoughness: 0.50,
   specularIntensity: 0.0,
   envMapIntensity: 0.4,
-  gradientStrength: 1.0,
+  gradientStrength: 0.45,
 });
 
 // ── Variant registry — maps a palette id to its gradient stops.
 // Add new frosted variants here; `createFrosted(id)` picks them up.
-// `preset` lets a variant override any FROSTED_PRESET value without
-// touching the shared baseline (used by other variants).
+// All physical params come from FROSTED_PRESET (single source of
+// truth); add a `preset: { … }` override only if a variant truly
+// needs to diverge from the shared tuning.
 export const FROSTED_VARIANTS = {
   frostedBlue: {
     label: 'Genuine Blue',
     top: COLORS.frostedBlueTop,
     bottom: COLORS.frostedBlueBottom,
-    preset: {
-      transmission: 0.70,
-      roughness: 0.60,
-      thickness: 2.30,
-      ior: 1.70,
-      clearcoat: 0.39,
-      clearcoatRoughness: 0.50,
-      attenuationDistance: 4.50,
-      gradientStrength: 0.45,
-    },
   },
   frostedGreen: {
     label: 'Jade Green',
     top: COLORS.frostedGreenTop,
     bottom: COLORS.frostedGreenBottom,
-    preset: {
-      transmission: 0.70,
-      roughness: 0.60,
-      thickness: 2.30,
-      ior: 1.70,
-      clearcoat: 0.39,
-      clearcoatRoughness: 0.50,
-      attenuationDistance: 4.50,
-      gradientStrength: 0.44,
-    },
   },
   frostedOrange: {
     label: 'Mango Orange',
     top: COLORS.frostedOrangeTop,
     bottom: COLORS.frostedOrangeBottom,
-    preset: {
-      transmission: 0.70,
-      roughness: 0.60,
-      thickness: 2.30,
-      ior: 1.70,
-      clearcoat: 0.39,
-      clearcoatRoughness: 0.50,
-      attenuationDistance: 4.50,
-      gradientStrength: 0.50,
-    },
   },
   frostedRed: {
     label: 'Coral Red',
     top: COLORS.frostedRedTop,
     bottom: COLORS.frostedRedBottom,
-    preset: {
-      transmission: 0.70,
-      roughness: 0.60,
-      thickness: 2.30,
-      ior: 1.70,
-      clearcoat: 0.39,
-      clearcoatRoughness: 0.50,
-      attenuationDistance: 4.50,
-      gradientStrength: 0.50,
-    },
   },
   frostedViolet: {
     label: 'Violet',
     top: COLORS.frostedVioletTop,
     bottom: COLORS.frostedVioletBottom,
-    preset: {
-      transmission: 0.70,
-      roughness: 0.60,
-      thickness: 2.30,
-      ior: 1.70,
-      clearcoat: 0.39,
-      clearcoatRoughness: 0.50,
-      attenuationDistance: 4.50,
-      gradientStrength: 0.50,
-    },
   },
   frostedDarkBlue: {
     label: 'Dark Blue',
     top: COLORS.frostedDarkBlueTop,
     bottom: COLORS.frostedDarkBlueBottom,
-    preset: {
-      transmission: 0.70,
-      roughness: 0.60,
-      thickness: 2.30,
-      ior: 1.70,
-      clearcoat: 0.39,
-      clearcoatRoughness: 0.50,
-      attenuationDistance: 4.50,
-      gradientStrength: 0.50,
-    },
   },
   frostedPink: {
     label: 'Candy Pink',
     top: COLORS.frostedPinkTop,
     bottom: COLORS.frostedPinkBottom,
-    preset: {
-      transmission: 0.70,
-      roughness: 0.60,
-      thickness: 2.30,
-      ior: 1.70,
-      clearcoat: 0.39,
-      clearcoatRoughness: 0.50,
-      attenuationDistance: 4.50,
-      gradientStrength: 0.50,
-    },
   },
 };
 
