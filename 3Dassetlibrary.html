@@ -826,6 +826,136 @@
     cursor: default;
   }
 
+  /* Collapsible accordion sections — only one expanded at a time.
+     Expanded section's data-section value drives the stage's active
+     mode (material vs color). */
+  .variants-section {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 14px 14px;
+    background: rgba(255, 255, 255, 0.55);
+  }
+  .variants-section.is-collapsed { padding-bottom: 10px; gap: 0; }
+  .variants-section-header {
+    display: flex; align-items: center; gap: 8px;
+    border: 0; background: none;
+    padding: 4px 0;
+    cursor: pointer;
+    font: inherit; color: var(--text);
+    font-size: 12px; font-weight: 700;
+    letter-spacing: 0.01em;
+    text-align: left;
+  }
+  .variants-section-caret::before {
+    content: '▸';
+    display: inline-block;
+    color: var(--text-mute);
+    font-size: 9px;
+    transition: transform var(--transition);
+  }
+  .variants-section:not(.is-collapsed) .variants-section-caret::before {
+    transform: rotate(90deg);
+  }
+  .variants-section-meta {
+    margin-left: auto;
+    font-size: 10px; color: var(--text-mute);
+    font-weight: 500;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+  }
+  .variants-section-body {
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .variants-section.is-collapsed .variants-section-body { display: none; }
+
+  /* ── Admin-vari mode (?admin=true&vari=true) ───────────────
+     Pares the palette down to Blue + Red and surfaces a 4-slot
+     "Color Vari" picker so designers can stash multiple gradient
+     directions side by side without losing prior settings. */
+  body.admin-vari-mode .palette-category[data-category="basic"] .chip:not([data-mat="frostedBlue"]):not([data-mat="frostedRed"]) {
+    display: none !important;
+  }
+  body.admin-vari-mode #bfButton,
+  body.admin-vari-mode #bfGear {
+    display: none !important;
+  }
+  #colorVariPanel { display: none; }
+  body.admin-vari-mode #colorVariPanel {
+    display: flex; flex-direction: column; gap: 8px;
+    padding: 10px 12px;
+    margin: 0 0 10px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.96);
+  }
+  #colorVariPanel .label {
+    font-size: 10px; font-weight: 700;
+    color: var(--text-mute); letter-spacing: 0.10em;
+    text-transform: uppercase;
+  }
+  #colorVariPanel .vari-chip-row {
+    display: flex; gap: 5px;
+  }
+  #colorVariPanel .vari-chip {
+    flex: 1;
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.92);
+    border-radius: 999px;
+    font-family: inherit; font-size: 12px;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition), border-color var(--transition);
+  }
+  #colorVariPanel .vari-chip:hover { background: #fff; color: var(--text); }
+  #colorVariPanel .vari-chip.active {
+    background: var(--accent); color: #fff;
+    border-color: var(--accent);
+  }
+  #colorVariPanel .vari-actions {
+    display: flex; gap: 5px; margin-top: 2px;
+  }
+  #colorVariPanel .vari-action {
+    flex: 1;
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.92);
+    border-radius: 6px;
+    font-family: inherit; font-size: 11px;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition);
+  }
+  #colorVariPanel .vari-action:hover { background: #fff; color: var(--text); }
+  #colorVariPanel .vari-action--primary {
+    background: var(--accent); color: #fff;
+    border-color: var(--accent);
+  }
+  #colorVariPanel .vari-action--primary:hover {
+    background: var(--accent-hover); border-color: var(--accent-hover);
+  }
+
+  /* Per-color group inside the color section's controls — 5 groups
+     stacked, each with the 4 gradient fields for that asset/color. */
+  .variants-color-group {
+    display: flex; flex-direction: column; gap: 6px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--border);
+  }
+  .variants-color-group:first-child {
+    border-top: 0;
+    padding-top: 0;
+  }
+  .variants-color-group-label {
+    font-size: 10px; font-weight: 700;
+    color: var(--text-mute);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
 </style>
 </head>
 <body>
@@ -851,27 +981,8 @@
 </div>
 
 <div id="variantsPanel">
-  <div class="variants-title">Tone Variants</div>
-  <div class="variants-subtitle">재질 5종 × Blue/Red 두 컬러를 커스터마이즈</div>
-
-  <div class="variants-group">
-    <div class="variants-group-label">Variant</div>
-    <div class="variants-chip-row" id="variantsKeyRow">
-      <button class="variants-chip active" data-variant="A">A재질</button>
-      <button class="variants-chip" data-variant="B">B재질</button>
-      <button class="variants-chip" data-variant="C">C재질</button>
-      <button class="variants-chip" data-variant="D">D재질</button>
-      <button class="variants-chip" data-variant="E">E재질</button>
-    </div>
-  </div>
-
-  <div class="variants-group">
-    <div class="variants-group-label">Color</div>
-    <div class="variants-chip-row" id="variantsColorRow">
-      <button class="variants-chip active" data-color="blue">Blue</button>
-      <button class="variants-chip" data-color="red">Red</button>
-    </div>
-  </div>
+  <div class="variants-title">Color Studies</div>
+  <div class="variants-subtitle">5 colored assets · 4 gradient palettes</div>
 
   <div class="variants-group">
     <div class="variants-group-label">그림자</div>
@@ -882,23 +993,47 @@
   </div>
 
   <div class="variants-group">
-    <div class="variants-group-label" id="variantsControlsLabel">A재질 · Blue — Material Settings</div>
-    <div class="variants-controls" id="variantsControls"></div>
+    <div class="variants-group-label">Color Mode</div>
+    <div class="variants-chip-row" id="colorModeRow">
+      <button class="variants-chip active" data-cmode="a">a컬러</button>
+      <button class="variants-chip" data-cmode="b">b컬러</button>
+      <button class="variants-chip" data-cmode="c">c컬러</button>
+      <button class="variants-chip" data-cmode="d">d컬러</button>
+    </div>
+  </div>
+
+  <div class="variants-group">
+    <div class="variants-group-label" id="colorControlsLabel">a컬러 — Color Gradients</div>
+    <div class="variants-controls" id="colorControls"></div>
   </div>
 
   <div class="variants-actions">
-    <button id="variantsSet" class="variants-action variants-action--primary" type="button">Set as default</button>
+    <button id="colorSet" class="variants-action variants-action--primary" type="button">Set as default</button>
     <div class="variants-actions-row">
-      <button id="variantsReset" class="variants-action" type="button">Reset</button>
-      <button id="variantsRestore" class="variants-action" type="button">원래대로</button>
+      <button id="colorReset" class="variants-action" type="button">Reset</button>
+      <button id="colorRestore" class="variants-action" type="button">원래대로</button>
     </div>
-    <button id="variantsExport" class="variants-action" type="button">현재 재질 PNG 다운로드</button>
+    <button id="variantsExport" class="variants-action" type="button">현재 화면 PNG 다운로드</button>
   </div>
 </div>
 
 <div id="variantsStage"></div>
 
 <div id="palette">
+  <div id="colorVariPanel">
+    <span class="label">Color Vari</span>
+    <div class="vari-chip-row">
+      <button class="vari-chip active" data-vari="a" type="button">컬러a</button>
+      <button class="vari-chip"        data-vari="b" type="button">컬러b</button>
+      <button class="vari-chip"        data-vari="c" type="button">컬러c</button>
+      <button class="vari-chip"        data-vari="d" type="button">컬러d</button>
+    </div>
+    <div class="vari-actions">
+      <button class="vari-action vari-action--primary" id="variSet" type="button">Set as default</button>
+      <button class="vari-action" id="variReset" type="button">Reset</button>
+    </div>
+  </div>
+
   <div class="palette-group">
     <div class="palette-category" data-category="basic">
       <button class="palette-category-header active-category">
@@ -1102,14 +1237,27 @@ import {
 
 // ── Admin mode: ?admin=true shows gear buttons & settings panel
 const IS_ADMIN = new URLSearchParams(window.location.search).has('admin');
+// Modified admin: ?admin=true&vari=true layers a "Color Vari" picker
+// on top of admin so designers can A/B/C/D the gradient (and the rest
+// of the material params) per Blue/Red without losing the others.
+const IS_ADMIN_VARI = IS_ADMIN && new URLSearchParams(window.location.search).has('vari');
+if (IS_ADMIN_VARI) document.body.classList.add('admin-vari-mode');
 if (IS_ADMIN) {
   // Swap the green-circle favicon for a tool emoji so admin tabs are
   // visually distinguishable from end-user tabs in the browser bar.
+  // 어드민-컬러 모드 (admin + vari) gets its own palette emoji + label
+  // so the two admin tabs don't blend together in the browser bar.
+  const faviconEmoji = IS_ADMIN_VARI ? '🎨' : '🛠';
   const adminFavicon = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(
-    `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><text x='4' y='52' font-size='52'>🛠</text></svg>`
+    `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><text x='4' y='52' font-size='52'>${faviconEmoji}</text></svg>`
   );
   document.querySelector('link[rel=icon]').setAttribute('href', adminFavicon);
-  document.getElementById('adminBadge').classList.add('visible');
+  if (IS_ADMIN_VARI) {
+    document.title = '어드민-컬러 모드';
+  }
+  const adminBadge = document.getElementById('adminBadge');
+  adminBadge.classList.add('visible');
+  if (IS_ADMIN_VARI) adminBadge.textContent = '어드민-컬러 모드';
 
   // Collapse the asset chip list behind the "Asset" section label so the
   // long admin settings panel gets the vertical space it needs. Clicking
@@ -1905,6 +2053,10 @@ function loadAsset(assetId) {
     });
     const useFullBox = bodyBox.isEmpty() || asset.useFullGradientBox;
     const gradBox = useFullBox ? fullBox : bodyBox;
+    // Stash on the root so callers (variants color mode) can recover
+    // the raw gradient bbox + native shift after load and re-remap UVs
+    // without rebuilding the asset.
+    root.userData.gradBox = gradBox.clone();
     // gradientYShift biases the gradient toward darker (negative) or
     // lighter (positive) by extending the gradient bbox on one side
     // instead of sliding the whole window — this avoids a clamped
@@ -2569,6 +2721,131 @@ const state = {
   cameraLens:      { ...INITIAL_STATE.cameraLens },
 };
 
+// ── Color Vari (admin-vari mode) ────────────────────────────
+// 4-slot picker that swaps both Blue and Red material configs at
+// once. Each (vari, color) holds a snapshot of the full admin slider
+// set; switching vari restores both colors to that vari's saved
+// values, slider edits write back to variStore[activeVari][color].
+const VARI_KEYS   = ['a', 'b', 'c', 'd'];
+const VARI_COLORS = ['frostedBlue', 'frostedRed'];
+// Bumped to v2: vari b/c/d now ship with team-aligned gradient stops
+// (was duplicates of vari a). v1 snapshots would mask the new defaults.
+const VARI_STORAGE_KEY = 'ohouseAdminVariDefaults_v2';
+
+// Team-aligned gradient ladders for varis b/c/d. Vari a stays on the
+// canonical frostedBlue/frostedRed defaults (matches normal mode).
+const VARI_GRADIENT_OVERRIDES = {
+  a: {},
+  b: {
+    frostedBlue: { top: '#9bc5fd', bottom: '#1a90ff' },
+    frostedRed:  { top: '#ffd1bd', bottom: '#ff4747' },
+  },
+  c: {
+    frostedBlue: { top: '#9bc5fd', bottom: '#006eff' },
+    frostedRed:  { top: '#ffd1bd', bottom: '#f53d3d' },
+  },
+  d: {
+    frostedBlue: { top: '#93c0fb', bottom: '#0062ff' },
+    frostedRed:  { top: '#fdbfa5', bottom: '#f02d2d' },
+  },
+};
+
+function freshVariStore() {
+  const out = {};
+  for (const v of VARI_KEYS) {
+    out[v] = {};
+    for (const c of VARI_COLORS) {
+      out[v][c] = { ...INITIAL_STATE[c], ...(VARI_GRADIENT_OVERRIDES[v]?.[c] || {}) };
+    }
+  }
+  return out;
+}
+
+function loadVariStore() {
+  try {
+    const raw = localStorage.getItem(VARI_STORAGE_KEY);
+    if (!raw) return freshVariStore();
+    const parsed = JSON.parse(raw);
+    const out = freshVariStore();
+    for (const v of VARI_KEYS) {
+      for (const c of VARI_COLORS) {
+        if (parsed?.[v]?.[c] && typeof parsed[v][c] === 'object') {
+          // Merge so newly-added schema fields fall back to INITIAL_STATE.
+          out[v][c] = { ...INITIAL_STATE[c], ...parsed[v][c] };
+        }
+      }
+    }
+    return out;
+  } catch {
+    return freshVariStore();
+  }
+}
+
+function persistVariStore() {
+  try { localStorage.setItem(VARI_STORAGE_KEY, JSON.stringify(variStore)); } catch {}
+}
+
+const variStore = loadVariStore();
+let activeVariKey = 'a';
+
+// Apply a (vari, color) snapshot to its live material. Mirrors the
+// renderControls slider logic so all gradient/transmission/etc. fields
+// land on the MeshPhysicalMaterial instance as well as the state cache.
+function applyVariSnapshotToColor(matKey) {
+  const snap = variStore[activeVariKey][matKey];
+  if (!snap) return;
+  const mat = materials[matKey];
+  const variant = FROSTED_VARIANTS[matKey];
+  state[matKey] = { ...INITIAL_STATE[matKey], ...snap };
+  const s = state[matKey];
+
+  // Gradient hex colors live on FROSTED_VARIANTS — sync those first
+  // so the regenerated texture below uses the right stops.
+  if (s.top    !== undefined) variant.top    = s.top;
+  if (s.bottom !== undefined) variant.bottom = s.bottom;
+
+  // Physical params (matches admin's slider->material assignment).
+  for (const c of CONTROL_SCHEMAS.frosted) {
+    if (c.custom) continue;
+    if (s[c.key] !== undefined) mat[c.key] = s[c.key];
+  }
+
+  // Custom: gradientStrength rebuilds the canvas texture.
+  const strength = s.gradientStrength ?? FROSTED_PRESET.gradientStrength;
+  const t = makeVerticalGradient(variant.top, variant.bottom, strength);
+  if (mat.map) mat.map.dispose();
+  mat.map = t;
+  mat.attenuationColor.set(variant.bottom);
+  mat.needsUpdate = true;
+
+  // Chip swatch + active-color shadow tint stay in sync with hex edits.
+  const chip = document.querySelector(`.chip[data-mat="${matKey}"]`);
+  if (chip) {
+    chip.style.setProperty('--top', variant.top);
+    chip.style.setProperty('--bot', variant.bottom);
+  }
+  if (matKey === activeVariantId) shadowMat.color.set(variant.bottom);
+}
+
+function applyVari(variKey) {
+  if (!variStore[variKey]) return;
+  activeVariKey = variKey;
+  for (const c of VARI_COLORS) applyVariSnapshotToColor(c);
+  // If the settings panel is open on a frosted color, refresh its
+  // sliders to reflect the new vari's values.
+  if (openMatKey && VARI_COLORS.includes(openMatKey)) {
+    renderControls(openMatKey, 'frosted');
+  }
+}
+
+// Called from renderControls slider handlers — only writes when the
+// edited material is one of the two vari colors and we're in vari mode.
+function recordVariEdit(matKey, key, value) {
+  if (!IS_ADMIN_VARI) return;
+  if (!VARI_COLORS.includes(matKey)) return;
+  variStore[activeVariKey][matKey][key] = value;
+}
+
 function snapshotMaterial(mat, schema) {
   const out = {};
   for (const c of schema) out[c.key] = mat[c.key];
@@ -2679,6 +2956,7 @@ function renderControls(matKey, matType) {
         hex.textContent = v;
         s[c.key] = v;
         applyFrostedColor(matKey, c.key, v);
+        recordVariEdit(matKey, c.key, v);
       });
       row.append(document.createTextNode(c.label + ' '), input, hex);
       controlsEl.appendChild(row);
@@ -2713,6 +2991,7 @@ function renderControls(matKey, matType) {
         mat[c.key] = v;
         mat.needsUpdate = true;
       }
+      recordVariEdit(matKey, c.key, v);
     });
     row.append(document.createTextNode(c.label + ' '), input, valueText);
     controlsEl.appendChild(row);
@@ -2792,6 +3071,39 @@ document.getElementById('bfGear').addEventListener('click', (e) => {
     openSettingsFor('blackFriday', 'blackFriday');
   }
 });
+
+// ── Color Vari chips + actions (admin-vari mode) ───────────────
+if (IS_ADMIN_VARI) {
+  // Apply the saved vari-a state to both Blue and Red on first load.
+  applyVari(activeVariKey);
+
+  document.querySelectorAll('#colorVariPanel .vari-chip').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#colorVariPanel .vari-chip')
+        .forEach((b) => b.classList.toggle('active', b === btn));
+      applyVari(btn.dataset.vari);
+    });
+  });
+
+  // Save current live state of both colors as the vari's defaults.
+  document.getElementById('variSet').addEventListener('click', (e) => {
+    for (const c of VARI_COLORS) {
+      variStore[activeVariKey][c] = { ...state[c] };
+    }
+    persistVariStore();
+    const btn = e.currentTarget;
+    const original = btn.textContent;
+    btn.textContent = 'Saved ✓';
+    btn.disabled = true;
+    setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 1000);
+  });
+
+  // Roll the current vari back to the last saved snapshot — refreshes
+  // both materials and (if open) the visible sliders.
+  document.getElementById('variReset').addEventListener('click', () => {
+    applyVari(activeVariKey);
+  });
+}
 
 // Asset switcher
 document.querySelectorAll('.asset-chip').forEach(btn => {
@@ -3190,6 +3502,45 @@ function tick() {
 }
 tick();
 
+// Debug helper — invoked from the browser console as
+// `__inspectBodyMat()`. Dumps the box body's MeshPhysicalMaterial
+// state so admin and color modes can be diff'd field-by-field.
+window.__inspectBodyMat = function () {
+  const slots = window.__variantSlots;
+  let m, env;
+  if (slots) {
+    const boxSlot = slots.find((s) => s.id === 'box');
+    m = boxSlot?.bodyMeshes?.[0]?.material;
+    env = boxSlot?.scene?.environment;
+  } else {
+    m = bodyMeshes[0]?.material;
+    env = scene.environment;
+  }
+  if (!m) { console.warn('No box body material yet'); return; }
+  const dump = {
+    transmission:        m.transmission,
+    roughness:           m.roughness,
+    thickness:           m.thickness,
+    ior:                 m.ior,
+    clearcoat:           m.clearcoat,
+    clearcoatRoughness:  m.clearcoatRoughness,
+    attenuationDistance: m.attenuationDistance,
+    attenuationColorHex: '#' + m.attenuationColor.getHexString(),
+    envMapIntensity:     m.envMapIntensity,
+    specularIntensity:   m.specularIntensity,
+    colorHex:             '#' + m.color.getHexString(),
+    mapColorSpace:        m.map?.colorSpace,
+    mapFlipY:             m.map?.flipY,
+    envSourcePresent:    !!env,
+    envSourceUuid:       env?.uuid,
+    envSourceMapping:    env?.mapping,
+    envSourceUserData:   JSON.stringify(env?.userData ?? {}),
+    hdrLoaded:           !!loadedHdrTexture,
+  };
+  console.table(dump);
+  return dump;
+};
+
 // `?autoexport=all` runs every asset through the same render the
 // landing page uses, then exposes the resulting PNGs as base64 on
 // `window.__exportedThumbs` and signals completion via
@@ -3445,6 +3796,90 @@ function renderVariantControls() {
   }
 }
 
+// ── 컬러설정 B ─────────────────────────────────────────────
+// In color mode, each cell holds its own per-color material rather
+// than the shared frostedBlue used in 재질설정 A. Designers compare
+// 4 alternate gradient palettes (a/b/c/d) across 5 colored assets
+// to align on a final palette direction. Only gradient-related
+// fields are user-tunable here — physical params (transmission,
+// roughness, etc.) stay locked to FROSTED_PRESET (= the C tone the
+// team already aligned on as the canonical baseline).
+const COLOR_BINDINGS = {
+  box:    { matId: 'frostedBlue',     label: '이사박스 · Blue' },
+  coupon: { matId: 'frostedPink',     label: '쿠폰 · Pink' },
+  gift:   { matId: 'frostedRed',      label: '선물상자 · Red' },
+  clock:  { matId: 'frostedViolet',   label: '시계 · Violet' },
+  camera: { matId: 'frostedDarkBlue', label: '카메라 · Navy' },
+};
+const COLOR_FIELDS = [
+  { key: 'gradientTop',      label: 'Gradient Top',      type: 'color' },
+  { key: 'gradientBottom',   label: 'Gradient Bottom',   type: 'color' },
+  { key: 'gradientStrength', label: 'Gradient Strength', type: 'range', min: 0,  max: 1, step: 0.01 },
+  { key: 'gradientYShift',   label: 'Gradient Y Shift',  type: 'range', min: -1, max: 1, step: 0.01 },
+];
+const COLOR_MODE_KEYS = ['a', 'b', 'c', 'd'];
+
+function colorModeBaseline(assetId) {
+  const { matId } = COLOR_BINDINGS[assetId];
+  const v = FROSTED_VARIANTS[matId];
+  // Default shift mirrors the asset's native admin-mode framing, so
+  // mode 'a' lands designers on the exact tone they see in normal
+  // mode without forcing them to dial it in by hand.
+  return {
+    gradientTop:      v.top,
+    gradientBottom:   v.bottom,
+    gradientStrength: FROSTED_PRESET.gradientStrength,
+    gradientYShift:   ASSETS[assetId]?.gradientYShift ?? 0,
+  };
+}
+function freshColorModeDefaults() {
+  const out = {};
+  for (const m of COLOR_MODE_KEYS) {
+    out[m] = {};
+    for (const id of Object.keys(COLOR_BINDINGS)) {
+      out[m][id] = colorModeBaseline(id);
+    }
+  }
+  return out;
+}
+
+// Bumped to v2: gradientYShift defaults switched from 0 to each
+// asset's native admin shift, so v1 snapshots would now show wrong
+// (zero-shift) baselines.
+const COLOR_MODE_STORAGE_KEY = 'ohouseColorModeDefaults_v2';
+
+function loadColorModeSavedDefaults() {
+  try {
+    const raw = localStorage.getItem(COLOR_MODE_STORAGE_KEY);
+    if (!raw) return freshColorModeDefaults();
+    const parsed = JSON.parse(raw);
+    const out = freshColorModeDefaults();
+    for (const m of COLOR_MODE_KEYS) {
+      for (const id of Object.keys(COLOR_BINDINGS)) {
+        if (parsed?.[m]?.[id] && typeof parsed[m][id] === 'object') {
+          out[m][id] = { ...colorModeBaseline(id), ...parsed[m][id] };
+        }
+      }
+    }
+    return out;
+  } catch {
+    return freshColorModeDefaults();
+  }
+}
+function persistColorModeSavedDefaults() {
+  try {
+    localStorage.setItem(COLOR_MODE_STORAGE_KEY, JSON.stringify(colorModeSavedDefaults));
+  } catch {}
+}
+
+const colorModeSavedDefaults = loadColorModeSavedDefaults();
+const colorModeStore = JSON.parse(JSON.stringify(colorModeSavedDefaults));
+let activeColorMode  = 'a';
+// 'material' (재질설정 A) | 'color' (컬러설정 B). Drives whether
+// the 5 stage cells share frostedBlue or each holds its own per-color
+// material. Default to 'color' since that's the active design focus.
+let activeStageMode  = 'color';
+
 if (IS_VARIANTS_MODE) {
   document.body.classList.add('variants-mode');
   // Visual identity for the variants tab: title becomes "재질모드"
@@ -3469,6 +3904,130 @@ if (IS_VARIANTS_MODE) {
   };
   const variantSlots = [];
 
+  // ── 컬러설정 B runtime ───────────────────────────────────
+  // Live application of current activeColorMode params for one asset:
+  // re-pin physical params to FROSTED_PRESET (so 재질설정 A edits
+  // don't bleed across), rebuild the gradient texture, and re-remap
+  // UVs to honor per-mode gradientYShift. Lives inside the variants-
+  // mode block so it can close over `variantSlots` for the slot lookup.
+  function applySingleColor(assetId) {
+    const params = colorModeStore[activeColorMode]?.[assetId];
+    if (!params) return;
+    const matId = COLOR_BINDINGS[assetId]?.matId;
+    if (!matId) return;
+    const mat = materials[matId];
+    if (!mat) return;
+    mat.transmission        = FROSTED_PRESET.transmission;
+    mat.roughness           = FROSTED_PRESET.roughness;
+    mat.thickness           = FROSTED_PRESET.thickness;
+    mat.ior                 = FROSTED_PRESET.ior;
+    mat.clearcoat           = FROSTED_PRESET.clearcoat;
+    mat.clearcoatRoughness  = FROSTED_PRESET.clearcoatRoughness;
+    mat.attenuationDistance = FROSTED_PRESET.attenuationDistance;
+    mat.attenuationColor.set(params.gradientBottom);
+    if (mat.map) mat.map.dispose();
+    mat.map = makeVerticalGradient(params.gradientTop, params.gradientBottom, params.gradientStrength);
+    mat.needsUpdate = true;
+
+    const slot = variantSlots.find((s) => s.id === assetId);
+    if (slot && slot.gradBox && slot.bodyMeshes) {
+      const span = slot.gradBox.max.y - slot.gradBox.min.y;
+      const shift = params.gradientYShift || 0;
+      const yMin = shift < 0 ? slot.gradBox.min.y + shift * span : slot.gradBox.min.y;
+      const yMax = shift > 0 ? slot.gradBox.max.y + shift * span : slot.gradBox.max.y;
+      for (const m of slot.bodyMeshes) {
+        remapUVsToWorldY(m, yMin, yMax);
+      }
+    }
+  }
+
+  function applyAllColorParams() {
+    for (const id of Object.keys(COLOR_BINDINGS)) applySingleColor(id);
+  }
+
+  function renderColorControls() {
+    const container = document.getElementById('colorControls');
+    if (!container) return;
+    const params = colorModeStore[activeColorMode];
+    if (!params) return;
+    container.innerHTML = Object.keys(COLOR_BINDINGS).map((assetId) => {
+      const p = params[assetId];
+      const fields = COLOR_FIELDS.map((f) => {
+        const v = p[f.key];
+        if (f.type === 'color') {
+          return `
+            <div class="variants-row is-color" data-asset="${assetId}" data-key="${f.key}">
+              <label>${f.label}</label>
+              <input type="color" class="variants-color-swatch" data-asset="${assetId}" data-key="${f.key}" value="${v}">
+              <input type="text" class="variants-hex-input" data-asset="${assetId}" data-key="${f.key}" value="${String(v).toUpperCase()}" maxlength="7" spellcheck="false">
+            </div>`;
+        }
+        return `
+          <div class="variants-row" data-asset="${assetId}" data-key="${f.key}">
+            <label>${f.label}</label>
+            <input type="range" data-asset="${assetId}" data-key="${f.key}" min="${f.min}" max="${f.max}" step="${f.step}" value="${v}">
+            <span class="variants-value">${Number(v).toFixed(2)}</span>
+          </div>`;
+      }).join('');
+      return `
+        <div class="variants-color-group" data-asset="${assetId}">
+          <div class="variants-color-group-label">${COLOR_BINDINGS[assetId].label}</div>
+          ${fields}
+        </div>`;
+    }).join('');
+
+    container.querySelectorAll('input[type="range"]').forEach((input) => {
+      input.addEventListener('input', (e) => {
+        const assetId = e.target.dataset.asset;
+        const k = e.target.dataset.key;
+        const val = parseFloat(e.target.value);
+        colorModeStore[activeColorMode][assetId][k] = val;
+        const valSpan = e.target.parentElement.querySelector('.variants-value');
+        if (valSpan) valSpan.textContent = val.toFixed(2);
+        applySingleColor(assetId);
+      });
+    });
+
+    const HEX_RE = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i;
+    const normalizeHex = (raw) => {
+      const m = raw.trim().match(HEX_RE);
+      if (!m) return null;
+      const body = m[1];
+      const full = body.length === 3
+        ? body.split('').map((c) => c + c).join('')
+        : body;
+      return '#' + full.toUpperCase();
+    };
+    container.querySelectorAll('.variants-row.is-color').forEach((row) => {
+      const assetId = row.dataset.asset;
+      const k = row.dataset.key;
+      const swatch = row.querySelector('.variants-color-swatch');
+      const hex    = row.querySelector('.variants-hex-input');
+      swatch.addEventListener('input', () => {
+        const val = swatch.value;
+        colorModeStore[activeColorMode][assetId][k] = val;
+        hex.value = val.toUpperCase();
+        applySingleColor(assetId);
+      });
+      hex.addEventListener('input', () => {
+        const norm = normalizeHex(hex.value);
+        if (!norm) return;
+        colorModeStore[activeColorMode][assetId][k] = norm;
+        swatch.value = norm;
+        applySingleColor(assetId);
+      });
+      hex.addEventListener('blur', () => {
+        const norm = normalizeHex(hex.value);
+        hex.value = norm || colorModeStore[activeColorMode][assetId][k].toUpperCase();
+      });
+    });
+
+    const label = document.getElementById('colorControlsLabel');
+    if (label) {
+      label.textContent = `${activeColorMode}컬러 — Color Gradients`;
+    }
+  }
+
   function addSlotLights(slotScene) {
     slotScene.add(new THREE.AmbientLight(0xffffff, 0.55));
     const k = new THREE.DirectionalLight(0xffffff, 1.8);  k.position.set(3, 5, 4);  slotScene.add(k);
@@ -3485,15 +4044,15 @@ if (IS_VARIANTS_MODE) {
     const w = Math.max(1, slot.cell.clientWidth);
     const h = Math.max(1, slot.cell.clientHeight);
     const aspect = w / h;
-    // Pull the framing in a touch (zoom 1 / 1.18) so each cell reads
-    // tight against the asset without bleeding into the cell edges.
+    // Match admin's framing (zoom 1) so the body fills the cell at
+    // the same ratio.
     slot.camera.left   = -frustum * aspect / 2;
     slot.camera.right  =  frustum * aspect / 2;
     slot.camera.top    =  frustum / 2;
     slot.camera.bottom = -frustum / 2;
     slot.camera.near = -slot.maxDim * 10;
     slot.camera.far  =  slot.maxDim * 10;
-    slot.camera.zoom = 0.85;
+    slot.camera.zoom = 1.0;
     slot.camera.updateProjectionMatrix();
     slot.camera.lookAt(0, 0, 0);
     slot.renderer.setSize(w, h, false);
@@ -3501,16 +4060,14 @@ if (IS_VARIANTS_MODE) {
 
   const stageEl = document.getElementById('variantsStage');
 
-  // Normalize per-asset gradient settings so the gradient maps to the
-  // body bbox identically across all 5 cells. Without this, coupon's
-  // `useFullGradientBox` (which expands the bbox to include the
-  // percent symbol) drops the visible body into the dark half of the
-  // gradient and reads way more saturated than its neighbors. We also
-  // zero out `gradientYShift` so box/camera-specific biases don't
-  // skew the comparison.
+  // 컬러설정 B respects each asset's native gradientYShift so each
+  // cell's tone matches what designers see in admin/normal modes.
+  // Snapshot the native values BEFORE rendering — color mode mode 'a'
+  // uses these as its baseline, and the slider lets the designer tune
+  // from there per-mode.
+  const NATIVE_ASSET_SHIFTS = {};
   for (const id of VARIANT_ASSETS) {
-    ASSETS[id].useFullGradientBox = false;
-    ASSETS[id].gradientYShift = 0;
+    NATIVE_ASSET_SHIFTS[id] = ASSETS[id].gradientYShift ?? 0;
   }
 
   (async () => {
@@ -3590,8 +4147,28 @@ if (IS_VARIANTS_MODE) {
     for (const slot of variantSlots) {
       await loadAsset(slot.id);
       // Force every body to point at the same frosted material so a
-      // single applyVariant updates all cells at once.
+      // single applyVariant updates all cells at once. Snapshot the
+      // body mesh refs immediately — the global `bodyMeshes` will be
+      // overwritten by the next loadAsset call.
       setActiveMaterial('frostedBlue');
+      slot.bodyMeshes = bodyMeshes.slice();
+
+      // Per-slot harmony accents — clone the global ribbonGray /
+      // harmony2 materials so each cell can carry its own tint that
+      // tracks its assigned body color (otherwise all 5 cells would
+      // share one harmony hue, which reads off when the bodies are
+      // 5 different colors).
+      const slotMatId = COLOR_BINDINGS[slot.id]?.matId || 'frostedBlue';
+      slot.ribbonGrayMat = ribbonGrayMat.clone();
+      slot.harmony2Mat   = harmony2Mat.clone();
+      slot.ribbonGrayMat.color.set(HARMONY_BY_BODY[slotMatId]  ?? HARMONY_BY_BODY.frostedBlue);
+      slot.harmony2Mat.color.set(  HARMONY2_BY_BODY[slotMatId] ?? HARMONY2_BY_BODY.frostedBlue);
+      currentRoot.traverse((m) => {
+        if (!m.isMesh) return;
+        if (m.material === ribbonGrayMat) m.material = slot.ribbonGrayMat;
+        else if (m.material === harmony2Mat) m.material = slot.harmony2Mat;
+      });
+
       const root = currentRoot;
       const maxDim = currentMaxDim;
       group.remove(root);
@@ -3599,6 +4176,21 @@ if (IS_VARIANTS_MODE) {
       slot.root = root;
       slot.maxDim = maxDim;
       frameSlotCamera(slot);
+
+      // Cache the gradient bbox loadAsset computed (honors per-asset
+      // useFullGradientBox / inGradientBox filters) so 컬러설정 B's
+      // shift slider can re-remap UVs live with the same mapping
+      // window admin uses. Falls back to body-mesh bbox if loadAsset
+      // didn't stash one.
+      slot.gradBox = root.userData.gradBox?.clone() || (() => {
+        const fallback = new THREE.Box3();
+        for (const m of slot.bodyMeshes) {
+          m.updateMatrixWorld(true);
+          fallback.expandByObject(m);
+        }
+        return fallback;
+      })();
+      slot.nativeGradientYShift = NATIVE_ASSET_SHIFTS[slot.id] ?? 0;
 
       // Position per-slot shadow plane + retarget shadow light, mirroring
       // main loadAsset's logic. Compute bbox from the relocated root so
@@ -3629,8 +4221,63 @@ if (IS_VARIANTS_MODE) {
     }
 
     renderVariantControls();
-    applyVariant();
+    renderColorControls();
+    applyStageMode();
   })();
+
+  // Stage mode dispatch — drives whether the 5 cells share frostedBlue
+  // (material mode) or each holds its own per-color material (color
+  // mode). Sections behave like an accordion, so the expanded section
+  // is always the active mode.
+  function applyStageMode() {
+    if (activeStageMode === 'color') applyColorMode();
+    else applyMaterialMode();
+  }
+
+  function applyMaterialMode() {
+    for (const slot of variantSlots) {
+      if (!slot.bodyMeshes) continue;
+      for (const m of slot.bodyMeshes) m.material = materials.frostedBlue;
+      // Color mode may have shifted UVs per slot — restore the canonical
+      // zero-shift mapping so 재질설정 A shows everything in baseline framing.
+      if (slot.gradBox) {
+        for (const m of slot.bodyMeshes) {
+          remapUVsToWorldY(m, slot.gradBox.min.y, slot.gradBox.max.y);
+        }
+      }
+    }
+    applyVariant();
+  }
+
+  function applyColorMode() {
+    for (const slot of variantSlots) {
+      if (!slot.bodyMeshes) continue;
+      const matId = COLOR_BINDINGS[slot.id]?.matId;
+      if (!matId) continue;
+      const mat = materials[matId];
+      for (const m of slot.bodyMeshes) m.material = mat;
+    }
+    // Per-slot harmony accents are pre-tinted at init (see slot
+    // setup) — no global retint needed here.
+    applyAllColorParams();
+  }
+
+  function setStageMode(mode) {
+    if (mode !== 'material' && mode !== 'color') return;
+    activeStageMode = mode;
+    document.querySelectorAll('.variants-section').forEach((s) => {
+      s.classList.toggle('is-collapsed', s.dataset.section !== mode);
+    });
+    applyStageMode();
+  }
+
+  // Section accordion — clicking a header expands that section and
+  // switches the stage to its mode. The other section auto-collapses.
+  document.querySelectorAll('.variants-section-header').forEach((header) => {
+    header.addEventListener('click', () => {
+      setStageMode(header.dataset.toggle);
+    });
+  });
 
   // Variant chips — switch the active slot. Each slot stores its own
   // parameter set (initial = VARIANT_DEFAULTS), so swapping is instant
@@ -3641,7 +4288,8 @@ if (IS_VARIANTS_MODE) {
         .forEach((b) => b.classList.toggle('active', b === btn));
       activeVariantKey = btn.dataset.variant;
       renderVariantControls();
-      applyVariant();
+      if (activeStageMode !== 'material') setStageMode('material');
+      else applyVariant();
     });
   });
 
@@ -3654,7 +4302,21 @@ if (IS_VARIANTS_MODE) {
         .forEach((b) => b.classList.toggle('active', b === btn));
       activeVariantColor = btn.dataset.color;
       renderVariantControls();
-      applyVariant();
+      if (activeStageMode !== 'material') setStageMode('material');
+      else applyVariant();
+    });
+  });
+
+  // Color mode chips (a/b/c/d) — switch the active color palette set.
+  // All 5 cells re-render with the new mode's per-color gradients.
+  document.querySelectorAll('#colorModeRow .variants-chip').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#colorModeRow .variants-chip')
+        .forEach((b) => b.classList.toggle('active', b === btn));
+      activeColorMode = btn.dataset.cmode;
+      renderColorControls();
+      if (activeStageMode !== 'color') setStageMode('color');
+      else applyAllColorParams();
     });
   });
 
@@ -3673,14 +4335,48 @@ if (IS_VARIANTS_MODE) {
     });
   });
 
-  // Set as default — promote the (key, color) slot's current edits
-  // into its persisted "default" layer and write to localStorage so
-  // reloading the page brings them back. Brief in-button confirmation
-  // so the designer knows the save landed.
-  document.getElementById('variantsSet').addEventListener('click', (e) => {
+  // ── 재질설정 A actions (currently hidden — UI removed) ─────
+  // The Set / Reset / Restore buttons only exist when 재질설정 A is
+  // rendered. Guard with null-checks so removing the section doesn't
+  // throw, but keep the wiring so re-enabling material mode later
+  // just needs the HTML put back.
+  const variantsSetBtn = document.getElementById('variantsSet');
+  if (variantsSetBtn) variantsSetBtn.addEventListener('click', (e) => {
     variantSavedDefaults[activeVariantKey][activeVariantColor] =
       { ...variantStore[activeVariantKey][activeVariantColor] };
     persistVariantSavedDefaults();
+    const btn = e.currentTarget;
+    const original = btn.textContent;
+    btn.textContent = 'Saved ✓';
+    btn.disabled = true;
+    setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 1100);
+  });
+
+  const variantsResetBtn = document.getElementById('variantsReset');
+  if (variantsResetBtn) variantsResetBtn.addEventListener('click', () => {
+    variantStore[activeVariantKey][activeVariantColor] =
+      { ...variantSavedDefaults[activeVariantKey][activeVariantColor] };
+    renderVariantControls();
+    applyVariant();
+  });
+
+  const variantsRestoreBtn = document.getElementById('variantsRestore');
+  if (variantsRestoreBtn) variantsRestoreBtn.addEventListener('click', () => {
+    const stock = VARIANT_DEFAULTS[activeVariantKey][activeVariantColor];
+    variantStore[activeVariantKey][activeVariantColor]         = { ...stock };
+    variantSavedDefaults[activeVariantKey][activeVariantColor] = { ...stock };
+    persistVariantSavedDefaults();
+    renderVariantControls();
+    applyVariant();
+  });
+
+  // ── 컬러설정 B actions ─────────────────────────────────
+  // Save / reset / restore operate on the entire active color mode
+  // (all 5 colors at once) since the panel shows them as one set.
+  document.getElementById('colorSet').addEventListener('click', (e) => {
+    colorModeSavedDefaults[activeColorMode] =
+      JSON.parse(JSON.stringify(colorModeStore[activeColorMode]));
+    persistColorModeSavedDefaults();
     const btn = e.currentTarget;
     const original = btn.textContent;
     btn.textContent = 'Saved ✓';
@@ -3691,37 +4387,24 @@ if (IS_VARIANTS_MODE) {
     }, 1100);
   });
 
-  // Reset — roll back the active (key, color) slot's live edits to
-  // its last-saved default. Other slots / colors are untouched.
-  document.getElementById('variantsReset').addEventListener('click', () => {
-    variantStore[activeVariantKey][activeVariantColor] =
-      { ...variantSavedDefaults[activeVariantKey][activeVariantColor] };
-    renderVariantControls();
-    applyVariant();
+  document.getElementById('colorReset').addEventListener('click', () => {
+    colorModeStore[activeColorMode] =
+      JSON.parse(JSON.stringify(colorModeSavedDefaults[activeColorMode]));
+    renderColorControls();
+    applyAllColorParams();
   });
 
-  // 원래대로 — full factory restore for the active (key, color) slot.
-  // Wipes both the live edits AND the persisted saved layer back to
-  // the per-key VARIANT_DEFAULTS for that color, so Reset also points
-  // back to factory from here.
-  document.getElementById('variantsRestore').addEventListener('click', () => {
-    const stock = VARIANT_DEFAULTS[activeVariantKey][activeVariantColor];
-    variantStore[activeVariantKey][activeVariantColor]         = { ...stock };
-    variantSavedDefaults[activeVariantKey][activeVariantColor] = { ...stock };
-    persistVariantSavedDefaults();
-    renderVariantControls();
-    applyVariant();
+  document.getElementById('colorRestore').addEventListener('click', () => {
+    const stock = {};
+    for (const id of Object.keys(COLOR_BINDINGS)) stock[id] = colorModeBaseline(id);
+    colorModeStore[activeColorMode]         = JSON.parse(JSON.stringify(stock));
+    colorModeSavedDefaults[activeColorMode] = JSON.parse(JSON.stringify(stock));
+    persistColorModeSavedDefaults();
+    renderColorControls();
+    applyAllColorParams();
   });
 
   // ── PNG export ─────────────────────────────────────────
-  // Each PNG is rendered at a fixed square (EXPORT_SIZE) using the
-  // slot's own renderer, so the PMREM-bound HDR / chrome / frosted
-  // materials look correct (they're tied to the slot's GL context).
-  // Two-pass composite mirrors the main library's exportPng:
-  //   pass 1 — overrideMaterial = white silhouette (alpha cleared)
-  //   pass 2 — normal render on top of the white backing
-  // → asset area becomes opaque white-backed; ground shadow keeps its
-  // alpha so the file drops cleanly onto any design surface.
   const EXPORT_SIZE = 1080;
 
   async function exportSlotPng(slot, filename) {
@@ -3802,8 +4485,11 @@ if (IS_VARIANTS_MODE) {
     btn.disabled = true;
     const prevLabel = btn.textContent;
     try {
+      const tag = activeStageMode === 'color'
+        ? `color${activeColorMode}`
+        : `${activeVariantKey}_${activeVariantColor}`;
       for (const slot of variantSlots) {
-        const name = `${slot.id}_${activeVariantKey}_${activeVariantColor}.png`;
+        const name = `${slot.id}_${tag}.png`;
         btn.textContent = `${slot.id} 다운로드 중…`;
         await exportSlotPng(slot, name);
       }
