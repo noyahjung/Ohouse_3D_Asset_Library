@@ -1041,31 +1041,31 @@
         <span class="arrow">▼</span> 기본 재질
       </button>
       <div class="palette-category-items">
-        <div class="chip active" data-mat="frostedBlue" data-mat-type="frosted" style="--top:#EBEFFF; --bot:#00a1ff;">
+        <div class="chip active" data-mat="frostedBlue" data-mat-type="frosted" style="--top:#9BC5FD; --bot:#1A90FF;">
           <button class="swatch"><span class="dot"></span> Genuine Blue</button>
           <button class="gear" title="Settings">⚙</button>
         </div>
-        <div class="chip" data-mat="frostedGreen" data-mat-type="frosted" style="--top:#EDFFF4; --bot:#19BD86;">
+        <div class="chip" data-mat="frostedGreen" data-mat-type="frosted" style="--top:#A8F5C6; --bot:#00C785;">
           <button class="swatch"><span class="dot"></span> Jade Green</button>
           <button class="gear" title="Settings">⚙</button>
         </div>
-        <div class="chip" data-mat="frostedOrange" data-mat-type="frosted" style="--top:#FFF4EC; --bot:#FF752C;">
+        <div class="chip" data-mat="frostedOrange" data-mat-type="frosted" style="--top:#F8C387; --bot:#F7691D;">
           <button class="swatch"><span class="dot"></span> Mango Orange</button>
           <button class="gear" title="Settings">⚙</button>
         </div>
-        <div class="chip" data-mat="frostedRed" data-mat-type="frosted" style="--top:#FFEFEF; --bot:#FF4747;">
+        <div class="chip" data-mat="frostedRed" data-mat-type="frosted" style="--top:#FFD1BD; --bot:#FF4747;">
           <button class="swatch"><span class="dot"></span> Coral Red</button>
           <button class="gear" title="Settings">⚙</button>
         </div>
-        <div class="chip" data-mat="frostedViolet" data-mat-type="frosted" style="--top:#F7EFFD; --bot:#C475F5;">
+        <div class="chip" data-mat="frostedViolet" data-mat-type="frosted" style="--top:#DCADFF; --bot:#B54AF7;">
           <button class="swatch"><span class="dot"></span> Violet</button>
           <button class="gear" title="Settings">⚙</button>
         </div>
-        <div class="chip" data-mat="frostedDarkBlue" data-mat-type="frosted" style="--top:#E8EEFB; --bot:#2C65CF;">
+        <div class="chip" data-mat="frostedDarkBlue" data-mat-type="frosted" style="--top:#8FAFF5; --bot:#286BE6;">
           <button class="swatch"><span class="dot"></span> Dark Blue</button>
           <button class="gear" title="Settings">⚙</button>
         </div>
-        <div class="chip" data-mat="frostedPink" data-mat-type="frosted" style="--top:#FFF0F4; --bot:#FF6E92;">
+        <div class="chip" data-mat="frostedPink" data-mat-type="frosted" style="--top:#FBACC1; --bot:#FF3D6E;">
           <button class="swatch"><span class="dot"></span> Candy Pink</button>
           <button class="gear" title="Settings">⚙</button>
         </div>
@@ -1131,6 +1131,7 @@
   <button class="asset-chip" data-asset="camera">Camera</button>
   <button class="asset-chip" data-asset="packagebox">Package Box</button>
   <button class="asset-chip" data-asset="lightning">Lightning</button>
+  <button class="asset-chip" data-asset="wifi">WiFi Router</button>
   <button class="asset-chip" id="exportPng">PNG 출력</button>
 
   <div id="assetSettings" hidden>
@@ -1715,6 +1716,47 @@ const ASSETS = {
     // bevels read smooth across any C4D UV/material splits.
     weldVertices: true,
     materialFor() {
+      return 'body';
+    },
+  },
+  wifi: {
+    url: 'wifi.glb',
+    label: 'WiFi Router',
+    // Source subtree root is named `wifi`; same name appears on the
+    // intermediate group and the leaf wave mesh too, but materialFor
+    // only inspects the immediate parent so the leaf still gets
+    // resolved correctly.
+    rootName: 'wifi',
+    recommended: 'frostedBlue',
+    // C4D-exported mesh wrappers already carry a 0.0342 normalization
+    // scale internally, so the source 9364 extent resolves to ~320
+    // world units at root scale 1.0 — same magnitude as the other
+    // library bodies. modelScale is intentionally absent (= 1.0); any
+    // scaling here would only shift the asset into a different
+    // transmission-absorption regime (path length vs attenuationDistance)
+    // and break tonal parity with neighbors (same trap as coupon).
+    //
+    // The merged bbox is wider than the cube alone because the antenna
+    // sticks reach further on X — that pushes the cube body to ~34%
+    // of the screen at the default 2.2 frameScale. Tighten to 1.7 so
+    // the cube reads at ~45% (similar to Moving Box).
+    frameScale: 1.7,
+    // Strong negative shift biases the gradient toward the saturated
+    // top color across most of the body — extends the gradient bbox
+    // downward so the visible asset sits in the saturated half of
+    // the gradient instead of fading to pale early.
+    gradientYShift: -0.75,
+    weldVertices: true,
+    materialFor(name, parentName) {
+      const n = (name || '').toLowerCase();
+      const pn = (parentName || '').toLowerCase();
+      // WiFi symbol: flat white luminance so the waves read clearly
+      // against the frosted body regardless of the active color.
+      if (/^wifi$/.test(pn) || /^wifi$/.test(n)) return 'luminance';
+      // Status LED: harmony accent (tracks body color, dimmer).
+      if (/^light$/.test(pn) || /^light$/.test(n)) return 'ribbonGray';
+      // Cube + sticks share the active frosted body material so they
+      // load as a single merged mesh under one continuous gradient.
       return 'body';
     },
   },

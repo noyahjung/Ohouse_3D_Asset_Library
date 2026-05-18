@@ -8,33 +8,34 @@ import * as THREE from 'three';
 
 // ── Color tokens ─────────────────────────────────────────────
 export const COLORS = {
-  // Frosted Blue — top (cool white) → bottom (saturated blue)
+  // Frosted Blue — top (cool white) → bottom (saturated blue).
+  // Values aligned to the 어드민-컬러 모드 vari-b snapshot.
   frostedBlueTop: '#9bc5fd',
-  frostedBlueBottom: '#00a1ff',
+  frostedBlueBottom: '#1a90ff',
 
   // Frosted Green — mirrored curve with a fresh mint→green
   frostedGreenTop: '#a8f5c6',
-  frostedGreenBottom: '#19BD86',
+  frostedGreenBottom: '#00C785',
 
   // Frosted Orange — warm peach → saturated orange
-  frostedOrangeTop: '#ffd4a3',
-  frostedOrangeBottom: '#ff6a1a',
+  frostedOrangeTop: '#F8C387',
+  frostedOrangeBottom: '#F7691D',
 
   // Coral Red — pale rose → coral red
   frostedRedTop: '#ffd1bd',
   frostedRedBottom: '#FF4747',
 
   // Violet — pale lilac → vibrant violet
-  frostedVioletTop: '#e2bdff',
-  frostedVioletBottom: '#be57ff',
+  frostedVioletTop: '#DCADFF',
+  frostedVioletBottom: '#B54AF7',
 
   // Dark Blue — pale sky → deep navy blue
-  frostedDarkBlueTop: '#99b9ff',
-  frostedDarkBlueBottom: '#2C65CF',
+  frostedDarkBlueTop: '#8FAFF5',
+  frostedDarkBlueBottom: '#286BE6',
 
   // Candy Pink — pale blush → sweet pink
-  frostedPinkTop: '#ffd1dd',
-  frostedPinkBottom: '#ff5c85',
+  frostedPinkTop: '#FBACC1',
+  frostedPinkBottom: '#FF3D6E',
 
   // Pure luminance white — unaffected by scene lighting
   luminanceWhite: '#FFFFFF',
