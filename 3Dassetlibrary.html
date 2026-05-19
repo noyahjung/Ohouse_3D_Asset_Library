@@ -1524,6 +1524,11 @@ const ASSETS = {
       '2': [1.299, 0.442, -0.002],
       '3': [1.126, -0.001, 0.303],
     },
+    // Hide the accent strap entirely — designer wants the woven body
+    // and handle to read on their own without the harmony band.
+    // The hidden node still contributes to bbox (irrelevant here
+    // since handle_mat sits inside the basket's existing extent).
+    hideMeshes: ['handle_mat'],
     materialFor(name, parentName) {
       const norm = (s) => (s || '').toLowerCase().replace(/\s+/g, '_');
       const n  = norm(name);
@@ -1532,9 +1537,9 @@ const ASSETS = {
         const k = norm(key);
         return n === k || pn === k;
       };
-      // The handle's accent strap sits on top of the woven body. It
-      // tracks the body variant's harmony color via the ribbonGray
-      // material — same pattern as the clock and basket bands.
+      // handle_mat would otherwise track the harmony accent — left
+      // here as documentation. hideMeshes above suppresses it
+      // entirely so this branch is currently unreachable.
       if (matches('handle_mat')) return 'ribbonGray';
       return 'body';
     },
@@ -1727,7 +1732,7 @@ const ASSETS = {
     // only inspects the immediate parent so the leaf still gets
     // resolved correctly.
     rootName: 'wifi',
-    recommended: 'frostedBlue',
+    recommended: 'frostedDarkBlue',
     // C4D-exported mesh wrappers already carry a 0.0342 normalization
     // scale internally, so the source 9364 extent resolves to ~320
     // world units at root scale 1.0 — same magnitude as the other
@@ -1750,11 +1755,14 @@ const ASSETS = {
     materialFor(name, parentName) {
       const n = (name || '').toLowerCase();
       const pn = (parentName || '').toLowerCase();
+      // TEMP DEBUG: log every materialFor call for wifi so we can see
+      // what name / parentName Three.js is actually feeding us.
+      console.log('[wifi.materialFor]', { name, parentName });
       // WiFi symbol: flat white luminance so the waves read clearly
       // against the frosted body regardless of the active color.
-      if (/^wifi$/.test(pn) || /^wifi$/.test(n)) return 'luminance';
+      if (/wifi/.test(pn) || /wifi/.test(n)) return 'luminance';
       // Status LED: harmony accent (tracks body color, dimmer).
-      if (/^light$/.test(pn) || /^light$/.test(n)) return 'ribbonGray';
+      if (/light/.test(pn) || /light/.test(n)) return 'ribbonGray';
       // Cube + sticks share the active frosted body material so they
       // load as a single merged mesh under one continuous gradient.
       return 'body';
