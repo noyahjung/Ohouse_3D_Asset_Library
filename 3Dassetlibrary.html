@@ -1357,6 +1357,46 @@ const materials = {
   frostedPink:     createFrosted('frostedPink'),
   blackFriday:     createBlackFriday(),
 };
+
+// ── Per-asset body material clones ─────────────────────────
+// Thin-body assets (e.g. lightning) read washed-out under the shared
+// frosted preset because their flat large faces catch the directional
+// key/front lights almost head-on, and clearcoat/env reflections lift
+// the surface toward white. An asset entry can declare
+// `materialOverrides: { ...physicalParams }` to opt out of the shared
+// instance: we clone the active variant's material, apply the
+// overrides, and route all body assignments for that asset through
+// the clone. Cached per `${assetId}/${variantId}` so variant switches
+// don't reallocate. The gradient `map` is re-shared from the base so
+// any UV remapping done on the base reaches the clone too.
+const _assetBodyMatCache = new Map();
+function getBodyMaterial(asset, variantId) {
+  const base = materials[variantId];
+  if (!asset?.materialOverrides) return base;
+  const key = `${asset.url || asset.label}/${variantId}`;
+  let mat = _assetBodyMatCache.get(key);
+  if (!mat) {
+    mat = base.clone();
+    const { gradient, ...physicalOverrides } = asset.materialOverrides;
+    // `gradient: { top, bottom, strength? }` rebuilds the V-axis map
+    // so a thin asset can stay in the saturated band of the palette
+    // even though its silhouette shows the entire vertical span (a
+    // cube hides its pale-bottom region, a bolt does not).
+    if (gradient) {
+      mat.map = makeVerticalGradient(
+        gradient.top, gradient.bottom,
+        gradient.strength ?? FROSTED_PRESET.gradientStrength,
+      );
+      if (gradient.bottom) mat.attenuationColor.set(gradient.bottom);
+    } else {
+      mat.map = base.map;
+    }
+    Object.assign(mat, physicalOverrides);
+    mat.needsUpdate = true;
+    _assetBodyMatCache.set(key, mat);
+  }
+  return mat;
+}
 // Built-in material chips — not exposed in the palette UI.
 const tapeMat      = createLuminanceWhite();
 const ribbonGrayMat = createRibbonGray();
@@ -1715,11 +1755,30 @@ const ASSETS = {
     frameScale: 1.57,
     // Strong negative shift biases the gradient toward the saturated
     // top color across most of the bolt — the bolt is tall and narrow,
-    // so without this it reads washed out toward the bottom tip.
-    gradientYShift: -0.6,
+    // so without this it reads washed out toward the bottom tip. Push
+    // further than typical (-0.85) so the bottom point still reads
+    // saturated red instead of falling off to the pale gradient end.
+    gradientYShift: -0.85,
     // Weld co-located vertices before normal recompute so the bolt's
     // bevels read smooth across any C4D UV/material splits.
     weldVertices: true,
+    // The bolt's thin profile (source maxDim 312 with min extent ~34)
+    // means its large flat faces catch the key/front directionals
+    // nearly head-on; the shared FROSTED_PRESET's envMap + clearcoat
+    // contribution then lifts those faces toward white and the red
+    // reads coral instead of the cube-asset saturation. Dial both
+    // back on the body clone so the gradient color dominates the
+    // shading rather than the surface reflection. The gradient also
+    // gets a custom red→red ramp (instead of the shared peach→red)
+    // because the bolt's silhouette exposes the full vertical span
+    // of the texture — keeping the pale top end leaves a washed-out
+    // tail; locking both endpoints inside the saturated red band
+    // gives the bolt the same red density as the cube assets.
+    materialOverrides: {
+      envMapIntensity: 0.1,
+      clearcoat: 0.2,
+      gradient: { top: '#FFA59A', bottom: '#E63838' },
+    },
     materialFor() {
       return 'body';
     },
@@ -2165,7 +2224,7 @@ function loadAsset(assetId) {
         obj.geometry = weldByPosition(obj.geometry, tol);
       }
       if (!keepNormals) obj.geometry.computeVertexNormals();
-      obj.material = materials[activeVariantId];
+      obj.material = getBodyMaterial(asset, activeVariantId);
       remapUVsToWorldY(obj, yMin, yMax);
       bodyMeshes.push(obj);
     } else if (bodyToMerge.length > 1) {
@@ -2252,7 +2311,7 @@ function loadAsset(assetId) {
       } else if (!keepNormals) {
         smoothNormalsByAngle(merged);
       }
-      const mergedMesh = new THREE.Mesh(merged, materials[activeVariantId]);
+      const mergedMesh = new THREE.Mesh(merged, getBodyMaterial(asset, activeVariantId));
       mergedMesh.castShadow = true;
       mergedMesh.receiveShadow = true;
       remapUVsToWorldY(mergedMesh, yMin, yMax);
@@ -2913,7 +2972,8 @@ function snapshotMaterial(mat, schema) {
 
 function setActiveMaterial(id) {
   activeVariantId = id;
-  const mat = materials[id];
+  const asset = ASSETS[currentAssetId];
+  const mat = getBodyMaterial(asset, id);
   for (const mesh of bodyMeshes) mesh.material = mat;
   chips.forEach(c => c.classList.toggle('active', c.dataset.mat === id));
 
