@@ -2608,10 +2608,19 @@ shadowLight.castShadow = false;
 scene.add(shadow);
 
 // ── Lights ─────────────────────────────────────────────────
-scene.add(new THREE.AmbientLight(0xffffff, 0.55));
-const key = new THREE.DirectionalLight(0xffffff, 1.8);
-key.position.set(3, 5, 4); scene.add(key);
-const fill = new THREE.DirectionalLight(0xdceaff, 0.75);
+// Ambient kept low so side faces fall off naturally; key is biased
+// overhead to lift the top plane while side stays in shadow gradient.
+// `top` and `front` are axis-aligned directionals that only contribute
+// to up- and forward-facing normals respectively — lets us boost top
+// and front independently while sides stay where they are.
+scene.add(new THREE.AmbientLight(0xffffff, 0.38));
+const key = new THREE.DirectionalLight(0xffffff, 2.1);
+key.position.set(0.8, 6, 3.5); scene.add(key);
+const top = new THREE.DirectionalLight(0xffffff, 1.9);
+top.position.set(0, 8, 0); scene.add(top);
+const front = new THREE.DirectionalLight(0xffffff, 0.6);
+front.position.set(0, 0, 8); scene.add(front);
+const fill = new THREE.DirectionalLight(0xdceaff, 0.55);
 fill.position.set(-4, 2, -3); scene.add(fill);
 const rim = new THREE.DirectionalLight(0xffffff, 0.4);
 rim.position.set(0, 3, -5); scene.add(rim);
@@ -4079,10 +4088,12 @@ if (IS_VARIANTS_MODE) {
   }
 
   function addSlotLights(slotScene) {
-    slotScene.add(new THREE.AmbientLight(0xffffff, 0.55));
-    const k = new THREE.DirectionalLight(0xffffff, 1.8);  k.position.set(3, 5, 4);  slotScene.add(k);
-    const f = new THREE.DirectionalLight(0xDCEAFF, 0.75); f.position.set(-4, 2, -3); slotScene.add(f);
-    const r = new THREE.DirectionalLight(0xffffff, 0.4);  r.position.set(0, 3, -5);  slotScene.add(r);
+    slotScene.add(new THREE.AmbientLight(0xffffff, 0.38));
+    const k  = new THREE.DirectionalLight(0xffffff, 2.1);  k.position.set(0.8, 6, 3.5);  slotScene.add(k);
+    const t  = new THREE.DirectionalLight(0xffffff, 1.9);  t.position.set(0, 8, 0);      slotScene.add(t);
+    const fr = new THREE.DirectionalLight(0xffffff, 0.6);  fr.position.set(0, 0, 8);     slotScene.add(fr);
+    const f  = new THREE.DirectionalLight(0xDCEAFF, 0.55); f.position.set(-4, 2, -3);    slotScene.add(f);
+    const r  = new THREE.DirectionalLight(0xffffff, 0.4);  r.position.set(0, 3, -5);     slotScene.add(r);
   }
 
   function frameSlotCamera(slot) {
