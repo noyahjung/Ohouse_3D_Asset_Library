@@ -501,105 +501,212 @@
   #bgSelector .toggle.on .switch { background: var(--accent); }
   #bgSelector .toggle.on .switch::after { left: 14px; background: #fff; }
   #bgSelector .toggle.on { color: var(--text); }
-  /* ── Landing page ───────────────────────────────────── */
+  /* ── Landing page ─────────────────────────────────────
+     Layout mirrors the brand book shell (ohouse-brand-book
+     docs/layout.md):
+       · Logo at top: 16 / left: 26 — sits exactly where the brand
+         book sidebar's "오늘의집 브랜드센터" mark lives.
+       · "← 브랜드 센터로 돌아가기" sits where the brand book's
+         가이드/도구 mode toggle would, so its TEXT cap-top lands on
+         Y=100.
+       · H1 cap-top also lands on Y=100 (via padding-top: 90),
+         matching the brand book content area's Y=100 rule.
+     Card / search bar / logo sizing comes from Figma node 92:763
+     (3D asset card 75:1246, search bar 77:1422, logo 77:1469). ── */
   #landing {
     position: fixed; inset: 0; z-index: 100;
-    background: var(--bg);
+    background: #ffffff;
     overflow: auto;
-    padding: 60px 40px;
+    /* padding-left mirrors brand book: --sidebar-w 240 + --sidebar-left 26
+       + 27px gap = 293. Keeps the H1 column lined up with where the
+       brand book's content text begins.
+       padding-top: 8.5 → search bar (height 43) lands centered with the
+       logo (top 16 + height 28 / 2 = y=30). H1 column is pushed back
+       down via .inner margin-top so its cap-top still hits Y=100. */
+    padding: 8.5px 80px 120px 293px;
   }
-  #landing .inner { max-width: 1100px; margin: 0 auto; }
-  #landing header { text-align: center; margin-bottom: 48px; }
-  #landing h1 {
-    font-size: 24px; font-weight: 700; color: var(--text);
-    margin: 0 0 8px; letter-spacing: -.02em;
-  }
-  #landing .subtitle {
-    font-size: 13px; color: var(--text-mute); margin: 0;
-    letter-spacing: .01em;
-  }
-  #landing .loading {
-    text-align: center; color: var(--text-mute);
-    font-size: 12px; padding: 80px 0;
-    letter-spacing: .05em;
-  }
-  #landing .search {
-    max-width: 480px; margin: 0 auto 32px;
+  #landing .inner {
     position: relative;
+    /* Search bar bottom at y = 8.5 + 43 = 51.5. H1 element top must be
+       y=90 (cap-top y=100). 90 − 51.5 = 38.5px gap. */
+    margin-top: 38.5px;
   }
-  #landing .search input {
-    width: 100%; box-sizing: border-box;
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: var(--radius-sm); padding: 11px 38px 11px 38px;
-    color: var(--text); font-family: inherit;
-    font-size: 13px; letter-spacing: .01em;
-    transition: border-color var(--transition), box-shadow var(--transition);
+
+  /* Logo — fixed at brand book's brand-mark slot. Box top y=16,
+     left y=26, height 28 are taken verbatim from
+     ../ohouse-brand-book/shared/shell.css .shell-sidebar-brand. */
+  #landing .landing-logo {
+    position: fixed;
+    top: 16px; left: 26px;
+    height: 28px;
+    padding: 0 6px;            /* matches .shell-sidebar-brand padding */
+    display: inline-flex; align-items: center; gap: 6px;
+    text-decoration: none; color: #000;
+    font-size: 18.8px; font-weight: 600;
+    letter-spacing: -0.3px; line-height: 1;
+    z-index: 110;
   }
-  #landing .search input::placeholder { color: var(--text-mute); }
-  #landing .search input:focus {
-    outline: 0; border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-light);
+  #landing .landing-logo svg { width: 26px; height: 26px; display: block; flex-shrink: 0; }
+  #landing .landing-logo .lt-D { letter-spacing: 2px; }
+
+  /* Back link — fixed so its text cap-top hits Y=100, mirroring the
+     brand book mode toggle's box top.
+       element-top + half-leading(3.5) + cap-inset(~2.5) ≈ 100
+       → element-top ≈ 94 */
+  #landing .landing-back {
+    position: fixed;
+    top: 94px; left: 26px;
+    padding: 0 6px;
+    display: inline-flex; align-items: center; gap: 4px;
+    text-decoration: none;
+    color: rgba(8,19,26,0.5);
+    font-size: 14px; font-weight: 500;
+    letter-spacing: -0.3px; line-height: 1.5;
+    transition: color var(--transition);
+    z-index: 110;
   }
-  #landing .search .icon {
-    position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
-    color: var(--text-mute); pointer-events: none;
+  #landing .landing-back:hover { color: #08131A; }
+  #landing .landing-back svg { width: 16px; height: 16px; display: block; }
+
+  /* Search bar — in document flow so it scrolls with the card grid
+     (lives in the same scroll layer as the cards, above them).
+       · margin-left: auto → pushes the box to #landing's content
+         right edge, which is the same X as the cards' right edge
+         (#landing padding-right = 80).
+       · #landing padding-top: 8.5 puts the search bar's top at y=8.5,
+         which centers its 43px box on y=30 (the logo's vertical
+         center). The H1 column is held at Y=100 via .inner margin-top. */
+  #landing .landing-search {
+    margin-left: auto;
+    width: 366px; height: 43px;
+    background: #F5F5F5;
+    border-radius: 12px;
+    display: flex; align-items: center;
+    padding: 0 15px;
+    box-sizing: border-box;
   }
-  #landing .search .clear {
-    position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
-    background: transparent; border: 0; color: var(--text-mute);
-    cursor: pointer; padding: 6px; font-size: 14px; line-height: 1;
-    border-radius: 4px;
+  #landing .landing-search[hidden] { display: none; }
+  #landing .landing-search svg.search-icon {
+    width: 20px; height: 20px; opacity: 0.3; flex-shrink: 0;
   }
-  #landing .search .clear:hover { color: var(--text); background: rgba(0,0,0,.04); }
-  #landing .search .clear[hidden] { display: none; }
+  #landing .landing-search input {
+    flex: 1; min-width: 0;
+    background: transparent; border: 0; outline: 0;
+    margin-left: 8px;
+    color: #08131A;
+    font-family: inherit;
+    font-size: 16px; font-weight: 500;
+    letter-spacing: -0.3px; line-height: 1.5;
+  }
+  #landing .landing-search input::placeholder {
+    color: rgba(8,19,26,0.5);
+  }
+  #landing .landing-search .clear {
+    background: transparent; border: 0; cursor: pointer;
+    color: rgba(8,19,26,0.5); font-size: 14px; line-height: 1;
+    padding: 6px; border-radius: 4px;
+    flex-shrink: 0;
+  }
+  #landing .landing-search .clear:hover { color: #08131A; background: rgba(0,0,0,.04); }
+  #landing .landing-search .clear[hidden] { display: none; }
+
+  /* Title block — H1 cap-top lands at Y=100 thanks to #landing
+     padding-top: 90 (same trick as brand book content-pad-top). */
+  #landing .landing-title-block { margin-bottom: 28px; }
+  #landing .landing-title-block h1 {
+    margin: 0 0 8px;
+    color: #08131A;
+    font-size: 46px; font-weight: 700;
+    letter-spacing: -0.3px; line-height: 1.25;
+  }
+  #landing .landing-desc {
+    margin: 0;
+    color: rgba(8,19,26,0.5);
+    font-size: 16px; font-weight: 500;
+    letter-spacing: -0.3px; line-height: 1.5;
+  }
+
+  #landing .loading {
+    color: rgba(8,19,26,0.5);
+    font-size: 14px; padding: 60px 0;
+    letter-spacing: -0.3px;
+  }
   #landing .empty {
-    text-align: center; color: var(--text-mute);
-    font-size: 13px; padding: 60px 0;
+    color: rgba(8,19,26,0.5);
+    font-size: 14px; padding: 60px 0;
   }
   #landing .empty[hidden] { display: none; }
+
+  /* Card grid — 2 columns, cards stretch to fill. Each card matches
+     Figma 75:1246 (bg #F5F5F5, 20px padding, 12px radius, 38px gap). */
   #landing .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
   }
   #landing .asset-card {
-    background: var(--card); border: 1px solid var(--border-light);
-    border-radius: var(--radius); padding: 16px;
-    cursor: pointer; font-family: inherit;
-    transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
-    display: flex; flex-direction: column; gap: 14px;
+    background: #F5F5F5;
+    border: 0;
+    border-radius: 12px;
+    padding: 20px;
+    cursor: pointer;
+    font-family: inherit;
     text-align: left;
-    box-shadow: var(--shadow-sm);
+    display: flex; align-items: flex-start; gap: 38px;
+    transition: background var(--transition);
   }
-  #landing .asset-card:hover {
-    transform: translateY(-2px);
-    border-color: rgba(17,24,39,.3);
-    box-shadow: var(--shadow-md);
-  }
+  #landing .asset-card:hover { background: #eeeeee; }
   #landing .asset-card .thumb {
-    aspect-ratio: 1; border-radius: 6px;
+    width: 116px; height: 116px; flex-shrink: 0;
     background: #ffffff;
+    border-radius: 10px;
     overflow: hidden;
     display: flex; align-items: center; justify-content: center;
   }
   #landing .asset-card .thumb img {
     width: 100%; height: 100%; object-fit: contain;
   }
+  #landing .asset-card .meta {
+    display: flex; flex-direction: column; gap: 8px;
+    min-width: 0; flex: 1;
+  }
   #landing .asset-card .label {
-    font-size: 14px; font-weight: 600; color: var(--text);
-    letter-spacing: -.005em;
+    color: #08131A;
+    font-size: 26px; font-weight: 700;
+    letter-spacing: -0.3px; line-height: 1.25;
+    word-break: break-word;
   }
-  #landing .asset-card .rec {
-    font-size: 10px; color: var(--text-mute);
-    letter-spacing: .08em; text-transform: uppercase;
-    margin-top: -10px;
-  }
-  #landing .asset-card .rec .dot {
-    display: inline-block; width: 8px; height: 8px;
-    border-radius: 50%; vertical-align: middle;
-    margin-right: 6px; border: 1px solid rgba(0,0,0,.1);
+  #landing .asset-card .desc {
+    color: rgba(8,19,26,0.5);
+    font-size: 16px; font-weight: 500;
+    letter-spacing: -0.3px; line-height: 1.5;
+    word-break: break-word;
   }
   #landing.hidden { display: none; }
+
+  /* Tablet / narrow desktop — drop the sidebar column so the H1 isn't
+     pushed off-screen. Logo and back link stay at top:16 / top:94 so
+     the brand book Y=100 rule still holds; only the content area
+     reflows down to free up horizontal space. */
+  @media (max-width: 1100px) {
+    #landing { padding: 8.5px 40px 100px 40px; }
+    /* Card right edge moves in to padding 40 → match it (search bar
+       still uses margin-left: auto, so its right edge follows the
+       padding automatically). */
+    #landing .landing-search { width: 280px; }
+  }
+  @media (max-width: 760px) {
+    /* On mobile the sidebar column disappears (logo and back link
+       still pin to top-left). Search bar stretches to match the card
+       column edge-to-edge. */
+    #landing { padding: 8.5px 24px 80px 24px; }
+    #landing .grid { grid-template-columns: 1fr; }
+    #landing .landing-search {
+      width: 100%;
+      margin-left: 0;
+    }
+    #landing .landing-title-block h1 { font-size: 34px; }
+  }
 
   #projectBadge {
     position: fixed; top: 18px; left: 18px; z-index: 110;
@@ -964,17 +1071,36 @@
 <div id="dragHint">마우스를 드래그해 에셋을 돌려보세요</div>
 
 <div id="landing">
+  <a class="landing-logo" href="#" aria-label="3D 에셋 라이브러리">
+    <svg viewBox="0 0 1000 1000" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M541.616 107.32C514.512 97.56 485.48 97.56 458.377 107.32C407.793 125.532 245.114 232.195 158.039 322C111.074 370.434 99.9961 403.937 99.9961 462.001C99.9961 471.684 99.996 481.687 99.9961 491.902C100.736 584.018 105.378 693.684 121.636 747.003C149.742 839.165 191.992 900 458.997 900H540.995C807.995 900 850.25 839.165 878.357 747.003C894.615 693.684 899.256 584.018 899.996 491.897C899.996 481.682 899.996 471.684 899.996 461.996C899.996 403.932 888.918 370.428 841.953 321.995C754.873 232.2 592.21 125.532 541.616 107.32Z" fill="#000"/>
+    </svg>
+    <span class="landing-logo-text"><span class="lt-3">3</span><span class="lt-D">D</span> 에셋 라이브러리</span>
+  </a>
+
+  <a class="landing-back" href="#" aria-label="브랜드 센터로 돌아가기">
+    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M10 3L5 8L10 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span>브랜드 센터로 돌아가기</span>
+  </a>
+
+  <div class="landing-search">
+    <svg class="search-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <circle cx="9" cy="9" r="6.25" stroke="#08131A" stroke-width="1.5"/>
+      <path d="M13.6 13.6L17 17" stroke="#08131A" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    <input id="searchInput" type="search" placeholder="Search assets" autocomplete="off" spellcheck="false" />
+    <button class="clear" id="searchClear" hidden title="Clear">✕</button>
+  </div>
+
   <div class="inner">
-    <header>
-      <h1>3D Asset Library</h1>
-      <p class="subtitle">Select an asset to customize</p>
+    <header class="landing-title-block">
+      <h1>오늘의집 3D 에셋 라이브러리</h1>
+      <p class="landing-desc">조합형 로고는 심볼과 워드마크를 결합한 형태입니다. 오늘의집을 나타내는 영역 전체에서 메인으로 사용합니다.<br>로고의 시각적 독립성을 위해 규정된 최소 공간을 다른 매체나 그래픽 요소가 침범하지 않도록 주의하여 사용해 주세요.</p>
     </header>
+
     <div class="loading">Generating previews…</div>
-    <div class="search" hidden>
-      <span class="icon">⌕</span>
-      <input id="searchInput" type="search" placeholder="Search assets" autocomplete="off" spellcheck="false" />
-      <button class="clear" id="searchClear" hidden title="Clear">✕</button>
-    </div>
     <div class="grid" hidden></div>
     <div class="empty" hidden>No matching assets.</div>
   </div>
@@ -1201,11 +1327,6 @@
     <span class="switch"></span>
   </button>
 </div>
-<a id="projectBadge" href="index.html" title="3D Asset Library 홈으로">
-  <span class="arrow">←</span>
-  <img src="logo.svg" alt="">
-  <span>3D Asset Library</span>
-</a>
 
 <script type="importmap">
 {
@@ -2701,15 +2822,21 @@ async function buildLanding() {
     const card = document.createElement('button');
     card.className = 'asset-card';
     card.dataset.asset = id;
+    // ASSETS.<id>.desc is the optional designer-provided one-liner shown
+    // under the card title. Falls back to the layout placeholder until
+    // real copy lands.
+    const desc = asset.desc || '에셋 설명 설명';
     card.innerHTML = `
       <div class="thumb"><img src="${thumbs[id]}" alt="${asset.label}" /></div>
-      <div class="label">${asset.label}</div>
+      <div class="meta">
+        <div class="label">${asset.label}</div>
+        <div class="desc">${desc}</div>
+      </div>
     `;
     card.addEventListener('click', () => selectAsset(id));
     grid.appendChild(card);
   }
   loading.hidden = true;
-  landing.querySelector('.search').hidden = false;
   grid.hidden = false;
 
   // Live search filter — case-insensitive substring match on label.
