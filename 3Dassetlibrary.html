@@ -1132,6 +1132,7 @@
   <button class="asset-chip" data-asset="packagebox">Package Box</button>
   <button class="asset-chip" data-asset="lightning">Lightning</button>
   <button class="asset-chip" data-asset="wifi">WiFi Router</button>
+  <button class="asset-chip" data-asset="cleaningtool">Cleaning Tool</button>
   <button class="asset-chip" id="exportPng">PNG 출력</button>
 
   <div id="assetSettings" hidden>
@@ -1229,6 +1230,7 @@ import {
   createFrosted,
   createBlackFriday,
   createLuminanceWhite,
+  createLuminanceBlack,
   createRibbonGray,
   createGlass,
   createChrome,
@@ -1398,7 +1400,8 @@ function getBodyMaterial(asset, variantId) {
   return mat;
 }
 // Built-in material chips — not exposed in the palette UI.
-const tapeMat      = createLuminanceWhite();
+const tapeMat       = createLuminanceWhite();
+const tapeBlackMat  = createLuminanceBlack();
 const ribbonGrayMat = createRibbonGray();
 // Harmony 2 — dimmer companion of the active body's ribbon accent.
 // Flat (unlit) so a recessed face reads as a solid tone instead of
@@ -1786,44 +1789,105 @@ const ASSETS = {
   wifi: {
     url: 'wifi.glb',
     label: 'WiFi Router',
-    // Source subtree root is named `wifi`; same name appears on the
-    // intermediate group and the leaf wave mesh too, but materialFor
-    // only inspects the immediate parent so the leaf still gets
-    // resolved correctly.
-    rootName: 'wifi',
+    rootName: 'new_wifi',
     recommended: 'frostedDarkBlue',
-    // C4D-exported mesh wrappers already carry a 0.0342 normalization
-    // scale internally, so the source 9364 extent resolves to ~320
-    // world units at root scale 1.0 — same magnitude as the other
-    // library bodies. modelScale is intentionally absent (= 1.0); any
-    // scaling here would only shift the asset into a different
-    // transmission-absorption regime (path length vs attenuationDistance)
-    // and break tonal parity with neighbors (same trap as coupon).
-    //
-    // The merged bbox is wider than the cube alone because the antenna
-    // sticks reach further on X — that pushes the cube body to ~34%
-    // of the screen at the default 2.2 frameScale. Tighten to 1.7 so
-    // the cube reads at ~45% (similar to Moving Box).
-    frameScale: 1.7,
-    // Strong negative shift biases the gradient toward the saturated
-    // top color across most of the body — extends the gradient bbox
-    // downward so the visible asset sits in the saturated half of
-    // the gradient instead of fading to pale early.
+    // Body (300×120×300) + two antennas with bar_head (137 tall) on
+    // top — combined Y span is taller than X, so the default 2.2
+    // frustum overshoots. Tighten a touch for parity with other
+    // boxy-bodied assets.
+    frameScale: 1.9,
+    // C4D-authored normals are precise on the rounded router body;
+    // weldVertices' recompute pass smears them into faceted shading
+    // bands across the top face. Preserve source normals instead.
+    keepOriginalNormals: true,
+    // The body sits at the bottom of the combined gradient bbox (Y≈0)
+    // and the antenna bar_heads at the top (Y≈257). Default UV mapping
+    // would land the body in the pale top-color half of the gradient.
+    // Strong negative shift extends the bbox downward so the body sits
+    // in the saturated lower half and reads with the same density as
+    // single-bodied assets like Moving Box.
     gradientYShift: -0.75,
-    weldVertices: true,
     materialFor(name, parentName) {
-      const n = (name || '').toLowerCase();
-      const pn = (parentName || '').toLowerCase();
-      // TEMP DEBUG: log every materialFor call for wifi so we can see
-      // what name / parentName Three.js is actually feeding us.
-      console.log('[wifi.materialFor]', { name, parentName });
-      // WiFi symbol: flat white luminance so the waves read clearly
-      // against the frosted body regardless of the active color.
-      if (/wifi/.test(pn) || /wifi/.test(n)) return 'luminance';
-      // Status LED: harmony accent (tracks body color, dimmer).
-      if (/light/.test(pn) || /light/.test(n)) return 'ribbonGray';
-      // Cube + sticks share the active frosted body material so they
-      // load as a single merged mesh under one continuous gradient.
+      // GLTFLoader auto-suffixes duplicate node names with `_N` (both
+      // antennas expose `bar` / `bar_head`) AND strips characters that
+      // PropertyBinding reserves (`.` in `wifi.1` becomes `wifi1`).
+      // Normalize both before matching so the two antennas + the wifi
+      // emblem all resolve through the same rules regardless of how
+      // Three.js mangled the source name.
+      const pn = (parentName || '').toLowerCase().replace(/\./g, '').replace(/_\d+$/, '');
+      if (pn === 'light')       return 'ribbonGray';
+      if (pn === 'light_area')  return 'harmony2';
+      // WiFi waves emblem on the body face — flat luminance white so
+      // the symbol reads against any frosted body color.
+      if (pn === 'wifi1')       return 'luminance';
+      // Antenna mast: `bar` is the slim harmony accent stem,
+      // `bar_head` is the frosted bulb on top of each antenna.
+      if (pn === 'bar')         return 'ribbonGray';
+      if (pn === 'bar_head')    return 'body';
+      // Default to the active frosted body for the main router cube.
+      return 'body';
+    },
+  },
+  cleaningtool: {
+    url: 'cleaningtool.glb',
+    label: 'Cleaning Tool',
+    rootName: 'cleaning tool',
+    recommended: 'frostedBlue',
+    weldVertices: true,
+    // Compound layout (spray upright + brush laid out alongside)
+    // makes the combined bbox both tall AND wide, so the default
+    // 2.2 frustum overshoots and each sub-object reads small in the
+    // cell. Tighten the frame so the pair fills the same proportion
+    // of the viewport as a single-body asset.
+    frameScale: 1.5,
+    // Compound asset — two sub-objects share one root: a tall spray
+    // bottle and a low brush. bodyGroupFor routes each frosted leaf
+    // into its own bucket so the gradient bbox + UV remap is computed
+    // per sub-object instead of being stretched across the union of
+    // both Y ranges (which would compress the brush's tonal range into
+    // a thin slice of the spray's full top-to-bottom gradient).
+    bodyGroupFor(name, parentName, grandparentName) {
+      const gp = (grandparentName || '').toLowerCase();
+      return gp === 'brush' ? 'brush' : 'spray';
+    },
+    gradientYShiftByGroup: {
+      spray: 0,
+      brush: 0,
+    },
+    // Source authoring leaves the brush bristles ~2.3 units above the
+    // spray bottle base. Nudge the brush subgroup down so both bottoms
+    // sit flush on the ground plane.
+    groupOffsets: {
+      brush: { y: -2.3 },
+    },
+    materialFor(name, parentName) {
+      // GLTFLoader auto-suffixes duplicate node names with `_N` when the
+      // source graph has the same identifier at multiple depths (e.g.
+      // gltfpack's mesh wrapper + the original group both named 'brush'
+      // → wrapper becomes 'brush_2'). Strip the suffix so material
+      // matching keys off the semantic name regardless of dedup.
+      const pn = (parentName || '').toLowerCase().replace(/_\d+$/, '');
+      // Spray sub-object
+      //  - body, head      → frosted body (bottle + trigger silhouette)
+      //  - head_front      → harmony accent (nozzle tip tracks body tint)
+      //  - head_front-Mat  → luminance white (the small inset disc on
+      //                       the nozzle face — always solid white)
+      //  - neck            → harmony accent (collar tracks body tint)
+      if (pn === 'head_front-mat') return 'luminance';
+      if (pn === 'head_front')     return 'ribbonGray';
+      if (pn === 'neck')           return 'ribbonGray';
+      if (pn === 'head')           return 'body';
+      if (pn === 'body')           return 'body';
+      // Brush sub-object
+      //  - brush                       → harmony accent (bristle bloom
+      //                                     tracks body tint, not frosted)
+      //  - brush-Mat (selected mesh)   → harmony2 (dimmer accent insert
+      //                                     against the harmony bloom)
+      //  - brush_body, brush_body_top  → frosted body (handle carries
+      //                                     the active body color)
+      if (pn === 'brush-mat')      return 'harmony2';
+      if (pn === 'brush_body' || pn === 'brush_body_top') return 'body';
+      if (pn === 'brush')          return 'ribbonGray';
       return 'body';
     },
   },
@@ -2110,9 +2174,10 @@ function loadAsset(assetId) {
     // separate mesh in the source file.
     if (asset.bottomFaceSplit) {
       const matMap = {
-        harmony2:   harmony2Mat,
-        ribbonGray: ribbonGrayMat,
-        luminance:  tapeMat,
+        harmony2:       harmony2Mat,
+        ribbonGray:     ribbonGrayMat,
+        luminance:      tapeMat,
+        luminanceBlack: tapeBlackMat,
       };
       for (const cfg of asset.bottomFaceSplit) {
         const target = root.getObjectByName(cfg.meshName);
@@ -2141,65 +2206,54 @@ function loadAsset(assetId) {
     }
     root.updateMatrixWorld(true);
 
-    // Pass 1: compute vertical bounds for the frosted gradient.
-    // Body-only for most assets; full bbox for assets where non-body
-    // parts extend beyond the body (e.g. coupon's percent symbol).
-    const bodyBox = new THREE.Box3();
+    // Per-subgroup position nudge — compound assets sometimes ship with
+    // sub-objects whose authored origins leave a small vertical gap
+    // between their bottom edges (cleaningtool: brush bristles sit
+    // ~2 source units above the spray bottle base). groupOffsets nudges
+    // a named subgroup before bbox/UV passes so the alignment shows up
+    // in the gradient bbox too, not just the rendered transform.
+    if (asset.groupOffsets) {
+      for (const [groupName, off] of Object.entries(asset.groupOffsets)) {
+        const sub = root.getObjectByName(groupName);
+        if (!sub) continue;
+        if (off.x) sub.position.x += off.x;
+        if (off.y) sub.position.y += off.y;
+        if (off.z) sub.position.z += off.z;
+      }
+      root.updateMatrixWorld(true);
+    }
+
+    // Pass 1: traverse once — accumulate fullBox, assign non-body
+    // materials directly, and bucket body meshes by group. Compound
+    // assets (e.g. cleaningtool: spray + brush) declare `bodyGroupFor`
+    // so each sub-object gets its own gradient bbox + shift and stays
+    // independently UV-remapped instead of being merged into a single
+    // gradient window across the whole asset (which would squash one
+    // sub-object's tonal range against the other's scale).
     const fullBox = new THREE.Box3();
+    const bodyBuckets = new Map(); // groupId → [meshes]
     root.traverse((obj) => {
       if (!obj.isMesh) return;
       if (obj.userData.skipMaterialAssign) return;
       fullBox.expandByObject(obj);
       const kind = asset.materialFor(obj.name, obj.parent?.name);
-      // inGradientBox lets an asset narrow the gradient range to a
-      // subset of its body meshes — useful when an outlying part
-      // (e.g. a handle) would otherwise stretch the gradient and wash
-      // out the dominant body. Default: every 'body' mesh contributes.
-      const inGrad = asset.inGradientBox
-        ? asset.inGradientBox(obj.name, obj.parent?.name)
-        : (kind === 'body');
-      if (inGrad) bodyBox.expandByObject(obj);
-    });
-    const useFullBox = bodyBox.isEmpty() || asset.useFullGradientBox;
-    const gradBox = useFullBox ? fullBox : bodyBox;
-    // Stash on the root so callers (variants color mode) can recover
-    // the raw gradient bbox + native shift after load and re-remap UVs
-    // without rebuilding the asset.
-    root.userData.gradBox = gradBox.clone();
-    // gradientYShift biases the gradient toward darker (negative) or
-    // lighter (positive) by extending the gradient bbox on one side
-    // instead of sliding the whole window — this avoids a clamped
-    // flat band at the mesh edge and keeps the transition smooth
-    // across the full visible body height.
-    const span = gradBox.max.y - gradBox.min.y;
-    const shift = asset.gradientYShift || 0;
-    const yMin = shift < 0 ? gradBox.min.y + shift * span : gradBox.min.y;
-    const yMax = shift > 0 ? gradBox.max.y + shift * span : gradBox.max.y;
-
-    // Collect body meshes for merging. Original glTF normals are
-    // preserved (no computeVertexNormals) — they're authored smooth
-    // in C4D and give the best result on reflective materials.
-    // After merge, angle-aware weldNormals smooths seam boundaries
-    // while preserving intentional hard edges.
-    const bodyToMerge = [];
-    root.traverse((obj) => {
-      if (!obj.isMesh) return;
-      if (obj.userData.skipMaterialAssign) return;
-      const kind = asset.materialFor(obj.name, obj.parent?.name);
       obj.castShadow = true;
       obj.receiveShadow = true;
       switch (kind) {
-        case 'luminance':  obj.material = tapeMat;        break;
-        case 'ribbonGray': obj.material = ribbonGrayMat;  break;
-        case 'harmony2':   obj.material = harmony2Mat;    break;
-        case 'glass':      obj.material = glassMat;       break;
-        case 'lensGlass':  obj.material = lensGlassMat;   break;
-        case 'cameraLens': obj.material = cameraLensMat;  break;
-        case 'chrome':     obj.material = chromeMat;      break;
-        case 'body':
-        default:
-          bodyToMerge.push(obj);
+        case 'luminance':      obj.material = tapeMat;        return;
+        case 'luminanceBlack': obj.material = tapeBlackMat;   return;
+        case 'ribbonGray':     obj.material = ribbonGrayMat;  return;
+        case 'harmony2':       obj.material = harmony2Mat;    return;
+        case 'glass':          obj.material = glassMat;       return;
+        case 'lensGlass':      obj.material = lensGlassMat;   return;
+        case 'cameraLens':     obj.material = cameraLensMat;  return;
+        case 'chrome':         obj.material = chromeMat;      return;
       }
+      const gid = asset.bodyGroupFor
+        ? (asset.bodyGroupFor(obj.name, obj.parent?.name, obj.parent?.parent?.name) || '__default__')
+        : '__default__';
+      if (!bodyBuckets.has(gid)) bodyBuckets.set(gid, []);
+      bodyBuckets.get(gid).push(obj);
     });
 
     // When the source file has authored smooth normals worth keeping
@@ -2207,6 +2261,49 @@ function loadAsset(assetId) {
     // recomputation prevents the smoothing pipeline from flattening
     // intentional curvature into faceted shading.
     const keepNormals = !!asset.keepOriginalNormals;
+
+    // Per-group gradient bbox + UV remap. For legacy single-bucket
+    // assets the loop runs once with the original bbox/shift behavior;
+    // compound assets get one pass per sub-object.
+    const gradBoxesByGroup = {};
+    let primaryGradBox = null;
+    for (const [gid, bucket] of bodyBuckets) {
+      // Bbox source for this group. Legacy assets honor inGradientBox /
+      // useFullGradientBox; compound assets always use their own meshes.
+      let groupBox;
+      if (asset.bodyGroupFor) {
+        groupBox = new THREE.Box3();
+        for (const m of bucket) groupBox.expandByObject(m);
+      } else {
+        const narrowBox = new THREE.Box3();
+        root.traverse((obj) => {
+          if (!obj.isMesh) return;
+          if (obj.userData.skipMaterialAssign) return;
+          const kind = asset.materialFor(obj.name, obj.parent?.name);
+          const inGrad = asset.inGradientBox
+            ? asset.inGradientBox(obj.name, obj.parent?.name)
+            : (kind === 'body');
+          if (inGrad) narrowBox.expandByObject(obj);
+        });
+        const useFullBox = narrowBox.isEmpty() || asset.useFullGradientBox;
+        groupBox = useFullBox ? fullBox : narrowBox;
+      }
+      gradBoxesByGroup[gid] = groupBox.clone();
+      if (!primaryGradBox) primaryGradBox = groupBox.clone();
+
+      // gradientYShift biases the gradient toward darker (negative) or
+      // lighter (positive) by extending the gradient bbox on one side
+      // instead of sliding the whole window — keeps the transition
+      // smooth across the visible body height. Compound assets resolve
+      // shift per group; legacy assets use the asset-wide value.
+      const shift = (asset.gradientYShiftByGroup && asset.gradientYShiftByGroup[gid] != null)
+        ? asset.gradientYShiftByGroup[gid]
+        : (asset.gradientYShift || 0);
+      const span = groupBox.max.y - groupBox.min.y;
+      const yMin = shift < 0 ? groupBox.min.y + shift * span : groupBox.min.y;
+      const yMax = shift > 0 ? groupBox.max.y + shift * span : groupBox.max.y;
+
+      const bodyToMerge = bucket;
 
     if (bodyToMerge.length === 1) {
       // Single body mesh — use indexed computeVertexNormals (shared
@@ -2318,6 +2415,15 @@ function loadAsset(assetId) {
       root.add(mergedMesh);
       bodyMeshes.push(mergedMesh);
     }
+    }
+
+    // Stash on the root so variants color mode can recover the raw
+    // gradient bbox + native shift after load and re-remap UVs without
+    // rebuilding the asset. Compound assets expose both the primary
+    // (first group's) bbox for legacy single-bbox consumers and a
+    // per-group map for callers that want each sub-object's own range.
+    if (primaryGradBox) root.userData.gradBox = primaryGradBox;
+    root.userData.gradBoxesByGroup = gradBoxesByGroup;
 
     const bbox = new THREE.Box3().setFromObject(root);
     const size = bbox.getSize(new THREE.Vector3());

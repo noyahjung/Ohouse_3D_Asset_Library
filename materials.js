@@ -39,6 +39,8 @@ export const COLORS = {
 
   // Pure luminance white — unaffected by scene lighting
   luminanceWhite: '#FFFFFF',
+  // Pure luminance black — unaffected by scene lighting
+  luminanceBlack: '#000000',
 
   // Ribbon accent — flat luminance tint for accent parts (e.g. gift ribbon)
   ribbonGray: '#A1CCFD',
@@ -177,6 +179,21 @@ export function createLuminanceWhite() {
     polygonOffsetUnits: -2,
   });
   mat.userData.paletteId = 'luminanceWhite';
+  return mat;
+}
+
+// Pure emissive black sibling — same unlit / polygon-offset behavior
+// as createLuminanceWhite, used for accents that should read as a
+// solid silhouette regardless of body color (e.g. cleaning tool neck).
+export function createLuminanceBlack() {
+  const mat = new THREE.MeshBasicMaterial({
+    color: new THREE.Color(COLORS.luminanceBlack),
+    toneMapped: false,
+    polygonOffset: true,
+    polygonOffsetFactor: -2,
+    polygonOffsetUnits: -2,
+  });
+  mat.userData.paletteId = 'luminanceBlack';
   return mat;
 }
 
