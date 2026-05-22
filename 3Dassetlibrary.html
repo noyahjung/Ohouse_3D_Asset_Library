@@ -1133,6 +1133,8 @@
   <button class="asset-chip" data-asset="lightning">Lightning</button>
   <button class="asset-chip" data-asset="wifi">WiFi Router</button>
   <button class="asset-chip" data-asset="cleaningtool">Cleaning Tool</button>
+  <button class="asset-chip" data-asset="woncoin">Won Coin</button>
+  <button class="asset-chip" data-asset="woncoinarrow">Won Coin + Arrow</button>
   <button class="asset-chip" id="exportPng">PNG 출력</button>
 
   <div id="assetSettings" hidden>
@@ -1891,6 +1893,84 @@ const ASSETS = {
       return 'body';
     },
   },
+  woncoin: {
+    url: 'arrowcoin.glb',
+    label: 'Won Coin',
+    rootName: 'arrow_coin',
+    recommended: 'frostedOrange',
+    weldVertices: true,
+    // Shares the source GLB with `woncoinarrow`; this entry drops the
+    // arrow subtree at load so only the won coin renders.
+    hideSubtrees: ['arrow'],
+    // Coin reads as a thin disc (303×303×60); at 3/4 iso the silhouette
+    // is much smaller than its X/Z extent suggests, so default 2.2
+    // leaves it looking small next to cube assets. Tighten so the disc
+    // fills the cell like Moving Box.
+    frameScale: 1.7,
+    // Shift the gradient bbox downward so the coin face sits inside
+    // the saturated half of the gradient instead of the pale top —
+    // flat assets only expose a thin slice of the V range, so without
+    // the shift the coin reads washed-out (same trap as lightning).
+    gradientYShift: -0.85,
+    // Pull envMap + clearcoat down so the gradient color (not surface
+    // reflections) dominates — the coin's flat top face would otherwise
+    // catch the overhead key/front directionals head-on and lift the
+    // body toward white, washing out whichever frosted variant is
+    // active. NB: no gradient override here — that would lock the
+    // texture to a single palette and break variant switching.
+    materialOverrides: {
+      envMapIntensity: 0.15,
+      clearcoat: 0.2,
+    },
+    materialFor(name, parentName) {
+      const pn = (parentName || '').toLowerCase().replace(/_\d+$/, '');
+      // won_logo (the embossed Won symbol) — always solid white so it
+      // reads against any frosted coin tone.
+      if (pn === 'won_logo')  return 'luminance';
+      // coin_body — active frosted variant.
+      if (pn === 'coin_body') return 'body';
+      return 'body';
+    },
+  },
+  woncoinarrow: {
+    url: 'arrowcoin.glb',
+    label: 'Won Coin + Arrow twisted',
+    rootName: 'arrow_coin',
+    recommended: 'frostedOrange',
+    weldVertices: true,
+    // Combined bbox is dominated by the arrow (maxDim ~442) vs the
+    // coin-only `woncoin` (maxDim ~303). Tightening frameScale by the
+    // same 303/442 ≈ 0.685 ratio keeps the coin disc at the same on-
+    // screen size as the standalone woncoin (1.7 × 0.685 ≈ 1.17).
+    frameScale: 1.17,
+    // Mirror woncoin so the coin half reads with identical density —
+    // only the arrow accent visually differs between the two assets.
+    gradientYShift: -0.85,
+    materialOverrides: {
+      envMapIntensity: 0.15,
+      clearcoat: 0.2,
+    },
+    // Arrow swirls around the coin without touching the ground, so it
+    // shouldn't cast a shadow on the plane (and shouldn't grow the AO
+    // footprint either). Only the coin contributes to the ground
+    // shadow — visually that reads as "coin floating, arrow decorating
+    // around it" instead of one big sprawling silhouette.
+    shadowExclude(name, parentName) {
+      const pn = (parentName || '').toLowerCase().replace(/_\d+$/, '');
+      return pn === 'arrow';
+    },
+    materialFor(name, parentName) {
+      const pn = (parentName || '').toLowerCase().replace(/_\d+$/, '');
+      // Coin half mirrors the woncoin mapping so the two assets read
+      // as the same coin under different decorations.
+      if (pn === 'won_logo')  return 'luminance';
+      if (pn === 'coin_body') return 'body';
+      // Arrow accent on top of the coin — harmony tracks the body
+      // tint so the arrow reads as a tonal companion to the coin.
+      if (pn === 'arrow')     return 'ribbonGray';
+      return 'body';
+    },
+  },
 };
 
 // ── Weld vertices by position only ─────────────────────────
@@ -2206,6 +2286,18 @@ function loadAsset(assetId) {
     }
     root.updateMatrixWorld(true);
 
+    // Drop named subtrees before any bbox/material pass — lets one
+    // source GLB back several asset variants by hiding optional pieces
+    // (e.g. arrowcoin ships both the coin and an arrow; Won Coin hides
+    // arrow, Won Coin + Arrow keeps it).
+    if (asset.hideSubtrees) {
+      for (const name of asset.hideSubtrees) {
+        const sub = root.getObjectByName(name);
+        if (sub && sub.parent) sub.parent.remove(sub);
+      }
+      root.updateMatrixWorld(true);
+    }
+
     // Per-subgroup position nudge — compound assets sometimes ship with
     // sub-objects whose authored origins leave a small vertical gap
     // between their bottom edges (cleaningtool: brush bristles sit
@@ -2231,14 +2323,24 @@ function loadAsset(assetId) {
     // gradient window across the whole asset (which would squash one
     // sub-object's tonal range against the other's scale).
     const fullBox = new THREE.Box3();
+    const shadowBox = new THREE.Box3();
     const bodyBuckets = new Map(); // groupId → [meshes]
     root.traverse((obj) => {
       if (!obj.isMesh) return;
       if (obj.userData.skipMaterialAssign) return;
       fullBox.expandByObject(obj);
       const kind = asset.materialFor(obj.name, obj.parent?.name);
-      obj.castShadow = true;
+      // Some assets ship with decorative meshes that visually float
+      // around the main body (e.g. woncoinarrow's arrow swirl) — those
+      // shouldn't cast shadow onto the ground plane, and the shadow
+      // plane/fade radii should size to the main body only so the AO
+      // blob doesn't sprawl out under the accent.
+      const noShadow = asset.shadowExclude
+        ? asset.shadowExclude(obj.name, obj.parent?.name)
+        : false;
+      obj.castShadow = !noShadow;
       obj.receiveShadow = true;
+      if (!noShadow) shadowBox.expandByObject(obj);
       switch (kind) {
         case 'luminance':      obj.material = tapeMat;        return;
         case 'luminanceBlack': obj.material = tapeBlackMat;   return;
@@ -2469,36 +2571,41 @@ function loadAsset(assetId) {
     // otherwise appear under their visible bottom edge.
     const bevelComp = size.y * (asset.bevelComp ?? 0);
     shadow.position.y = objectCenterY - size.y / 2 + bevelComp;
-    // Scale the ground plane to the asset so the shadow footprint
-    // always lands on it — glTF scales vary wildly between assets
-    // (meters vs centimeters), so a fixed 50×50 plane leaves large
-    // assets casting shadows into empty space.
-    shadow.scale.setScalar(maxDim);
+    // Shadow plane + fade sized from the *shadow-casting* subset of
+    // meshes, not the full bbox. Decorative meshes (woncoinarrow's
+    // arrow swirl) are excluded via shadowExclude, so the AO blob
+    // tracks the main body silhouette instead of inflating to fit
+    // floating accents that visually shouldn't ground the asset.
+    const shadowSize = shadowBox.isEmpty()
+      ? size
+      : shadowBox.getSize(new THREE.Vector3());
+    const shadowMaxDim = Math.max(shadowSize.x, shadowSize.y, shadowSize.z);
+    shadow.scale.setScalar(shadowMaxDim);
 
     // Retarget the shadow light at the object center and scale the
     // orthographic shadow camera so any asset's silhouette fits.
-    shadowLight.position.copy(SHADOW_LIGHT_DIR).multiplyScalar(maxDim * 5);
+    shadowLight.position.copy(SHADOW_LIGHT_DIR).multiplyScalar(shadowMaxDim * 5);
     shadowLight.position.y += objectCenterY;
     shadowLight.target.position.set(0, objectCenterY, 0);
     shadowLight.target.updateMatrixWorld();
-    const shadowExtent = maxDim * 3;
+    const shadowExtent = shadowMaxDim * 3;
     shadowLight.shadow.camera.left   = -shadowExtent;
     shadowLight.shadow.camera.right  =  shadowExtent;
     shadowLight.shadow.camera.top    =  shadowExtent;
     shadowLight.shadow.camera.bottom = -shadowExtent;
     shadowLight.shadow.camera.near   = 0.1;
-    shadowLight.shadow.camera.far    = maxDim * 20;
+    shadowLight.shadow.camera.far    = shadowMaxDim * 20;
     shadowLight.shadow.camera.updateProjectionMatrix();
 
     // Update the radial-fade uniforms so the shadow is fully opaque
     // near the object's ground footprint and smoothly fades to zero as
     // the shadow extends outward.
     shadowFadeUniforms.uObjectCenter.value.set(0, shadow.position.y, 0);
-    shadowFadeUniforms.uFadeInner.value = maxDim * 0.7;
-    shadowFadeUniforms.uFadeOuter.value = maxDim * 1.5;
-    // Size the contact-AO ellipse to the asset's XZ footprint so the
-    // penumbra-fill blob hugs the silhouette automatically per asset.
-    shadowFadeUniforms.uContactSize.value.set(size.x * 0.5, size.z * 0.5);
+    shadowFadeUniforms.uFadeInner.value = shadowMaxDim * 0.7;
+    shadowFadeUniforms.uFadeOuter.value = shadowMaxDim * 1.5;
+    // Size the contact-AO ellipse to the shadow-casting subset's XZ
+    // footprint so the penumbra-fill blob hugs the grounded silhouette.
+    shadowFadeUniforms.uContactSize.value.set(shadowSize.x * 0.5, shadowSize.z * 0.5);
 
     // Frosted (basic) mode: each asset loads in its recommended color.
     // Black Friday mode: keep the BF material across asset switches.
