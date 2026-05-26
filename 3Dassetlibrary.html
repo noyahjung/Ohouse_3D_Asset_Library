@@ -2035,23 +2035,31 @@ const ASSETS = {
     // tone under the *identical* FROSTED_PRESET — its flat face spans
     // the whole gradient (so the pale top band shows) and its thinness
     // lets the bright background bleed through the transmission, both
-    // lifting the body toward pale cyan. Per the tone-priority call we
-    // match box's color and accept slightly less translucency:
+    // lifting the body toward pale cyan. A disc can't simultaneously
+    // hold the coupon's gradient *and* its deep color (killing the cyan
+    // needs low transmission, which then shows the gradient's pale top);
+    // per the deep-color-priority call we go for the densest uniform
+    // tone the disc can reach:
     //  · gradientYShift -3 — extends the gradient bbox below the body so
     //    the coin's V range compresses into the saturated end. (Not a
     //    material value — box itself uses -0.12; every asset tunes this
     //    to its silhouette.)
     //  · envMapIntensity 0 — kill the env reflection that lifts the flat
     //    face toward white/cyan.
-    //  · transmission 0.5 (vs the 0.85 FROSTED_PRESET) — cut the white-
+    //  · transmission 0.4 (vs the 0.85 FROSTED_PRESET) — cut the white-
     //    background bleed-through so the disc reads saturated.
+    //  · attenuationDistance 2.5 (vs 4.5) — deepen the volume tint to
+    //    pull the body below the gradient endpoint, compensating for the
+    //    disc's short absorption path.
     // No hardcoded gradient (that would lock the palette + break variant
-    // switching). Result: frostedBlue avg ~#329EE7, close to box #4096F3.
+    // switching). Result: frostedBlue avg ~#2F9AE3, the closest a disc
+    // gets to box/coupon #3F8DF1 (residual: a touch deeper, near-uniform).
     gradientYShift: -3,
     materialOverrides: {
       envMapIntensity: 0.0,
       clearcoat: 0.2,
-      transmission: 0.5,
+      transmission: 0.4,
+      attenuationDistance: 2.5,
     },
     materialFor(name, parentName) {
       const pn = (parentName || '').toLowerCase().replace(/_\d+$/, '');
@@ -2082,7 +2090,8 @@ const ASSETS = {
     materialOverrides: {
       envMapIntensity: 0.0,
       clearcoat: 0.2,
-      transmission: 0.5,
+      transmission: 0.4,
+      attenuationDistance: 2.5,
     },
     // Arrow swirls around the coin without touching the ground, so it
     // shouldn't cast a shadow on the plane (and shouldn't grow the AO
@@ -2132,7 +2141,8 @@ const ASSETS = {
     materialOverrides: {
       envMapIntensity: 0.0,
       clearcoat: 0.2,
-      transmission: 0.5,
+      transmission: 0.4,
+      attenuationDistance: 2.5,
     },
     materialFor(name, parentName) {
       const n  = (name || '').toLowerCase();
