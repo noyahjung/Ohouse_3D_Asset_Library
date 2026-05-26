@@ -2029,20 +2029,29 @@ const ASSETS = {
     // leaves it looking small next to cube assets. Tighten so the disc
     // fills the cell like Moving Box.
     frameScale: 1.7,
-    // Shift the gradient bbox downward so the coin face sits inside
-    // the saturated half of the gradient instead of the pale top —
-    // flat assets only expose a thin slice of the V range, so without
-    // the shift the coin reads washed-out (same trap as lightning).
-    gradientYShift: -0.85,
-    // Pull envMap + clearcoat down so the gradient color (not surface
-    // reflections) dominates — the coin's flat top face would otherwise
-    // catch the overhead key/front directionals head-on and lift the
-    // body toward white, washing out whichever frosted variant is
-    // active. NB: no gradient override here — that would lock the
-    // texture to a single palette and break variant switching.
+    // ── Match the Moving Box (box) frosted standard ──────────────
+    // `box` is the canonical frosted tone (decided via contrast/color
+    // tests): frostedBlue averages ~#4096F3. A thin disc can't hit that
+    // tone under the *identical* FROSTED_PRESET — its flat face spans
+    // the whole gradient (so the pale top band shows) and its thinness
+    // lets the bright background bleed through the transmission, both
+    // lifting the body toward pale cyan. Per the tone-priority call we
+    // match box's color and accept slightly less translucency:
+    //  · gradientYShift -3 — extends the gradient bbox below the body so
+    //    the coin's V range compresses into the saturated end. (Not a
+    //    material value — box itself uses -0.12; every asset tunes this
+    //    to its silhouette.)
+    //  · envMapIntensity 0 — kill the env reflection that lifts the flat
+    //    face toward white/cyan.
+    //  · transmission 0.5 (vs the 0.85 FROSTED_PRESET) — cut the white-
+    //    background bleed-through so the disc reads saturated.
+    // No hardcoded gradient (that would lock the palette + break variant
+    // switching). Result: frostedBlue avg ~#329EE7, close to box #4096F3.
+    gradientYShift: -3,
     materialOverrides: {
-      envMapIntensity: 0.15,
+      envMapIntensity: 0.0,
       clearcoat: 0.2,
+      transmission: 0.5,
     },
     materialFor(name, parentName) {
       const pn = (parentName || '').toLowerCase().replace(/_\d+$/, '');
@@ -2067,10 +2076,13 @@ const ASSETS = {
     frameScale: 1.17,
     // Mirror woncoin so the coin half reads with identical density —
     // only the arrow accent visually differs between the two assets.
-    gradientYShift: -0.85,
+    // (See woncoin for why the shift + transmission/envMap drop are
+    // needed to match the Moving Box frosted standard.)
+    gradientYShift: -3,
     materialOverrides: {
-      envMapIntensity: 0.15,
+      envMapIntensity: 0.0,
       clearcoat: 0.2,
+      transmission: 0.5,
     },
     // Arrow swirls around the coin without touching the ground, so it
     // shouldn't cast a shadow on the plane (and shouldn't grow the AO
@@ -2108,7 +2120,20 @@ const ASSETS = {
     // Match the standalone `coupon` (1.6) so the asset reads at the same
     // scale instead of the smaller default-2.2 framing.
     frameScale: 1.6,
+    // The paper body is a thin flat sheet, so like the won coin disc it
+    // reads washed-out vs the Moving Box frosted standard under the
+    // identical preset (pale gradient band shows + bright background
+    // bleeds through). Same tone-match fix as woncoin: shift the V range
+    // into the saturated end, kill env reflection, drop transmission to
+    // cut the bleed. (The envelope/10% accents are unaffected — only the
+    // paper body takes these body-material overrides.)
+    gradientYShift: -3,
     weldVertices: true,
+    materialOverrides: {
+      envMapIntensity: 0.0,
+      clearcoat: 0.2,
+      transmission: 0.5,
+    },
     materialFor(name, parentName) {
       const n  = (name || '').toLowerCase();
       const pn = (parentName || '').toLowerCase();
