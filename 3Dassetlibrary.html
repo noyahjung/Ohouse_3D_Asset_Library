@@ -1261,6 +1261,7 @@
   <button class="asset-chip" data-asset="cleaningtool">Cleaning Tool</button>
   <button class="asset-chip" data-asset="woncoin">Won Coin</button>
   <button class="asset-chip" data-asset="woncoinarrow">Won Coin + Arrow</button>
+  <button class="asset-chip" data-asset="couponEnvelope">10% Coupon + Envelope</button>
   <button class="asset-chip" id="exportPng">PNG 출력</button>
 
   <div id="assetSettings" hidden>
@@ -2089,6 +2090,36 @@ const ASSETS = {
       // Arrow accent on top of the coin — harmony tracks the body
       // tint so the arrow reads as a tonal companion to the coin.
       if (pn === 'arrow')     return 'ribbonGray';
+      return 'body';
+    },
+  },
+  couponEnvelope: {
+    url: 'couponEnvelope.glb',
+    label: '10% Coupon + Envelope',
+    rootName: '10%coupon',
+    recommended: 'frostedPink',
+    // Source meshes are ~100× smaller than the standard asset (paper
+    // body maxDim ~3.7 source units vs the ~300-unit norm). modelScale
+    // 160 lands the paper at ~592×464×48 world — matching the existing
+    // `coupon` asset (588×425×54) so transmission absorption reads at
+    // the same frosted tone under the shared material.
+    modelScale: 160,
+    // On-screen size ∝ 1/frameScale (maxDim cancels out of the frustum).
+    // Match the standalone `coupon` (1.6) so the asset reads at the same
+    // scale instead of the smaller default-2.2 framing.
+    frameScale: 1.6,
+    weldVertices: true,
+    materialFor(name, parentName) {
+      const n  = (name || '').toLowerCase();
+      const pn = (parentName || '').toLowerCase();
+      // gltfpack wraps each source Mesh in an unnamed Group, so the
+      // recognizable name lands on parentName while name is blank —
+      // check both arguments.
+      // 10% emblem on the coupon paper → flat white luminance.
+      if (n === '10%' || pn === '10%') return 'luminance';
+      // Envelope → harmony accent (tracks the active body tint).
+      if (n === 'envelope' || pn === 'envelope') return 'ribbonGray';
+      // coupon.2 / paper → frosted body.
       return 'body';
     },
   },
