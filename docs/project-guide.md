@@ -277,7 +277,7 @@ aws s3 sync . s3://bucketplace-data-static/prod/branddesign/3Dassetlibrary/ \
   --include "*.bin" \
   --include "Botanical_Gardens_2_quarter.hdr" \
   --include "materials.js" \
-  --include "librarythumbnail/*" \
+  --include "librarythumbnail/*.png" \
   --dryrun
 
 # 2) 문제 없으면 --dryrun 빼고 실제 실행
@@ -289,7 +289,7 @@ aws s3 sync . s3://bucketplace-data-static/prod/branddesign/3Dassetlibrary/ \
   --include "*.bin" \
   --include "Botanical_Gardens_2_quarter.hdr" \
   --include "materials.js" \
-  --include "librarythumbnail/*"
+  --include "librarythumbnail/*.png"
 ```
 
 **include 패턴 설계 원칙** — 이 화이트리스트가 곧 "배포 대상 파일 정의"다. 새로운 확장자/폴더가 생기면 이 목록에도 반드시 추가해야 한다. 제외해야 할 대상(절대 올리면 안 되는 것):
