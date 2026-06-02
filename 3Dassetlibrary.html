@@ -520,16 +520,13 @@
     /* padding-left mirrors brand book: --sidebar-w 240 + --sidebar-left 26
        + 27px gap = 293. Keeps the H1 column lined up with where the
        brand book's content text begins.
-       padding-top: 8.5 → search bar (height 43) lands centered with the
-       logo (top 16 + height 28 / 2 = y=30). H1 column is pushed back
-       down via .inner margin-top so its cap-top still hits Y=100. */
-    padding: 8.5px 80px 120px 293px;
+       padding-top: 90 matches brand book's --content-pad-top so the H1
+       element-top lands at y=90, giving a visible cap-top ~y=102 —
+       aligned with the sidebar search bar's outer top (y=100). */
+    padding: 90px 80px 120px 293px;
   }
   #landing .inner {
     position: relative;
-    /* Search bar bottom at y = 8.5 + 43 = 51.5. H1 element top must be
-       y=90 (cap-top y=100). 90 − 51.5 = 38.5px gap. */
-    margin-top: 38.5px;
   }
 
   /* Logo — fixed at brand book's brand-mark slot. Box top y=16,
@@ -549,62 +546,132 @@
   #landing .landing-logo svg { width: 26px; height: 26px; display: block; flex-shrink: 0; }
   #landing .landing-logo .lt-D { letter-spacing: 2px; }
 
-  /* Back link — fixed so its text cap-top hits Y=100, mirroring the
-     brand book mode toggle's box top.
-       element-top + half-leading(3.5) + cap-inset(~2.5) ≈ 100
-       → element-top ≈ 94 */
-  #landing .landing-back {
+  /* Left sidebar — mirrors brand book .shell-sidebar exactly:
+     fixed full-height column at left: --sidebar-left (26), width
+     --sidebar-w (240), padding 0 (children carry their own inset).
+     padding-top: 100 leaves space for the page's logo / chrome zone
+     (logo top:16 + height:28 + margin equivalent → first nav row at
+     y=100, matching brand book's .shell-mode-toggle top). Display
+     flex column + nav flex:1 pins the footer to the bottom edge. */
+  #landing .landing-sidebar {
     position: fixed;
-    top: 94px; left: 26px;
-    padding: 0 6px;
-    display: inline-flex; align-items: center; gap: 4px;
-    text-decoration: none;
-    color: rgba(8,19,26,0.5);
-    font-size: 14px; font-weight: 500;
-    letter-spacing: -0.3px; line-height: 1.5;
-    transition: color var(--transition);
-    z-index: 110;
-  }
-  #landing .landing-back:hover { color: #08131A; }
-  #landing .landing-back svg { width: 16px; height: 16px; display: block; }
-
-  /* Search bar — in document flow so it scrolls with the card grid
-     (lives in the same scroll layer as the cards, above them).
-       · margin-left: auto → pushes the box to #landing's content
-         right edge, which is the same X as the cards' right edge
-         (#landing padding-right = 80).
-       · #landing padding-top: 8.5 puts the search bar's top at y=8.5,
-         which centers its 43px box on y=30 (the logo's vertical
-         center). The H1 column is held at Y=100 via .inner margin-top. */
-  #landing .landing-search {
-    margin-left: auto;
-    width: 366px; height: 43px;
-    background: #F5F5F5;
-    border-radius: 12px;
-    display: flex; align-items: center;
-    padding: 0 15px;
+    top: 0; left: 26px;
+    bottom: 0;
+    width: 240px;
+    padding: 100px 0 28px;
+    display: flex;
+    flex-direction: column;
     box-sizing: border-box;
+    z-index: 105;
+  }
+  #landing .landing-sidebar-nav { flex: 1; }
+
+  /* Footer — pinned to the bottom of the sidebar via the nav's
+     flex:1. Spec mirrors brand book .shell-sidebar-foot:
+       padding 24/10/0, font-size 11, color text-mute. */
+  #landing .landing-sidebar-foot {
+    padding: 24px 10px 0;
+    font-size: 11px;
+    color: #b8b8b8;
+    letter-spacing: -0.005em;
+  }
+  #landing .landing-sidebar-foot-links {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 28px;
+    font-size: 13.5px;
+  }
+  #landing .landing-sidebar-foot-links a {
+    color: inherit;
+    text-decoration: none;
+    transition: color var(--transition);
+  }
+  #landing .landing-sidebar-foot-links a:hover {
+    color: #08131A;
+    text-decoration: none;
+  }
+
+  /* Search bar — sits at the top of the sidebar nav, in the slot
+     where brand book's .shell-mode-toggle would be. Shape mirrors
+     the toggle: full-width pill, bg #F5F5F5, radius 999, margin-
+     bottom 25 (same gap to the first section title below). Internal
+     padding 9/18 echoes the toggle's button text inset. */
+  #landing .landing-search {
+    width: 100%;
+    background: #F5F5F5;
+    border-radius: 999px;
+    margin: 0 0 25px;
+    padding: 9px 18px;
+    display: flex; align-items: center; gap: 8px;
+    box-sizing: border-box;
+  }
+
+  /* CTA — styled as a brand book .shell-nav-link row. Three states:
+       inactive  → transparent bg, muted text rgba(8,19,26,0.6)
+       hover     → bg #F5F5F5, same muted text
+       active    → bg #F5F5F5, full text #08131A
+     `.active` is applied when the user is on the prototype page (set
+     by the routing logic — for now we never add it on the library). */
+  #landing .landing-cta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 10px;
+    background: transparent;
+    color: rgba(8,19,26,0.6);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 13px; font-weight: 500;
+    letter-spacing: -0.3px; line-height: 20px;
+    text-decoration: none;
+    transition: color var(--transition), background var(--transition);
+    box-sizing: border-box;
+  }
+  #landing .landing-cta:hover {
+    background: #F5F5F5;
+    color: rgba(8,19,26,0.6);
+    text-decoration: none;
+  }
+  #landing .landing-cta.active {
+    background: #F5F5F5;
+    color: #08131A;
+  }
+
+  /* Section title — non-clickable category divider above the CTA.
+     Mirrors brand book .shell-nav-section-title spec exactly:
+     13px/500, letter-spacing -0.3, line-height 20, padding 8/10,
+     color rgba(0,0,0,0.3) for the quiet "Overview / Identity" feel. */
+  #landing .landing-section-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.3);
+    margin: 0;
+    padding: 8px 10px;
+    letter-spacing: -0.3px;
+    line-height: 20px;
   }
   #landing .landing-search[hidden] { display: none; }
   #landing .landing-search svg.search-icon {
-    width: 20px; height: 20px; opacity: 0.3; flex-shrink: 0;
+    width: 16px; height: 16px; opacity: 0.4; flex-shrink: 0;
   }
   #landing .landing-search input {
     flex: 1; min-width: 0;
     background: transparent; border: 0; outline: 0;
-    margin-left: 8px;
     color: #08131A;
     font-family: inherit;
-    font-size: 16px; font-weight: 500;
-    letter-spacing: -0.3px; line-height: 1.5;
+    font-size: 14px; font-weight: 500;
+    letter-spacing: -0.3px; line-height: 20px;
   }
   #landing .landing-search input::placeholder {
-    color: rgba(8,19,26,0.5);
+    color: rgba(8,19,26,0.3);
   }
   #landing .landing-search .clear {
     background: transparent; border: 0; cursor: pointer;
-    color: rgba(8,19,26,0.5); font-size: 14px; line-height: 1;
-    padding: 6px; border-radius: 4px;
+    color: rgba(8,19,26,0.5); font-size: 12px; line-height: 1;
+    padding: 4px; border-radius: 999px;
     flex-shrink: 0;
   }
   #landing .landing-search .clear:hover { color: #08131A; background: rgba(0,0,0,.04); }
@@ -689,22 +756,18 @@
      the brand book Y=100 rule still holds; only the content area
      reflows down to free up horizontal space. */
   @media (max-width: 1100px) {
-    #landing { padding: 8.5px 40px 100px 40px; }
-    /* Card right edge moves in to padding 40 → match it (search bar
-       still uses margin-left: auto, so its right edge follows the
-       padding automatically). */
-    #landing .landing-search { width: 280px; }
+    /* Brand book pattern — sidebar narrows from 240 → 220, content
+       padding-left tightens accordingly. Search bar follows the
+       sidebar width automatically (width:100% inside the column). */
+    #landing { padding: 90px 40px 100px 273px; }
+    #landing .landing-sidebar { width: 220px; }
   }
-  @media (max-width: 760px) {
-    /* On mobile the sidebar column disappears (logo and back link
-       still pin to top-left). Search bar stretches to match the card
-       column edge-to-edge. */
-    #landing { padding: 8.5px 24px 80px 24px; }
+  @media (max-width: 640px) {
+    /* Brand book pattern — hide sidebar entirely on mobile. Content
+       reclaims the full width with a tighter top inset. */
+    #landing { padding: 32px 24px 80px 24px; }
     #landing .grid { grid-template-columns: 1fr; }
-    #landing .landing-search {
-      width: 100%;
-      margin-left: 0;
-    }
+    #landing .landing-sidebar { display: none; }
     #landing .landing-title-block h1 { font-size: 34px; }
   }
 
@@ -1078,27 +1141,32 @@
     <span class="landing-logo-text"><span class="lt-3">3</span><span class="lt-D">D</span> 에셋 라이브러리</span>
   </a>
 
-  <a class="landing-back" href="#" aria-label="브랜드 센터로 돌아가기">
-    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <path d="M10 3L5 8L10 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-    <span>브랜드 센터로 돌아가기</span>
-  </a>
-
-  <div class="landing-search">
-    <svg class="search-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <circle cx="9" cy="9" r="6.25" stroke="#08131A" stroke-width="1.5"/>
-      <path d="M13.6 13.6L17 17" stroke="#08131A" stroke-width="1.5" stroke-linecap="round"/>
-    </svg>
-    <input id="searchInput" type="search" placeholder="Search assets" autocomplete="off" spellcheck="false" />
-    <button class="clear" id="searchClear" hidden title="Clear">✕</button>
-  </div>
-
   <div class="inner">
     <header class="landing-title-block">
       <h1>오늘의집 3D 에셋 라이브러리</h1>
       <p class="landing-desc">3D 에셋은 비교적 큰 용처에서 평면 GUI 대비 높은 주목도로 시선을 끌어, 브랜드의 시각적 완성도와 인지도를 강화합니다</p>
     </header>
+
+    <aside class="landing-sidebar">
+      <nav class="landing-sidebar-nav">
+        <div class="landing-search">
+          <svg class="search-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="9" cy="9" r="6.25" stroke="#08131A" stroke-width="1.5"/>
+            <path d="M13.6 13.6L17 17" stroke="#08131A" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <input id="searchInput" type="search" placeholder="Search assets" autocomplete="off" spellcheck="false" />
+          <button class="clear" id="searchClear" hidden title="Clear">✕</button>
+        </div>
+        <div class="landing-section-title">AI</div>
+        <a class="landing-cta" href="#" id="prototypeCta">3D 에셋 프로토타입 생성</a>
+      </nav>
+      <div class="landing-sidebar-foot">
+        <nav class="landing-sidebar-foot-links">
+          <span>오늘의집 브랜드 센터</span>
+        </nav>
+        <div class="landing-sidebar-foot-copy">© 2026 Ohouse. All rights reserved.</div>
+      </div>
+    </aside>
 
     <div class="loading">Generating previews…</div>
     <div class="grid" hidden></div>
@@ -1246,7 +1314,7 @@
 </div>
 
 <div id="assets">
-  <button id="backToLibrary" class="asset-chip back-btn">← Library</button>
+  <button id="backToLibrary" class="asset-chip back-btn">← 라이브러리</button>
   <div class="section-label">Asset</div>
   <button class="asset-chip active" data-asset="box">Moving Box</button>
   <button class="asset-chip" data-asset="coupon">Coupon</button>
