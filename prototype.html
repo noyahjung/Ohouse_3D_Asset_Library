@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3D 에셋 프로토타입 생성 — Ohouse 3D Asset Library</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 1000'%3E%3Cpath d='M541.616 107.32C514.512 97.56 485.48 97.56 458.377 107.32C407.793 125.532 245.114 232.195 158.039 322C111.074 370.434 99.9961 403.937 99.9961 462.001C99.9961 471.684 99.996 481.687 99.9961 491.902C100.736 584.018 105.378 693.684 121.636 747.003C149.742 839.165 191.992 900 458.997 900H540.995C807.995 900 850.25 839.165 878.357 747.003C894.615 693.684 899.256 584.018 899.996 491.897C899.996 481.682 899.996 471.684 899.996 461.996C899.996 403.932 888.918 370.428 841.953 321.995C754.873 232.2 592.21 125.532 541.616 107.32Z' fill='%23000000'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  :root {
+    --transition: 0.15s ease;
+    --content-max: 920px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html, body {
+    margin: 0; padding: 0;
+    background: #ffffff;
+    color: #08131A;
+    font-family: 'Pretendard Variable', Pretendard, Inter, -apple-system,
+                 BlinkMacSystemFont, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  /* Smooth hash navigation. scroll-padding-top matches #landing
+     padding-top so an anchored heading's box top lands at y=90 —
+     visible cap-top at y=102, aligned with sidebar pill top. */
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 90px;
+  }
+
+  /* ── Page shell — mirrors the asset library landing chrome so the
+     sidebar / logo / footer feel identical across the two pages. ── */
+
+  #landing {
+    position: fixed; inset: 0; z-index: 1;
+    background: #ffffff;
+    overflow: auto;
+    padding: 90px 80px 120px 293px;
+  }
+
+  /* Logo — matches the library's top-left brand mark exactly. */
+  #landing .landing-logo {
+    position: fixed;
+    top: 16px; left: 26px;
+    height: 28px;
+    padding: 0 6px;
+    display: inline-flex; align-items: center; gap: 6px;
+    text-decoration: none; color: #000;
+    font-size: 18.8px; font-weight: 600;
+    letter-spacing: -0.3px; line-height: 1;
+    z-index: 110;
+  }
+  #landing .landing-logo svg { width: 26px; height: 26px; display: block; flex-shrink: 0; }
+  #landing .landing-logo .lt-D { letter-spacing: 2px; }
+
+  /* ── Sidebar — same spec as the library landing's sidebar. ── */
+  #landing .landing-sidebar {
+    position: fixed;
+    top: 0; left: 26px;
+    bottom: 0;
+    width: 240px;
+    padding: 100px 0 28px;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    z-index: 105;
+  }
+  #landing .landing-sidebar-nav { flex: 1; }
+
+  /* Footer */
+  #landing .landing-sidebar-foot {
+    padding: 24px 10px 0;
+    font-size: 11px;
+    color: #b8b8b8;
+    letter-spacing: -0.005em;
+  }
+  #landing .landing-sidebar-foot-links {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 28px;
+    font-size: 13.5px;
+  }
+  #landing .landing-sidebar-foot-links a,
+  #landing .landing-sidebar-foot-links span {
+    color: inherit;
+    text-decoration: none;
+    transition: color var(--transition);
+  }
+  #landing .landing-sidebar-foot-links a:hover {
+    color: #08131A;
+    text-decoration: none;
+  }
+
+  /* Search bar (pill — mirrors brand book mode toggle slot) */
+  #landing .landing-search {
+    width: 100%;
+    background: #F5F5F5;
+    border-radius: 999px;
+    margin: 0 0 25px;
+    padding: 9px 18px;
+    display: flex; align-items: center; gap: 8px;
+    box-sizing: border-box;
+  }
+  #landing .landing-search svg.search-icon {
+    width: 16px; height: 16px; opacity: 0.4; flex-shrink: 0;
+  }
+  #landing .landing-search input {
+    flex: 1; min-width: 0;
+    background: transparent; border: 0; outline: 0;
+    color: #08131A;
+    font-family: inherit;
+    font-size: 14px; font-weight: 500;
+    letter-spacing: -0.3px; line-height: 20px;
+  }
+  #landing .landing-search input::placeholder {
+    color: rgba(8,19,26,0.3);
+  }
+
+  /* Section title — non-clickable category divider (matches brand book
+     .shell-nav-section-title spec). */
+  #landing .landing-section-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.3);
+    margin: 0;
+    padding: 8px 10px;
+    letter-spacing: -0.3px;
+    line-height: 20px;
+  }
+  /* Section title following a nav-link gets a small top gap so the
+     visual category break reads clearly. */
+  #landing .landing-cta + .landing-section-title {
+    margin-top: 16px;
+  }
+
+  /* CTA — brand book .shell-nav-link three-state pill. On this page
+     the .active modifier is applied (this IS the prototype page). */
+  #landing .landing-cta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 10px;
+    background: transparent;
+    color: rgba(8,19,26,0.6);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 13px; font-weight: 500;
+    letter-spacing: -0.3px; line-height: 20px;
+    text-decoration: none;
+    transition: color var(--transition), background var(--transition);
+    box-sizing: border-box;
+  }
+  #landing .landing-cta:hover {
+    background: #F5F5F5;
+    color: rgba(8,19,26,0.6);
+    text-decoration: none;
+  }
+  #landing .landing-cta.active {
+    background: #F5F5F5;
+    color: #08131A;
+  }
+
+  /* ── Content area — replicates brand book .shell-content spec for
+     long-form pages. H1 sits at the cap-top y=102 (matching the
+     sidebar pill's outer top y=100). ── */
+  #landing .prototype-content {
+    max-width: var(--content-max);
+  }
+  #landing .prototype-content h1 {
+    margin: 80px 0 8px;
+    color: #08131A;
+    font-size: 46px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    line-height: 1.25;
+  }
+  /* First h1 sits flush with the content top — subsequent section
+     headings carry the 80px gap above. Brand book spec parity. */
+  #landing .prototype-content h1:first-of-type {
+    margin-top: 0;
+  }
+  /* Body paragraph spec — applies to every <p> in the content area
+     (intro copy, asterisk note, etc.). */
+  #landing .prototype-content p {
+    margin: 0;
+    color: rgba(8, 19, 26, 0.5);
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.5;
+    letter-spacing: -0.3px;
+  }
+  #landing .prototype-content p + p {
+    margin-top: 8px;
+  }
+
+  /* About banner — 16:9 image block. Spacing per brand book:
+     Contents → Image = 30px above, p after banner sits 30px below. */
+  #landing .about-banner {
+    width: 100%;
+    max-width: var(--content-max);
+    aspect-ratio: 16 / 9;
+    margin: 30px 0 0;
+    background: #fafafa;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  #landing .about-banner img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  #landing .about-banner + p { margin-top: 30px; }
+
+  /* Primary CTA button below the banner image — promoted from brand
+     book's quiet .content-download spec to a dark high-contrast pill
+     so the "이동" action reads as the page's main next-step. */
+  #landing .content-download {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #08131A;
+    color: #ffffff;
+    border-radius: 12px;
+    padding: 12px 20px;
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: -0.3px;
+    line-height: 1.4;
+    text-decoration: none;
+    margin: 24px 0 0;
+    transition: background var(--transition);
+  }
+  #landing .content-download:hover {
+    background: #1f2937;
+    color: #ffffff;
+    text-decoration: none;
+  }
+  /* Body paragraph following the CTA — keeps a comfortable gap so the
+     asterisk note doesn't crowd the button. */
+  #landing .content-download + p {
+    margin-top: 16px;
+  }
+
+  /* Section divider — brand book .content-divider spec exactly:
+     80px breathing room above + below, 1px hairline in border-soft.
+     The 80px collapses with the following h1's 80px margin-top into
+     a single 80px gap (CSS margin collapsing). */
+  #landing .prototype-content .content-divider {
+    margin: 80px 0;
+    border: 0;
+    border-top: 1px solid #ececec;
+  }
+
+  /* ── On-this-page TOC — brand book .shell-toc spec verbatim.
+     Fixed to viewport top-right with a thick black bar indicator
+     that replaces the gray track at the active item's y position.
+     Auto-hidden under 1380px (no room next to the content column). ── */
+  #landing .shell-toc {
+    position: fixed;
+    top: 96px;
+    right: 40px;
+    width: 180px;
+    font-size: 13px;
+    z-index: 10;
+  }
+  #landing .shell-toc-title {
+    font-size: 11px;
+    font-weight: 500;
+    color: #b8b8b8;
+    margin: 0 0 12px;
+    letter-spacing: -0.005em;
+    padding-left: 14px;
+  }
+  #landing .shell-toc-list {
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid #ececec;
+  }
+  #landing .shell-toc-item {
+    padding: 6px 0 6px 14px;
+    margin-left: -1px;
+    border-left: 2px solid transparent;
+    color: #b8b8b8;
+    text-decoration: none;
+    font-weight: 400;
+    line-height: 1.5;
+    transition: color var(--transition), border-color var(--transition);
+  }
+  #landing .shell-toc-item:hover {
+    color: #08131A;
+    text-decoration: none;
+  }
+  #landing .shell-toc-item.active {
+    color: #08131A;
+    font-weight: 600;
+    border-left-color: #08131A;
+  }
+  /* h2/h3 sub-items indent one level so chapter / sub hierarchy
+     reads at a glance. Not used here yet but kept for parity. */
+  #landing .shell-toc-item--sub {
+    padding-left: 28px;
+    font-size: 12px;
+    color: #b8b8b8;
+  }
+  #landing .shell-toc-item--sub.active {
+    color: #08131A;
+  }
+
+  /* Responsive — same breakpoints as the library landing. */
+  /* At ≥1381px reserve 240px of right padding so the fixed TOC
+     (180w + 40 right offset + 20 gap) doesn't overlap content. */
+  @media (min-width: 1381px) {
+    #landing.has-toc { padding-right: 240px; }
+  }
+  /* Below 1380, hide the TOC entirely — no room beside the content
+     column without crushing the text. */
+  @media (max-width: 1380px) {
+    #landing .shell-toc { display: none; }
+  }
+  @media (max-width: 1100px) {
+    #landing { padding: 90px 40px 100px 273px; }
+    #landing.has-toc { padding-right: 40px; }
+    #landing .landing-sidebar { width: 220px; }
+  }
+  @media (max-width: 640px) {
+    #landing { padding: 32px 24px 80px 24px; }
+    #landing.has-toc { padding-right: 24px; }
+    #landing .landing-sidebar { display: none; }
+    #landing .prototype-content h1 { font-size: 34px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="landing">
+  <a class="landing-logo" href="3Dassetlibrary.html" aria-label="3D 에셋 라이브러리">
+    <svg viewBox="0 0 1000 1000" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M541.616 107.32C514.512 97.56 485.48 97.56 458.377 107.32C407.793 125.532 245.114 232.195 158.039 322C111.074 370.434 99.9961 403.937 99.9961 462.001C99.9961 471.684 99.996 481.687 99.9961 491.902C100.736 584.018 105.378 693.684 121.636 747.003C149.742 839.165 191.992 900 458.997 900H540.995C807.995 900 850.25 839.165 878.357 747.003C894.615 693.684 899.256 584.018 899.996 491.897C899.996 481.682 899.996 471.684 899.996 461.996C899.996 403.932 888.918 370.428 841.953 321.995C754.873 232.2 592.21 125.532 541.616 107.32Z" fill="#000"/>
+    </svg>
+    <span class="landing-logo-text"><span class="lt-3">3</span><span class="lt-D">D</span> 에셋 라이브러리</span>
+  </a>
+
+  <aside class="landing-sidebar">
+    <nav class="landing-sidebar-nav">
+      <a class="landing-cta" href="3Dassetlibrary.html">홈</a>
+      <div class="landing-section-title">AI</div>
+      <a class="landing-cta active" href="prototype.html">3D 에셋 프로토타입 생성</a>
+    </nav>
+    <div class="landing-sidebar-foot">
+      <nav class="landing-sidebar-foot-links">
+        <span>오늘의집 브랜드 센터</span>
+      </nav>
+      <div class="landing-sidebar-foot-copy">© 2026 Ohouse. All rights reserved.</div>
+    </div>
+  </aside>
+
+  <main class="prototype-content">
+    <h1>3D 에셋 프로토타입 생성</h1>
+    <p>브랜드팀이 정의한 3D 에셋 스타일을 GPT 이미지 생성으로 빠르게 구현하는 프로토타입용 툴입니다. 실제 서비스 적용이나 고도화 작업에는 시스템에서 제공하는 정식 3D 에셋을 사용해 주세요.</p>
+    <figure class="about-banner"><img src="prototype/banner.png" alt=""></figure>
+    <a class="content-download" href="https://chatgpt.com/g/g-6a166ec2bb80819192e64cc262edc39c-oneulyijib-3d-eses-peurototaib-bildeo" target="_blank" rel="noopener noreferrer">GPT 이미지 빌더로 이동</a>
+    <p>*GPT 이미지 빌더는 GPT 유료계정을 사용해야 정상 작동합니다.</p>
+
+    <hr class="content-divider">
+
+    <h1>사용방법</h1>
+    <p>어쩌구 저쩌구 저쩌구</p>
+    <figure class="about-banner"><img src="prototype/usage.webp" alt=""></figure>
+
+    <h1>주의사항</h1>
+    <p>어쩌구 저쩌구</p>
+    <figure class="about-banner"><img src="prototype/caution.webp" alt=""></figure>
+  </main>
+</div>
+
+<script>
+// ─── On-this-page TOC + scroll spy ─────────────────────────
+// Mirrors brand book shell.js TOC implementation. Collects every h1/h2/h3
+// in .prototype-content, assigns sequential ids, renders an aside.shell-toc
+// fixed to the viewport's top-right, and updates the active item via
+// IntersectionObserver as the user scrolls.
+(function () {
+  const landing = document.getElementById('landing');
+  const content = landing.querySelector('.prototype-content');
+  if (!content) return;
+
+  const headings = Array.from(content.querySelectorAll('h1, h2, h3'));
+  if (headings.length < 2) return;
+
+  // Assign stable ids (Korean text → sequential fallback).
+  headings.forEach((h, i) => { if (!h.id) h.id = `section-${i + 1}`; });
+
+  // Render TOC.
+  const toc = document.createElement('aside');
+  toc.className = 'shell-toc';
+  toc.innerHTML = `
+    <div class="shell-toc-title">On this page</div>
+    <nav class="shell-toc-list">
+      ${headings.map(h => {
+        const tag = h.tagName.toLowerCase();
+        const sub = tag === 'h1' ? '' : ' shell-toc-item--sub';
+        return `<a class="shell-toc-item${sub}" href="#${h.id}" data-target-id="${h.id}">${h.textContent.trim()}</a>`;
+      }).join('')}
+    </nav>
+  `;
+  landing.appendChild(toc);
+  landing.classList.add('has-toc');
+
+  // Scroll spy — mark topmost visible heading as active.
+  const items = Array.from(toc.querySelectorAll('.shell-toc-item'));
+  const byId = {};
+  items.forEach(el => { byId[el.dataset.targetId] = el; });
+
+  let activeId = null;
+  function setActive(id) {
+    if (id === activeId) return;
+    activeId = id;
+    items.forEach(el => el.classList.remove('active'));
+    if (byId[id]) byId[id].classList.add('active');
+  }
+
+  const visible = new Set();
+  const observer = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (entry.isIntersecting) visible.add(entry.target.id);
+      else visible.delete(entry.target.id);
+    }
+    if (visible.size === 0) return;
+    const topmost = headings
+      .filter(h => visible.has(h.id))
+      .sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top)[0];
+    if (topmost) setActive(topmost.id);
+  }, { rootMargin: '-15% 0px -70% 0px' });
+
+  headings.forEach(h => observer.observe(h));
+
+  // Initial active = hash target if present, else first heading.
+  const hashId = window.location.hash.slice(1);
+  if (hashId && byId[hashId]) setActive(hashId);
+  else setActive(headings[0].id);
+})();
+</script>
+
+</body>
+</html>

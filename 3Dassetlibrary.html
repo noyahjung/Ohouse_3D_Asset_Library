@@ -592,18 +592,28 @@
     text-decoration: none;
   }
 
-  /* Search bar — sits at the top of the sidebar nav, in the slot
-     where brand book's .shell-mode-toggle would be. Shape mirrors
-     the toggle: full-width pill, bg #F5F5F5, radius 999, margin-
-     bottom 25 (same gap to the first section title below). Internal
-     padding 9/18 echoes the toggle's button text inset. */
-  #landing .landing-search {
+  /* Hero placeholder — full grid-width banner that sits between the
+     title block and the search bar. Height ≈ two stacked cards
+     (card 156 + gap 16 + card 156 = 328 → rounded to 320). Empty
+     gray surface for now; an image will be slotted in later. */
+  #landing .landing-hero {
     width: 100%;
+    height: 320px;
     background: #F5F5F5;
-    border-radius: 999px;
-    margin: 0 0 25px;
-    padding: 9px 18px;
-    display: flex; align-items: center; gap: 8px;
+    border-radius: 12px;
+    margin: 0 0 28px;
+  }
+
+  /* Search bar — sits directly above the card grid. Width matches
+     the LEFT card column: (100% − 16px gap) / 2. */
+  #landing .landing-search {
+    width: calc((100% - 16px) / 2);
+    height: 43px;
+    margin: 0 0 16px;
+    background: #F5F5F5;
+    border-radius: 12px;
+    display: flex; align-items: center;
+    padding: 0 15px;
     box-sizing: border-box;
   }
 
@@ -653,25 +663,31 @@
     letter-spacing: -0.3px;
     line-height: 20px;
   }
+  /* Section title following a nav-link gets a small top gap so the
+     visual category break reads clearly. */
+  #landing .landing-cta + .landing-section-title {
+    margin-top: 16px;
+  }
   #landing .landing-search[hidden] { display: none; }
   #landing .landing-search svg.search-icon {
-    width: 16px; height: 16px; opacity: 0.4; flex-shrink: 0;
+    width: 20px; height: 20px; opacity: 0.3; flex-shrink: 0;
   }
   #landing .landing-search input {
     flex: 1; min-width: 0;
     background: transparent; border: 0; outline: 0;
+    margin-left: 8px;
     color: #08131A;
     font-family: inherit;
-    font-size: 14px; font-weight: 500;
-    letter-spacing: -0.3px; line-height: 20px;
+    font-size: 16px; font-weight: 500;
+    letter-spacing: -0.3px; line-height: 1.5;
   }
   #landing .landing-search input::placeholder {
-    color: rgba(8,19,26,0.3);
+    color: rgba(8,19,26,0.5);
   }
   #landing .landing-search .clear {
     background: transparent; border: 0; cursor: pointer;
-    color: rgba(8,19,26,0.5); font-size: 12px; line-height: 1;
-    padding: 4px; border-radius: 999px;
+    color: rgba(8,19,26,0.5); font-size: 14px; line-height: 1;
+    padding: 6px; border-radius: 4px;
     flex-shrink: 0;
   }
   #landing .landing-search .clear:hover { color: #08131A; background: rgba(0,0,0,.04); }
@@ -768,6 +784,8 @@
     #landing { padding: 32px 24px 80px 24px; }
     #landing .grid { grid-template-columns: 1fr; }
     #landing .landing-sidebar { display: none; }
+    #landing .landing-search { width: 100%; }
+    #landing .landing-hero { height: 180px; }
     #landing .landing-title-block h1 { font-size: 34px; }
   }
 
@@ -1144,21 +1162,14 @@
   <div class="inner">
     <header class="landing-title-block">
       <h1>오늘의집 3D 에셋 라이브러리</h1>
-      <p class="landing-desc">3D 에셋은 비교적 큰 용처에서 평면 GUI 대비 높은 주목도로 시선을 끌어, 브랜드의 시각적 완성도와 인지도를 강화합니다</p>
+      <p class="landing-desc">오늘의집 브랜드팀이 정의한 비주얼 원칙으로 제작된 3D 에셋 라이브러리입니다.<br>WebGL로 구현된 에셋의 색상과 구도를 자유롭게 조정해 다운로드하고, 콘텐츠 제작에 활용해 보세요.</p>
     </header>
 
     <aside class="landing-sidebar">
       <nav class="landing-sidebar-nav">
-        <div class="landing-search">
-          <svg class="search-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <circle cx="9" cy="9" r="6.25" stroke="#08131A" stroke-width="1.5"/>
-            <path d="M13.6 13.6L17 17" stroke="#08131A" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-          <input id="searchInput" type="search" placeholder="Search assets" autocomplete="off" spellcheck="false" />
-          <button class="clear" id="searchClear" hidden title="Clear">✕</button>
-        </div>
+        <a class="landing-cta active" href="3Dassetlibrary.html">홈</a>
         <div class="landing-section-title">AI</div>
-        <a class="landing-cta" href="#" id="prototypeCta">3D 에셋 프로토타입 생성</a>
+        <a class="landing-cta" href="prototype.html" id="prototypeCta">3D 에셋 프로토타입 생성</a>
       </nav>
       <div class="landing-sidebar-foot">
         <nav class="landing-sidebar-foot-links">
@@ -1167,6 +1178,17 @@
         <div class="landing-sidebar-foot-copy">© 2026 Ohouse. All rights reserved.</div>
       </div>
     </aside>
+
+    <div class="landing-hero"></div>
+
+    <div class="landing-search">
+      <svg class="search-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <circle cx="9" cy="9" r="6.25" stroke="#08131A" stroke-width="1.5"/>
+        <path d="M13.6 13.6L17 17" stroke="#08131A" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <input id="searchInput" type="search" placeholder="Search assets" autocomplete="off" spellcheck="false" />
+      <button class="clear" id="searchClear" hidden title="Clear">✕</button>
+    </div>
 
     <div class="loading">Generating previews…</div>
     <div class="grid" hidden></div>
