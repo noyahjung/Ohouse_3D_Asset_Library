@@ -200,6 +200,27 @@
   #landing .prototype-content p + p {
     margin-top: 8px;
   }
+  /* Lists — brand book .shell-content ul/ol/li spec.
+     Padding-left 22 for marker space, color text-dim, comfortable
+     1.75 line-height so multi-line items breathe. */
+  #landing .prototype-content ul,
+  #landing .prototype-content ol {
+    padding-left: 22px;
+    color: rgba(8, 19, 26, 0.5);
+    margin: 0 0 16px;
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: -0.3px;
+  }
+  #landing .prototype-content li {
+    margin-bottom: 6px;
+    line-height: 1.75;
+  }
+  /* p directly followed by ul tightens the gap so a lead paragraph
+     and its bullet list read as one block. */
+  #landing .prototype-content p + ul {
+    margin-top: 8px;
+  }
 
   /* About banner — 16:9 image block. Spacing per brand book:
      Contents → Image = 30px above, p after banner sits 30px below. */
@@ -248,6 +269,32 @@
      asterisk note doesn't crowd the button. */
   #landing .content-download + p {
     margin-top: 16px;
+  }
+
+  /* Secondary content link — brand book .content-download original
+     light spec (bg #F5F5F5, color #08131A, radius 12, padding 8/10,
+     font 14/500). Used for non-primary links like the Slack channel
+     in the 주의사항 section. */
+  #landing .content-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #F5F5F5;
+    color: #08131A;
+    border-radius: 12px;
+    padding: 8px 10px;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: -0.3px;
+    line-height: 1.4;
+    text-decoration: none;
+    margin: 24px 0 0;
+    transition: background var(--transition);
+  }
+  #landing .content-link:hover {
+    background: #EDEDED;
+    color: #08131A;
+    text-decoration: none;
   }
 
   /* Section divider — brand book .content-divider spec exactly:
@@ -365,20 +412,22 @@
 
   <main class="prototype-content">
     <h1>3D 에셋 프로토타입 생성</h1>
-    <p>브랜드팀이 정의한 3D 에셋 스타일을 GPT 이미지 생성으로 빠르게 구현하는 프로토타입용 툴입니다. 실제 서비스 적용이나 고도화 작업에는 시스템에서 제공하는 정식 3D 에셋을 사용해 주세요.</p>
-    <figure class="about-banner"><img src="prototype/banner.png" alt=""></figure>
+    <p>브랜드팀이 정의한 3D 에셋 스타일을 GPT 이미지 생성으로 빠르게 구현하는 프로토타입용 툴입니다. 실제 서비스 적용이나 고도화 작업에는 가급적 시스템에서 제공하는 정식 3D 에셋을 사용해 주세요.</p>
+    <figure class="about-banner"><img src="prototype/ai_kv.webp" alt=""></figure>
     <a class="content-download" href="https://chatgpt.com/g/g-6a166ec2bb80819192e64cc262edc39c-oneulyijib-3d-eses-peurototaib-bildeo" target="_blank" rel="noopener noreferrer">GPT 이미지 빌더로 이동</a>
     <p>*GPT 이미지 빌더는 GPT 유료계정을 사용해야 정상 작동합니다.</p>
 
     <hr class="content-divider">
 
     <h1>사용방법</h1>
-    <p>어쩌구 저쩌구 저쩌구</p>
-    <figure class="about-banner"><img src="prototype/usage.webp" alt=""></figure>
+    <p>사용방법은 간단합니다. 만들고 싶은 오브젝트의 이름과 색상을 ‘오브젝트 / 색상’ 형식으로 입력해 주세요. (예: 헤드폰 / 바이올렛)</p>
+    <p>*제공 색상: 블루 · 그린 · 오렌지 · 레드 · 바이올렛 · 다크블루 · 핑크</p>
+    <figure class="about-banner"><img src="prototype/ai_guide1.webp" alt=""></figure>
 
     <h1>주의사항</h1>
-    <p>어쩌구 저쩌구</p>
-    <figure class="about-banner"><img src="prototype/caution.webp" alt=""></figure>
+    <p>AI 생성 이미지는 브랜드 원칙·시스템 호환성이 보장되지 않으므로 시급한 프로토타입 단계에서만 사용해 주세요. 실 서비스나 고도화 작업에는 가급적 공식 3D 에셋을 사용하거나 브랜드팀에 제작을 요청해 주세요.</p>
+    <a class="content-link" href="https://ohou-se.slack.com/archives/C08D7GRCJVB" target="_blank" rel="noopener noreferrer">그래픽 제작 요청 채널</a>
+    <figure class="about-banner"><img src="prototype/ai_guide2.webp" alt=""></figure>
   </main>
 </div>
 
