@@ -271,10 +271,10 @@
     margin-top: 16px;
   }
 
-  /* Secondary content link — brand book .content-download original
-     light spec (bg #F5F5F5, color #08131A, radius 12, padding 8/10,
-     font 14/500). Used for non-primary links like the Slack channel
-     in the 주의사항 section. */
+  /* Secondary content link ("일반 버튼") — same size as the primary
+     .content-download "중요 버튼" so the two buttons form a uniform
+     pair on the page; the only visual hierarchy is COLOR (dark =
+     important, light = normal). See docs/layout-rules.md §2. */
   #landing .content-link {
     display: inline-flex;
     align-items: center;
@@ -282,8 +282,8 @@
     background: #F5F5F5;
     color: #08131A;
     border-radius: 12px;
-    padding: 8px 10px;
-    font-size: 14px;
+    padding: 12px 20px;
+    font-size: 16px;
     font-weight: 500;
     letter-spacing: -0.3px;
     line-height: 1.4;

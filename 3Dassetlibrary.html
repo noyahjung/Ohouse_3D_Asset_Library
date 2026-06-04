@@ -60,7 +60,8 @@
   }
   #adminBadge.visible { display: block; }
 
-  #dragHint {
+  #dragHint,
+  #exportHint {
     position: fixed;
     top: 8%;
     left: 50%;
@@ -76,7 +77,8 @@
     z-index: 5;
     white-space: nowrap;
   }
-  #dragHint.visible { opacity: 1; }
+  #dragHint.visible,
+  #exportHint.visible { opacity: 1; }
 
   /* ── Shared card shell ───────────────────────────────── */
   .card {
@@ -306,9 +308,10 @@
   #exportPng.active { background: var(--accent); color: #fff; }
   #exportPng.active::before { display: none; }
 
-  /* Admin mode: collapsible asset chip list so the settings panel gets
-     more vertical breathing room. Section label becomes the toggle. */
-  #assets.admin-collapsible .section-label {
+  /* Collapsible asset chip list — "Asset" section label becomes a
+     toggle. Default state is collapsed so the right panel stays
+     compact; the chevron flips when the list is open. */
+  #assets.collapsible .section-label {
     cursor: pointer;
     user-select: none;
     display: flex;
@@ -318,18 +321,19 @@
     border-radius: 6px;
     transition: background 0.15s;
   }
-  #assets.admin-collapsible .section-label:hover { background: rgba(0,0,0,0.04); }
-  #assets.admin-collapsible .section-label::after {
+  #assets.collapsible .section-label:hover { background: rgba(0,0,0,0.04); }
+  #assets.collapsible .section-label::after {
     content: '▾';
     margin-left: auto;
-    font-size: 9px;
-    color: var(--text-mute);
+    font-size: 14px;
+    line-height: 1;
+    color: var(--text);
     transition: transform 0.2s;
   }
-  #assets.admin-collapsible.collapsed .section-label::after {
+  #assets.collapsible.collapsed .section-label::after {
     transform: rotate(-90deg);
   }
-  #assets.admin-collapsible.collapsed .asset-chip[data-asset] {
+  #assets.collapsible.collapsed .asset-chip[data-asset] {
     display: none;
   }
 
@@ -823,6 +827,7 @@
   body.variants-mode #bgSelector,
   body.variants-mode #hint,
   body.variants-mode #dragHint,
+  body.variants-mode #exportHint,
   body.variants-mode #projectBadge,
   body.variants-mode #app { display: none !important; }
 
@@ -1155,6 +1160,7 @@
 <div id="app"></div>
 <div id="adminBadge">ADMIN MODE</div>
 <div id="dragHint">마우스를 드래그해 에셋을 돌려보세요</div>
+<div id="exportHint">원하는 각도에서 우측 'PNG 출력' 버튼을 눌러보세요</div>
 
 <div id="landing">
   <a class="landing-logo" href="#" aria-label="3D 에셋 라이브러리">
@@ -1342,7 +1348,7 @@
 
 <div id="assets">
   <button id="backToLibrary" class="asset-chip back-btn">← 라이브러리</button>
-  <div class="section-label">Asset</div>
+  <div class="section-label">다른 에셋 선택</div>
   <button class="asset-chip active" data-asset="box">Moving Box</button>
   <button class="asset-chip" data-asset="coupon">Coupon</button>
   <button class="asset-chip" data-asset="purifier">Water Purifier</button>
@@ -1471,22 +1477,27 @@ if (IS_ADMIN) {
   const adminBadge = document.getElementById('adminBadge');
   adminBadge.classList.add('visible');
   if (IS_ADMIN_VARI) adminBadge.textContent = '어드민-컬러 모드';
-
-  // Collapse the asset chip list behind the "Asset" section label so the
-  // long admin settings panel gets the vertical space it needs. Clicking
-  // the label toggles; picking an asset auto-collapses again.
-  const assetsEl = document.getElementById('assets');
-  const assetSectionLabel = assetsEl.querySelector('.section-label');
-  assetsEl.classList.add('admin-collapsible', 'collapsed');
-  assetSectionLabel.addEventListener('click', () => {
-    assetsEl.classList.toggle('collapsed');
-  });
-  assetsEl.querySelectorAll('.asset-chip[data-asset]').forEach(chip => {
-    chip.addEventListener('click', () => {
-      assetsEl.classList.add('collapsed');
-    });
-  });
 }
+
+// Collapsible asset chip list — applies to every user. The "Asset"
+// section label is the toggle; default state is collapsed so the
+// right column stays compact. Picking a chip auto-collapses again.
+const assetsEl = document.getElementById('assets');
+const assetSectionLabel = assetsEl.querySelector('.section-label');
+assetsEl.classList.add('collapsible', 'collapsed');
+assetSectionLabel.addEventListener('click', () => {
+  assetsEl.classList.toggle('collapsed');
+});
+assetsEl.querySelectorAll('.asset-chip[data-asset]').forEach(chip => {
+  chip.addEventListener('click', () => {
+    assetsEl.classList.add('collapsed');
+    if (exportHintEl) exportHintEl.classList.remove('visible');
+  });
+});
+// Dismiss the PNG hint as soon as the user actually clicks the export button.
+document.getElementById('exportPng').addEventListener('click', () => {
+  if (exportHintEl) exportHintEl.classList.remove('visible');
+});
 if (!IS_ADMIN) {
   document.querySelectorAll('.gear, .bf-gear').forEach(el => el.style.display = 'none');
   document.getElementById('settings').style.display = 'none';
@@ -3049,10 +3060,22 @@ function selectAsset(id) {
 // enters the customizer. Dismissed on any pointer movement so it never
 // gets in the way of actual interaction.
 const dragHintEl = document.getElementById('dragHint');
+const exportHintEl = document.getElementById('exportHint');
 let dragHintDismissHandler = null;
+let exportHintTimer = null;
+function showExportHint() {
+  if (!exportHintEl) return;
+  exportHintEl.classList.add('visible');
+  clearTimeout(exportHintTimer);
+  // Auto-dismiss after 8s if the user doesn't act on it.
+  exportHintTimer = setTimeout(() => {
+    exportHintEl.classList.remove('visible');
+  }, 8000);
+}
 function showDragHint() {
   if (!dragHintEl) return;
   dragHintEl.classList.add('visible');
+  if (exportHintEl) exportHintEl.classList.remove('visible');
   if (dragHintDismissHandler) return;
   // Defer listener binding so the click that opened the asset (and any
   // micro-movement during it) doesn't dismiss the hint immediately.
@@ -3063,6 +3086,9 @@ function showDragHint() {
       dragHintEl.classList.remove('visible');
       window.removeEventListener('pointermove', dragHintDismissHandler);
       dragHintDismissHandler = null;
+      // Chain: once the user releases the mouse after dragging, surface
+      // the PNG export hint so they know how to capture the angle.
+      window.addEventListener('pointerup', showExportHint, { once: true });
     };
     window.addEventListener('pointermove', dragHintDismissHandler, { passive: true });
   }, 150);
