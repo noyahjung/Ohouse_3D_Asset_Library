@@ -18,8 +18,8 @@ export const COLORS = {
   frostedGreenBottom: '#00C785',
 
   // Frosted Orange — warm peach → saturated orange
-  frostedOrangeTop: '#F8C387',
-  frostedOrangeBottom: '#F7691D',
+  frostedOrangeTop: '#fba94b',
+  frostedOrangeBottom: '#fc6703',
 
   // Coral Red — pale rose → coral red
   frostedRedTop: '#ffd1bd',

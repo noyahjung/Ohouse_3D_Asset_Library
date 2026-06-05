@@ -335,8 +335,33 @@
   #assets.collapsible.collapsed .section-label::after {
     transform: rotate(-90deg);
   }
-  #assets.collapsible.collapsed .asset-chip[data-asset] {
+  #assets.collapsible.collapsed .asset-chip-list {
     display: none;
+  }
+
+  /* Scrollable chip list — caps the height so 15 chips don't fill the
+     viewport. ~232px ≈ 5.5 chip rows (38px each + 4px gap), keeping a
+     clear visual cue that more sit below. */
+  .asset-chip-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 232px;
+    overflow-y: auto;
+    /* Custom thin scrollbar so it blends with the floating chip pill
+       instead of intruding with the OS default. */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(17,24,39,0.25) transparent;
+  }
+  .asset-chip-list::-webkit-scrollbar {
+    width: 4px;
+  }
+  .asset-chip-list::-webkit-scrollbar-thumb {
+    background: rgba(17,24,39,0.25);
+    border-radius: 3px;
+  }
+  .asset-chip-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(17,24,39,0.45);
   }
 
   #assetSettings {
@@ -1353,20 +1378,26 @@
 <div id="assets">
   <button id="backToLibrary" class="asset-chip back-btn">← 라이브러리</button>
   <div class="section-label">다른 에셋 선택</div>
-  <button class="asset-chip active" data-asset="box">이사박스</button>
-  <button class="asset-chip" data-asset="coupon">할인쿠폰</button>
-  <button class="asset-chip" data-asset="purifier">정수기</button>
-  <button class="asset-chip" data-asset="gift">선물상자</button>
-  <button class="asset-chip" data-asset="basket">장바구니</button>
-  <button class="asset-chip" data-asset="clock">시계</button>
-  <button class="asset-chip" data-asset="camera">카메라</button>
-  <button class="asset-chip" data-asset="packagebox">패키지 할인 박스</button>
-  <button class="asset-chip" data-asset="lightning">오늘의딜 번개</button>
-  <button class="asset-chip" data-asset="wifi">와이파이 라우터</button>
-  <button class="asset-chip" data-asset="cleaningtool">청소 도구</button>
-  <button class="asset-chip" data-asset="woncoin">원화 코인</button>
-  <button class="asset-chip" data-asset="woncoinarrow">원화 코인 + 페이백</button>
-  <button class="asset-chip" data-asset="couponEnvelope">10% 할인 쿠폰</button>
+  <!-- Order mirrors LANDING_ORDER in the script (Figma-usage-driven). -->
+  <!-- Wrapped in a scrollable container so the 15-asset list doesn't
+       run off the screen — caps to ~5.5 chips of visible height. -->
+  <div class="asset-chip-list">
+    <button class="asset-chip active" data-asset="gift">선물상자</button>
+    <button class="asset-chip" data-asset="coupon">할인쿠폰</button>
+    <button class="asset-chip" data-asset="box">이사박스</button>
+    <button class="asset-chip" data-asset="truck3">배송 트럭</button>
+    <button class="asset-chip" data-asset="basket">장바구니</button>
+    <button class="asset-chip" data-asset="clock">시계</button>
+    <button class="asset-chip" data-asset="woncoin">원화 코인</button>
+    <button class="asset-chip" data-asset="couponEnvelope">10% 할인 쿠폰</button>
+    <button class="asset-chip" data-asset="camera">카메라</button>
+    <button class="asset-chip" data-asset="packagebox">패키지 할인 박스</button>
+    <button class="asset-chip" data-asset="woncoinarrow">원화 코인 + 페이백</button>
+    <button class="asset-chip" data-asset="lightning">오늘의딜 번개</button>
+    <button class="asset-chip" data-asset="purifier">정수기</button>
+    <button class="asset-chip" data-asset="wifi">와이파이 라우터</button>
+    <button class="asset-chip" data-asset="cleaningtool">청소 도구</button>
+  </div>
   <button class="asset-chip" id="exportPng">PNG 출력</button>
 
   <div id="assetSettings" hidden>
@@ -1379,7 +1410,7 @@
       <span class="row-label">Library Thumbnails</span>
       <div class="thumbnail-tools">
         <button id="exportThumbCurrent" class="capture-btn">Save current as PNG</button>
-        <button id="exportThumbAll" class="capture-btn">Export all (View 1)</button>
+        <button id="exportThumbAll" class="capture-btn">Export all (View 3)</button>
       </div>
       <span class="thumbnail-hint">Save into <code>librarythumbnail/&lt;id&gt;.png</code>.</span>
     </div>
@@ -1621,6 +1652,33 @@ function getBodyMaterial(asset, variantId) {
     _assetBodyMatCache.set(key, mat);
   }
   return mat;
+}
+
+// Admin tuning of a variant mutates the shared base material in-place,
+// but assets with materialOverrides hold a cached clone whose params
+// were copied at clone time and whose `.map` may point to a now-disposed
+// gradient texture. Drop every cache entry for the variant so the next
+// getBodyMaterial call rebuilds them against the just-updated base, and
+// if the active body uses the variant, re-bind its meshes immediately
+// so the change shows without an asset reload. Params explicitly set in
+// an asset's materialOverrides (e.g. woncoin's transmission lock) still
+// win after the rebuild — by design.
+function invalidateAssetBodyClonesFor(variantId) {
+  let invalidated = 0;
+  for (const key of [..._assetBodyMatCache.keys()]) {
+    if (key.endsWith(`/${variantId}`)) {
+      // Just drop from cache — don't dispose. The old clone's `.map`
+      // typically shared base.map (already disposed by the admin handler
+      // that swapped textures), and the material instance itself is GC'd
+      // once the next setActiveMaterial swaps it off the meshes.
+      _assetBodyMatCache.delete(key);
+      invalidated++;
+    }
+  }
+  if (invalidated && typeof setActiveMaterial === 'function'
+      && typeof activeVariantId !== 'undefined' && activeVariantId === variantId) {
+    setActiveMaterial(variantId);
+  }
 }
 // Built-in material chips — not exposed in the palette UI.
 const tapeMat       = createLuminanceWhite();
@@ -2151,8 +2209,10 @@ const ASSETS = {
     // needs low transmission, which then shows the gradient's pale top);
     // per the deep-color-priority call we go for the densest uniform
     // tone the disc can reach:
-    //  · gradientYShift -3 — extends the gradient bbox below the body so
-    //    the coin's V range compresses into the saturated end. (Not a
+    //  · gradientYShift -1.5 — extends the gradient bbox below the body
+    //    so the coin's V range compresses into the saturated half of the
+    //    frosted gradient (V 0 to ~0.4 instead of 0 to 1), pulling the
+    //    disc deeper without locking out the top stop entirely. (Not a
     //    material value — box itself uses -0.12; every asset tunes this
     //    to its silhouette.)
     //  · envMapIntensity 0 — kill the env reflection that lifts the flat
@@ -2163,9 +2223,8 @@ const ASSETS = {
     //    pull the body below the gradient endpoint, compensating for the
     //    disc's short absorption path.
     // No hardcoded gradient (that would lock the palette + break variant
-    // switching). Result: frostedBlue avg ~#2F9AE3, the closest a disc
-    // gets to box/coupon #3F8DF1 (residual: a touch deeper, near-uniform).
-    gradientYShift: -3,
+    // switching).
+    gradientYShift: -1.5,
     materialOverrides: {
       envMapIntensity: 0.0,
       clearcoat: 0.2,
@@ -2198,7 +2257,7 @@ const ASSETS = {
     // only the arrow accent visually differs between the two assets.
     // (See woncoin for why the shift + transmission/envMap drop are
     // needed to match the Moving Box frosted standard.)
-    gradientYShift: -3,
+    gradientYShift: -1.5,
     materialOverrides: {
       envMapIntensity: 0.0,
       clearcoat: 0.2,
@@ -2268,6 +2327,77 @@ const ASSETS = {
       // Envelope → harmony accent (tracks the active body tint).
       if (n === 'envelope' || pn === 'envelope') return 'ribbonGray';
       // coupon.2 / paper → frosted body.
+      return 'body';
+    },
+  },
+  truck3: {
+    url: 'truck3.glb',
+    label: '배송 트럭',
+    desc: '배송·물류 서비스를 나타낼 때 쓰는 트럭 에셋',
+    // Source file ships the root node still named 'truck2' (designer
+    // versioned the file by export name, not by re-labeling the root).
+    rootName: 'truck2',
+    recommended: 'frostedBlue',
+    // body-box Y is ~200 source units vs the ~290-unit Moving Box body —
+    // scale the whole asset up so transmission path length matches the
+    // frosted reference and the body tone reads at the same saturation.
+    // 1.5 lands body world Y at ~304, just above the Moving Box
+    // reference so the frosted absorption reads with comparable density
+    // instead of bleeding out as a pale wash.
+    modelScale: 1.5,
+    // Compound silhouette (cargo box + wheels hanging below + cab + roof
+    // beacon + front grill + side mirrors + plates) — the default 2.2
+    // frustum centers on the union bbox and shrinks the asset in the
+    // viewport. 1.6 strikes a balance: visibly larger than the default
+    // framing but with enough margin that the wheel-well bottoms and
+    // roof beacon don't crowd the cell edges.
+    frameScale: 1.6,
+    // No materialOverrides — once the multi-mesh UV remap bug is
+    // accounted for (mergedMesh added to root before remap so
+    // matrixWorld picks up modelScale), the body shows the full V=0..1
+    // gradient range and tonally matches the Moving Box reference
+    // under the shared FROSTED_PRESET. Earlier overrides were chasing
+    // the symptom of a compressed gradient, not a true material gap.
+    weldVertices: true,
+    // body-box has a wheel-well indentation whose rim sits at a high
+    // dihedral against the surrounding panel; without an angle-aware
+    // polish the post-weld computeVertexNormals averages near-opposite
+    // face normals at the rim and the body fans out into visible facet
+    // artifacts around each wheel. 1.2 rad (~69°) keeps the rim edge
+    // sharp while smoothing the body panels and the body-box ↔ Cube
+    // (cab) junction into one continuous frosted surface.
+    smoothAngle: 1.2,
+    // Compound asset — bucket the wheels into their own body group so
+    // they don't share a weld/normal pass with body-box. Otherwise
+    // weldByPosition fuses the body and wheel vertices where they
+    // touch, and the subsequent computeVertexNormals averages flat
+    // body-side faces with curved wheel faces, fanning out the seam
+    // normals into visible facet artifacts on the body around each
+    // wheel hub.
+    bodyGroupFor(name, parentName, grandparentName) {
+      const pn = (parentName || '').toLowerCase().replace(/_\d+$/, '');
+      const gp = (grandparentName || '').toLowerCase().replace(/_\d+$/, '');
+      if (pn === 'wheels-box' || gp === 'wheels') return 'wheels';
+      return 'body';
+    },
+    materialFor(name, parentName) {
+      const n  = (name || '').toLowerCase();
+      const pn = (parentName || '').toLowerCase();
+      // gltfpack wraps each source Mesh in an unnamed Group, so the
+      // recognizable name lands on parentName while name is blank.
+      // Tail lamps + roof beacon ("lightining" preserves the source
+      // typo for "lightning") + license plates → flat white luminance.
+      if (/lamp/.test(n)    || /lamp/.test(pn))    return 'luminance';
+      if (/lightin/.test(n) || /lightin/.test(pn)) return 'luminance';
+      if (/plate/.test(n)   || /plate/.test(pn))   return 'luminance';
+      // body-tape / wheels-tape accent strips + front grill →
+      // harmony ribbon gray (tracks the active body tint).
+      if (/tape/.test(n)    || /tape/.test(pn))    return 'ribbonGray';
+      if (/grill/.test(n)   || /grill/.test(pn))   return 'ribbonGray';
+      // Side mirrors → harmony2 (dim accent, distinct from the lighter
+      // ribbon strips).
+      if (/mirror/.test(n)  || /mirror/.test(pn))  return 'harmony2';
+      // body-box, wheels-box, Cube (cab) → frosted body.
       return 'body';
     },
   },
@@ -2615,6 +2745,16 @@ function loadAsset(assetId) {
       root.updateMatrixWorld(true);
     }
 
+    // Per-asset node rename — for source files where multiple meshes
+    // share a single name (e.g. C4D exports where a designer left several
+    // siblings under the same label), the asset can re-tag nodes based on
+    // world bbox or sibling order so materialFor / bodyGroupFor can route
+    // each kind separately. Runs after matrices are settled so the hook
+    // can inspect world-space bboxes.
+    if (asset.rewriteNames) {
+      asset.rewriteNames(root);
+    }
+
     // Pass 1: traverse once — accumulate fullBox, assign non-body
     // materials directly, and bucket body meshes by group. Compound
     // assets (e.g. cleaningtool: spray + brush) declare `bodyGroupFor`
@@ -2807,14 +2947,42 @@ function loadAsset(assetId) {
         const tol = Math.max(1e-4, fMax * 0.001);
         merged = weldByPosition(merged, tol);
         merged.computeVertexNormals();
+        // Opt-in polish pass for assets whose merged body has intrinsic
+        // facet artifacts that survive welding — typically C4D bevels
+        // or wheel-well style cutouts whose rim edges sit at a high
+        // dihedral, so blind computeVertexNormals averages near-opposite
+        // face normals into a twisted shared normal and reveals the
+        // underlying triangulation. smoothNormalsByAngle re-averages
+        // each vertex using only face normals within `smoothAngle`
+        // radians of its own face — preserves the rim as a hard edge
+        // while keeping the continuous body smooth.
+        if (asset.smoothAngle) {
+          if (merged.index) {
+            const ni = merged.toNonIndexed();
+            merged.dispose();
+            merged = ni;
+          }
+          smoothNormalsByAngle(merged, tol, asset.smoothAngle);
+        }
       } else if (!keepNormals) {
         smoothNormalsByAngle(merged);
       }
       const mergedMesh = new THREE.Mesh(merged, getBodyMaterial(asset, activeVariantId));
       mergedMesh.castShadow = true;
       mergedMesh.receiveShadow = true;
-      remapUVsToWorldY(mergedMesh, yMin, yMax);
+      // Add to root BEFORE the UV remap so mergedMesh.matrixWorld picks
+      // up root.scale (= asset.modelScale). The bakeGeos pass above
+      // strips modelScale by going through rootInv to land vertices in
+      // root-local space; without the parent in place at remap time,
+      // mesh.matrixWorld stays identity and remap reads root-local Y
+      // while yMin/yMax come from the world-space bucket bbox — the
+      // coord mismatch compresses the gradient toward V=0.5 for any
+      // modelScale != 1 asset with a multi-mesh body bucket. Adding
+      // first restores the world transform so both sides of the UV
+      // calc speak the same units. modelScale == 1 assets are
+      // unaffected (root scale = identity → world == root-local).
       root.add(mergedMesh);
+      remapUVsToWorldY(mergedMesh, yMin, yMax);
       bodyMeshes.push(mergedMesh);
     }
     }
@@ -2946,12 +3114,42 @@ function loadAsset(assetId) {
 // framing, capture the canvas to a data URL, and assemble a click-
 // able card grid. Clicking a card hides the landing overlay and
 // shows the main customizer with the selected asset loaded.
+// Display order for the landing grid + customizer chip rail. Derived
+// from designer-team Figma usage (1-year insert counts of related asset
+// families) so the most-reached-for kits sit at the top of the library.
+// Unlisted assets fall through to the end so adding a new entry to
+// ASSETS doesn't silently disappear from the grid.
+const LANDING_ORDER = [
+  'gift',          // Gift Large series — top usage
+  'coupon',        // Percent Ticket Large variants
+  'box',           // Moving Boxes on Dolly + Glossy Delivery Box
+  'truck3',        // Bolt Truck + Shipping Truck variants
+  'basket',        // Cart + Grocery Shopping Bag
+  'clock',         // Clock Large + View2 + Motion
+  'woncoin',       // Won Sign Circle
+  'couponEnvelope',// Percent Ticket On Coupon Large
+  'camera',        // Camera Large + views
+  'packagebox',    // Package Surprise Icons
+  'woncoinarrow',  // woncoin derivative
+  'lightning',     // Bolt only appears as truck composite
+  'purifier',      // Glossy Water Purifier (~1 use)
+  'wifi',          // Glossy Wi-Fi Router (~0 use)
+  'cleaningtool',  // no Figma match
+];
+function orderedAssetIds() {
+  const known = new Set(Object.keys(ASSETS));
+  const ordered = LANDING_ORDER.filter((id) => known.has(id));
+  const seen = new Set(ordered);
+  for (const id of known) if (!seen.has(id)) ordered.push(id);
+  return ordered;
+}
+
 async function buildLanding() {
   const landing = document.getElementById('landing');
   const loading = landing.querySelector('.loading');
   const grid = landing.querySelector('.grid');
   const thumbs = {};
-  const assetIds = Object.keys(ASSETS);
+  const assetIds = orderedAssetIds();
 
   // Step 1: Try pre-baked PNGs in /librarythumbnail/ first. Static files
   // load in parallel and skip the per-asset GLB + render entirely, so
@@ -2970,7 +3168,7 @@ async function buildLanding() {
     if (thumbs[id]) continue;
     await loadAsset(id);
     const asset = ASSETS[id];
-    const v = asset.viewOverrides?.['1'] || VIEW_DIRS['1'];
+    const v = asset.viewOverrides?.['3'] || VIEW_DIRS['3'];
     const d = currentMaxDim * 2.0;
     camera.position.set(v[0] * d, v[1] * d, v[2] * d);
     // Asset reads at ~80% of the frame so the form stays prominent
@@ -2997,7 +3195,8 @@ async function buildLanding() {
     thumbs[id] = crop.toDataURL('image/png');
   }
   grid.innerHTML = '';
-  for (const [id, asset] of Object.entries(ASSETS)) {
+  for (const id of assetIds) {
+    const asset = ASSETS[id];
     const card = document.createElement('button');
     card.className = 'asset-card';
     card.dataset.asset = id;
@@ -3670,6 +3869,10 @@ function renderControls(matKey, matType) {
         mat.needsUpdate = true;
       }
       recordVariEdit(matKey, c.key, v);
+      // Assets with materialOverrides (e.g. woncoin) hold cached clones
+      // that won't pick up the just-mutated base material until they're
+      // rebuilt. Invalidate now so the change shows on the live asset.
+      invalidateAssetBodyClonesFor(matKey);
     });
     row.append(document.createTextNode(c.label + ' '), input, valueText);
     controlsEl.appendChild(row);
@@ -3688,6 +3891,10 @@ function applyFrostedColor(matKey, key, hex) {
   const t = makeVerticalGradient(variant.top, variant.bottom, strength);
   if (mat.map) mat.map.dispose();
   mat.map = t;
+  // Attenuation color tints transmission absorption — kept in sync with
+  // the gradient bottom so depth-tinted regions stay coherent with the
+  // visible bottom hex.
+  mat.attenuationColor.set(variant.bottom);
   mat.needsUpdate = true;
   // Chip swatch shows via `--top` and `--bot` CSS variables.
   const chip = document.querySelector(`.chip[data-mat="${matKey}"]`);
@@ -3699,6 +3906,10 @@ function applyFrostedColor(matKey, key, hex) {
   if (key === 'bottom' && matKey === activeVariantId) {
     shadowMat.color.set(hex);
   }
+  // Asset-specific clones (woncoin etc.) cached against the old base.map
+  // would keep rendering the disposed gradient texture — rebuild them so
+  // the new colors land on the live asset.
+  invalidateAssetBodyClonesFor(matKey);
 }
 
 // ── Category collapse/expand ──────────────────────────────
@@ -3874,13 +4085,15 @@ if (IS_ADMIN) {
     });
   });
 
-  // Render the current asset from its View 1 onto a white-background
-  // 500×500 canvas and trigger a download — designer drops the file
-  // into /librarythumbnail/ to replace the live-render fallback.
+  // Render the current asset from its View 3 angle onto a white-
+  // background 500×500 canvas and trigger a download — designer drops
+  // the file into /librarythumbnail/ to replace the live-render
+  // fallback. View 3 (side-front) matches what the landing live
+  // fallback uses so saved PNGs and unsaved live renders look the same.
   async function renderThumbnailPng(assetId) {
     await loadAsset(assetId);
     const asset = ASSETS[assetId];
-    const v = asset.viewOverrides?.['1'] || VIEW_DIRS['1'];
+    const v = asset.viewOverrides?.['3'] || VIEW_DIRS['3'];
     const d = currentMaxDim * 2.0;
     camera.position.set(v[0] * d, v[1] * d, v[2] * d);
     // Match the landing-page live-render framing exactly so saved PNGs

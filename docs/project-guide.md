@@ -237,6 +237,33 @@ newAsset: {
 2. **`keepOriginalNormals: true`** → C4D 소스의 normal을 그대로 보존. 정밀 normal 작성된 에셋용.
 3. **둘 다 없음** → 단일 메시면 `computeVertexNormals`만, 다중 메시면 병합 후 `smoothNormalsByAngle`. 이음새가 살짝 각질 수 있음 → 가능하면 (1)을 명시.
 
+### 4-6. 톤이 옅게 나올 때 진단/보정 절차
+
+새로 등록한 frosted 에셋이 이사박스(`box`) 대비 색이 옅거나, 그라데이션이 압축되어 단일 색처럼 보이거나, 위/아래 방향이 뒤집힌 듯 보일 때 — **이 순서대로** 확인. 결론부터 바꾸지 말고, 위에서부터 검증해야 엉뚱한 knob을 돌리지 않게 된다.
+
+**Step 0 — 기준값 비교**
+- 이사박스 = canonical baseline (`gradientYShift` / `materialOverrides` 없음, `modelScale` 없음, 그냥 `FROSTED_PRESET` 그대로). 새 에셋이 box와 톤이 다르다면 *box를 맞추지 말고 새 에셋의 어떤 옵션이 차이를 만드는지* 추적할 것.
+- box body Y(소스 단위) 약 291. 새 에셋 body 메시도 *world 기준* maxDim이 이 범위(~250–350)에 들어와야 transmission 흡수가 같은 톤으로 떨어진다 → §4-2 body 크기 점검 참조.
+
+**Step 1 — body 메시 식별 + 단일/다중 확인 (가장 흔한 함정)**
+- `materialFor`가 `'body'`를 반환하는 메시들을 적어본다.
+- 그중 같은 body 버킷(또는 `bodyGroupFor`로 묶이는 버킷)에 **메시가 2개 이상**이고, 동시에 `modelScale ≠ 1`이라면 → 과거 multi-mesh UV remap 버그의 영향권. 현재는 `loadAsset()` 내부에서 `root.add(mergedMesh)`를 `remapUVsToWorldY` 호출 전에 실행하도록 수정되어 있으니 정상 동작해야 함. 만약 여전히 압축돼 보이면 그 픽스가 회귀(regression)된 것 — 코드를 먼저 본다.
+- 그라데이션 방향: `flipY=true` CanvasTexture + remap이 `V = 1 - (y - yMin)/ySpan` → **body 윗면 = bottomHex (진한 색), body 아랫면 = topHex (옅은 색)**. truck처럼 윗면이 옅게 보인다면 거의 확실히 위의 multi-mesh + modelScale 압축 버그.
+
+**Step 2 — 그라데이션 위치만 옮기는 가벼운 보정**
+- 위 진단으로 안 잡히면 `gradientYShift`로 보이는 V 범위를 슬라이드. **방향에 주의** — `flipY` 기본값 때문에 그라데이션 텍스처는 캔버스의 top(`topHex`, 옅음)이 OpenGL V=1에 매핑되고 bottom(`bottomHex`, saturated)이 V=0에 매핑된다. remap은 mesh world `yMax → V=0`, `yMin → V=1`로 깔리므로 결과적으로 **body 윗면 = saturated, 아랫면 = 옅음**.
+  - `-0.5 ~ -1.5`(또는 더 음수) → bbox yMin을 아래로 늘려 body의 V 범위를 [0 ~ <1]로 압축 → body 전체가 saturated 절반 쪽으로 몰림 → **더 진해 보임**. box `-0.12`(살짝 진하게), woncoin `-1.5`(디스크형이라 강하게), couponEnvelope `-3`(아주 얇은 종이라 극단) 같은 식으로 silhouette에 비례.
+  - `+0.2 ~ +0.6` → bbox yMax를 위로 늘려 body가 [0~<1] 범위 중 더 큰 V(옅은 쪽)로 분포 → **옅어 보임**.
+- frosted 룩의 정체성(transmission/clearcoat/envMap)은 **그대로**. 단지 어느 슬라이스를 보여줄지만 바뀌므로 다른 에셋과 시각적으로 어긋날 위험이 적다.
+
+**Step 3 — 흡수 거리만 조정 (정체성 유지하면서 색만 진하게)**
+- Step 2로 부족하면 `materialOverrides: { attenuationDistance: 3.0 }` 같이 **이 하나만** 줄여본다. 기본 4.5. Beer-Lambert 흡수가 빡빡해져 같은 두께를 통과한 빛이 attenuationColor(= gradient bottomHex)로 더 많이 변환됨 → saturated 끝 색이 깊게 박힘.
+- 가이드 범위: 3.5(살짝) → 3.0(약간) → 2.5(꽤) → 2.0(강함). 1.8 이하는 frosted 룩이 깨지기 시작.
+
+**Step 4 — 절대로 가볍게 손대지 말 것**
+- `transmission` ↓, `envMapIntensity` ↓, `clearcoat` ↓ — 이 셋을 한꺼번에 내리면 frosted glass의 반투명·환경반사·광택 정체성이 무너지고 *색조 자체가 다른 에셋*처럼 보인다 (truck2 작업에서 한 번 시행착오함). 정말로 *물리 특성을 바꾸고 싶을 때만* 손대고, "조금 더 진하게"가 목적이면 Step 2 / Step 3로 충분.
+- `modelScale`은 톤 보정용이 아니라 **world 크기 정규화용**임을 잊지 말 것. Step 0의 사이즈 기준에 맞춰 한 번 잡고, 이후 톤 보정은 별도 knob으로.
+
 ---
 
 ## 5. S3 배포
