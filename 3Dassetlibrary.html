@@ -61,7 +61,8 @@
   #adminBadge.visible { display: block; }
 
   #dragHint,
-  #exportHint {
+  #exportHint,
+  #materialHint {
     position: fixed;
     top: 8%;
     left: 50%;
@@ -78,7 +79,8 @@
     white-space: nowrap;
   }
   #dragHint.visible,
-  #exportHint.visible { opacity: 1; }
+  #exportHint.visible,
+  #materialHint.visible { opacity: 1; }
 
   /* ── Shared card shell ───────────────────────────────── */
   .card {
@@ -828,6 +830,7 @@
   body.variants-mode #hint,
   body.variants-mode #dragHint,
   body.variants-mode #exportHint,
+  body.variants-mode #materialHint,
   body.variants-mode #projectBadge,
   body.variants-mode #app { display: none !important; }
 
@@ -1161,6 +1164,7 @@
 <div id="adminBadge">ADMIN MODE</div>
 <div id="dragHint">마우스를 드래그해 에셋을 돌려보세요</div>
 <div id="exportHint">원하는 각도에서 우측 'PNG 출력' 버튼을 눌러보세요</div>
+<div id="materialHint">좌측 패널에서 색상과 재질을 골라 적용해보세요</div>
 
 <div id="landing">
   <a class="landing-logo" href="#" aria-label="3D 에셋 라이브러리">
@@ -1349,20 +1353,20 @@
 <div id="assets">
   <button id="backToLibrary" class="asset-chip back-btn">← 라이브러리</button>
   <div class="section-label">다른 에셋 선택</div>
-  <button class="asset-chip active" data-asset="box">Moving Box</button>
-  <button class="asset-chip" data-asset="coupon">Coupon</button>
-  <button class="asset-chip" data-asset="purifier">Water Purifier</button>
-  <button class="asset-chip" data-asset="gift">Gift Box</button>
-  <button class="asset-chip" data-asset="basket">Basket</button>
-  <button class="asset-chip" data-asset="clock">Clock</button>
-  <button class="asset-chip" data-asset="camera">Camera</button>
-  <button class="asset-chip" data-asset="packagebox">Package Box</button>
-  <button class="asset-chip" data-asset="lightning">Lightning</button>
-  <button class="asset-chip" data-asset="wifi">WiFi Router</button>
-  <button class="asset-chip" data-asset="cleaningtool">Cleaning Tool</button>
-  <button class="asset-chip" data-asset="woncoin">Won Coin</button>
-  <button class="asset-chip" data-asset="woncoinarrow">Won Coin + Arrow</button>
-  <button class="asset-chip" data-asset="couponEnvelope">10% Coupon + Envelope</button>
+  <button class="asset-chip active" data-asset="box">이사박스</button>
+  <button class="asset-chip" data-asset="coupon">할인쿠폰</button>
+  <button class="asset-chip" data-asset="purifier">정수기</button>
+  <button class="asset-chip" data-asset="gift">선물상자</button>
+  <button class="asset-chip" data-asset="basket">장바구니</button>
+  <button class="asset-chip" data-asset="clock">시계</button>
+  <button class="asset-chip" data-asset="camera">카메라</button>
+  <button class="asset-chip" data-asset="packagebox">패키지 할인 박스</button>
+  <button class="asset-chip" data-asset="lightning">오늘의딜 번개</button>
+  <button class="asset-chip" data-asset="wifi">와이파이 라우터</button>
+  <button class="asset-chip" data-asset="cleaningtool">청소 도구</button>
+  <button class="asset-chip" data-asset="woncoin">원화 코인</button>
+  <button class="asset-chip" data-asset="woncoinarrow">원화 코인 + 페이백</button>
+  <button class="asset-chip" data-asset="couponEnvelope">10% 할인 쿠폰</button>
   <button class="asset-chip" id="exportPng">PNG 출력</button>
 
   <div id="assetSettings" hidden>
@@ -1491,13 +1495,11 @@ assetSectionLabel.addEventListener('click', () => {
 assetsEl.querySelectorAll('.asset-chip[data-asset]').forEach(chip => {
   chip.addEventListener('click', () => {
     assetsEl.classList.add('collapsed');
-    if (exportHintEl) exportHintEl.classList.remove('visible');
+    resetHintChain();
   });
 });
-// Dismiss the PNG hint as soon as the user actually clicks the export button.
-document.getElementById('exportPng').addEventListener('click', () => {
-  if (exportHintEl) exportHintEl.classList.remove('visible');
-});
+// Dismiss any pending hint as soon as the user clicks PNG export.
+document.getElementById('exportPng').addEventListener('click', resetHintChain);
 if (!IS_ADMIN) {
   document.querySelectorAll('.gear, .bf-gear').forEach(el => el.style.display = 'none');
   document.getElementById('settings').style.display = 'none';
@@ -1702,7 +1704,7 @@ const VIEW_DIRS = {
 const ASSETS = {
   box: {
     url: 'box.gltf',
-    label: 'Moving Box',
+    label: '이사박스',
     desc: '이사 서비스를 나타낼 때 쓰는 이사 박스 에셋',
     rootName: 'newbox_blue_moving',
     recommended: 'frostedBlue',
@@ -1713,7 +1715,7 @@ const ASSETS = {
   },
   coupon: {
     url: 'Coupon.gltf',
-    label: 'Coupon',
+    label: '할인쿠폰',
     desc: '프로모션 할인 혜택을 나타낼 때 쓰는 쿠폰 에셋',
     rootName: 'coupon',
     recommended: 'frostedPink',
@@ -1739,7 +1741,7 @@ const ASSETS = {
   },
   gift: {
     url: 'gift.gltf',
-    label: 'Gift Box',
+    label: '선물상자',
     desc: '프로모션·이벤트를 나타낼 때 쓰는 선물 상자 에셋',
     rootName: 'gift_save',
     recommended: 'frostedRed',
@@ -1761,7 +1763,7 @@ const ASSETS = {
   },
   purifier: {
     url: 'waterpurifier.gltf',
-    label: 'Water Purifier',
+    label: '정수기',
     desc: '생활 서비스의 렌탈을 나타낼 때 쓰는 정수기 에셋',
     rootName: 'water purifier',
     recommended: 'frostedBlue',
@@ -1777,7 +1779,7 @@ const ASSETS = {
   },
   basket: {
     url: 'basket3.glb',
-    label: 'Basket',
+    label: '장바구니',
     desc: '마트·장보기를 나타낼 때 쓰는 장바구니 에셋',
     // basket3.glb wraps the assembly in a `basket.1` parent group
     // (sanitized by Three.js to `basket1`), with `basket`, `handle`,
@@ -1830,7 +1832,7 @@ const ASSETS = {
   },
   clock: {
     url: 'clock.glb?v=2',
-    label: 'Clock',
+    label: '시계',
     desc: '시간성 이벤트를 나타낼 때 쓰는 탁상 시계 에셋',
     rootName: 'clock',
     recommended: 'frostedViolet',
@@ -1849,7 +1851,7 @@ const ASSETS = {
   },
   camera: {
     url: 'camera6.glb',
-    label: 'Camera',
+    label: '카메라',
     desc: '집꾸미기 촬영을 나타낼 때 쓰는 카메라 에셋',
     rootName: 'camera',
     recommended: 'frostedDarkBlue',
@@ -1933,7 +1935,7 @@ const ASSETS = {
   },
   packagebox: {
     url: 'packagebox.glb',
-    label: 'Package Box',
+    label: '패키지 할인 박스',
     desc: '패키지 할인을 나타낼 때 쓰는 할인 상자 에셋',
     // Source file has the root node name spelled "pakagebox" (missing
     // the second 'c'); preserve the typo here so the loader resolves.
@@ -1971,7 +1973,7 @@ const ASSETS = {
   },
   lightning: {
     url: 'lightning.glb',
-    label: 'Lightning',
+    label: '오늘의딜 번개',
     desc: '오늘의딜을 나타낼 때 쓰는 번개 에셋',
     // Source file ships the root node spelled `ligtning` (missing the
     // second 'h'); match the actual name so the loader can resolve it.
@@ -2018,7 +2020,7 @@ const ASSETS = {
   },
   wifi: {
     url: 'wifi.glb',
-    label: 'WiFi Router',
+    label: '와이파이 라우터',
     desc: '인터넷 설치를 나타낼 때 쓰는 라우터 에셋',
     rootName: 'new_wifi',
     recommended: 'frostedDarkBlue',
@@ -2061,7 +2063,7 @@ const ASSETS = {
   },
   cleaningtool: {
     url: 'cleaningtool.glb',
-    label: 'Cleaning Tool',
+    label: '청소 도구',
     desc: '청소 서비스를 나타낼 때 쓰는 청소 도구 에셋',
     rootName: 'cleaning tool',
     recommended: 'frostedBlue',
@@ -2125,7 +2127,7 @@ const ASSETS = {
   },
   woncoin: {
     url: 'arrowcoin.glb',
-    label: 'Won Coin',
+    label: '원화 코인',
     desc: '현금·포인트 혜택을 나타낼 때 쓰는 원화 동전 에셋',
     rootName: 'arrow_coin',
     recommended: 'frostedOrange',
@@ -2182,7 +2184,7 @@ const ASSETS = {
   },
   woncoinarrow: {
     url: 'arrowcoin.glb',
-    label: 'Won Coin + Arrow twisted',
+    label: '원화 코인 + 페이백',
     desc: '페이백 혜택을 나타낼 때 쓰는 동전·화살표 에셋',
     rootName: 'arrow_coin',
     recommended: 'frostedOrange',
@@ -2226,7 +2228,7 @@ const ASSETS = {
   },
   couponEnvelope: {
     url: 'couponEnvelope.glb',
-    label: '10% Coupon + Envelope',
+    label: '10% 할인 쿠폰',
     desc: '할인 이벤트를 나타낼 때 쓰는 쿠폰·봉투 에셋',
     rootName: '10%coupon',
     recommended: 'frostedPink',
@@ -3056,26 +3058,51 @@ function selectAsset(id) {
 }
 
 // ── Drag-hint tutorial overlay ──────────────────────────────
-// Faint gray prompt that floats above the asset when the user first
-// enters the customizer. Dismissed on any pointer movement so it never
-// gets in the way of actual interaction.
+// Faint gray prompt sequence that walks the user through the
+// customizer: drag the asset (initial) → PNG export (after first
+// drag-release) → left material panel (after the PNG hint fades).
 const dragHintEl = document.getElementById('dragHint');
 const exportHintEl = document.getElementById('exportHint');
+const materialHintEl = document.getElementById('materialHint');
 let dragHintDismissHandler = null;
 let exportHintTimer = null;
+let exportToMaterialTimer = null;
+let materialHintTimer = null;
+
+function resetHintChain() {
+  clearTimeout(exportHintTimer);
+  clearTimeout(exportToMaterialTimer);
+  clearTimeout(materialHintTimer);
+  if (exportHintEl) exportHintEl.classList.remove('visible');
+  if (materialHintEl) materialHintEl.classList.remove('visible');
+}
+
+function showMaterialHint() {
+  if (!materialHintEl) return;
+  materialHintEl.classList.add('visible');
+  clearTimeout(materialHintTimer);
+  materialHintTimer = setTimeout(() => {
+    materialHintEl.classList.remove('visible');
+  }, 3000);
+}
+
 function showExportHint() {
   if (!exportHintEl) return;
   exportHintEl.classList.add('visible');
   clearTimeout(exportHintTimer);
-  // Auto-dismiss after 8s if the user doesn't act on it.
+  clearTimeout(exportToMaterialTimer);
+  // Visible 3s → fade out → after the 0.4s opacity transition,
+  // surface the material-panel hint as the next prompt in the chain.
   exportHintTimer = setTimeout(() => {
     exportHintEl.classList.remove('visible');
-  }, 8000);
+    exportToMaterialTimer = setTimeout(showMaterialHint, 450);
+  }, 3000);
 }
+
 function showDragHint() {
   if (!dragHintEl) return;
   dragHintEl.classList.add('visible');
-  if (exportHintEl) exportHintEl.classList.remove('visible');
+  resetHintChain();
   if (dragHintDismissHandler) return;
   // Defer listener binding so the click that opened the asset (and any
   // micro-movement during it) doesn't dismiss the hint immediately.
@@ -4457,7 +4484,7 @@ function renderVariantControls() {
 // team already aligned on as the canonical baseline).
 const COLOR_BINDINGS = {
   box:    { matId: 'frostedBlue',     label: '이사박스 · Blue' },
-  coupon: { matId: 'frostedPink',     label: '쿠폰 · Pink' },
+  coupon: { matId: 'frostedPink',     label: '할인쿠폰 · Pink' },
   gift:   { matId: 'frostedRed',      label: '선물상자 · Red' },
   clock:  { matId: 'frostedViolet',   label: '시계 · Violet' },
   camera: { matId: 'frostedDarkBlue', label: '카메라 · Navy' },
@@ -4543,7 +4570,7 @@ if (IS_VARIANTS_MODE) {
   // call updates all five at once.
   const VARIANT_ASSETS = ['box', 'coupon', 'gift', 'clock', 'camera'];
   const VARIANT_LABELS = {
-    box: '이사박스', coupon: '쿠폰', gift: '선물상자',
+    box: '이사박스', coupon: '할인쿠폰', gift: '선물상자',
     clock: '시계', camera: '카메라',
   };
   const variantSlots = [];
