@@ -26,8 +26,8 @@ export const COLORS = {
   frostedRedBottom: '#FF4747',
 
   // Violet — pale lilac → vibrant violet
-  frostedVioletTop: '#DCADFF',
-  frostedVioletBottom: '#B54AF7',
+  frostedVioletTop: '#b698fb',
+  frostedVioletBottom: '#8152e9',
 
   // Dark Blue — pale sky → deep navy blue
   frostedDarkBlueTop: '#8FAFF5',

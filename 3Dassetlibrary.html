@@ -1313,7 +1313,7 @@
           <button class="swatch"><span class="dot"></span> Coral Red</button>
           <button class="gear" title="Settings">⚙</button>
         </div>
-        <div class="chip" data-mat="frostedViolet" data-mat-type="frosted" style="--top:#DCADFF; --bot:#B54AF7;">
+        <div class="chip" data-mat="frostedViolet" data-mat-type="frosted" style="--top:#b698fb; --bot:#8152e9;">
           <button class="swatch"><span class="dot"></span> Violet</button>
           <button class="gear" title="Settings">⚙</button>
         </div>
@@ -1389,6 +1389,7 @@
     <button class="asset-chip" data-asset="basket">장바구니</button>
     <button class="asset-chip" data-asset="clock">시계</button>
     <button class="asset-chip" data-asset="woncoin">원화 코인</button>
+    <button class="asset-chip" data-asset="checkcircle">체크 코인</button>
     <button class="asset-chip" data-asset="couponEnvelope">10% 할인 쿠폰</button>
     <button class="asset-chip" data-asset="camera">카메라</button>
     <button class="asset-chip" data-asset="packagebox">패키지 할인 박스</button>
@@ -1439,6 +1440,13 @@
           <button class="capture-btn reset" data-action="reset" title="Use default">×</button>
           <code class="capture-full" title="Click to select, copy with Cmd+C"></code>
         </div>
+        <div class="capture-item" data-view="4">
+          <span class="capture-label">View 4</span>
+          <span class="capture-val"></span>
+          <button class="capture-btn" data-action="save">Save</button>
+          <button class="capture-btn reset" data-action="reset" title="Use default">×</button>
+          <code class="capture-full" title="Click to select, copy with Cmd+C"></code>
+        </div>
       </div>
     </div>
   </div>
@@ -1451,6 +1459,7 @@
   <button class="view-btn active" data-view="1" title="Isometric">1</button>
   <button class="view-btn" data-view="2" title="Slight Top-Down">2</button>
   <button class="view-btn" data-view="3" title="Side">3</button>
+  <button class="view-btn" data-view="4" title="Low Angle">4</button>
 </div>
 
 <div id="bgSelector">
@@ -1749,6 +1758,7 @@ const VIEW_DIRS = {
   '1': [0.85, 0.70, 1.00],   // Isometric — default iso angle
   '2': [0.85, 0.40, 1.00],   // Slight top-down — gentle overhead, front-heavy
   '3': [0.60, 0.00, 1.00],   // Side-front — front-weighted with side depth
+  '4': [0.612, -0.479, 1.268], // Low-angle — looking up from below-front
 };
 
 // ── Asset registry ────────────────────────────────────────
@@ -2327,6 +2337,47 @@ const ASSETS = {
       // Envelope → harmony accent (tracks the active body tint).
       if (n === 'envelope' || pn === 'envelope') return 'ribbonGray';
       // coupon.2 / paper → frosted body.
+      return 'body';
+    },
+  },
+  checkcircle: {
+    url: 'checkcircle.glb',
+    label: '체크 코인',
+    desc: '완료·인증 혜택을 나타낼 때 쓰는 체크 원형 에셋',
+    rootName: 'check_circle',
+    recommended: 'frostedViolet',
+    // Match woncoin's on-screen disc size — default 2.2 frustum leaves
+    // a flat circular silhouette looking small next to the cube assets.
+    frameScale: 1.7,
+    weldVertices: true,
+    // Thin disc (symbol 292×292×65) — same form factor as woncoin so
+    // it inherits the same tone-density problem under the shared
+    // FROSTED_PRESET: flat face spans the whole gradient (pale top
+    // band shows) and the disc's thinness lets the bright background
+    // bleed through transmission. Apply the same §4-6 recipe:
+    //  · gradientYShift -1.5 — pulls V range into the saturated half
+    //    so the disc reads at a denser tone (V 0 to ~0.4).
+    //  · envMapIntensity 0 — kill the env reflection that lifts the
+    //    flat face toward white.
+    //  · transmission 0.4 (vs 0.85 preset) — cut white-background
+    //    bleed-through so the disc reads saturated.
+    //  · attenuationDistance 2.5 (vs 4.5) — deepen the volume tint to
+    //    compensate for the disc's short absorption path.
+    //  · clearcoat 0.2 — soften the glossy white highlight layer.
+    gradientYShift: -1.5,
+    materialOverrides: {
+      envMapIntensity: 0.0,
+      clearcoat: 0.2,
+      transmission: 0.4,
+      attenuationDistance: 2.5,
+    },
+    materialFor(name, parentName) {
+      const n  = (name || '').toLowerCase();
+      const pn = (parentName || '').toLowerCase();
+      // gltfpack wraps each source Mesh in an unnamed Group, so check
+      // both arguments. Checkmark stamped on the disc → flat white
+      // luminance. Circular symbol disc → active frosted variant.
+      if (/check/.test(n) || /check/.test(pn)) return 'luminance';
       return 'body';
     },
   },
@@ -3127,6 +3178,7 @@ const LANDING_ORDER = [
   'basket',        // Cart + Grocery Shopping Bag
   'clock',         // Clock Large + View2 + Motion
   'woncoin',       // Won Sign Circle
+  'checkcircle',   // 체크 코인 — coin family clustering (no Figma usage data yet)
   'couponEnvelope',// Percent Ticket On Coupon Large
   'camera',        // Camera Large + views
   'packagebox',    // Package Surprise Icons

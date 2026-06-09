@@ -299,24 +299,28 @@ cd "/Users/luka.jung/Desktop/ai frontire/Ohouse_3D_Asset_Library"
 aws s3 sync . s3://bucketplace-data-static/prod/branddesign/3Dassetlibrary/ \
   --exclude "*" \
   --include "3Dassetlibrary.html" \
+  --include "prototype.html" \
   --include "*.glb" \
   --include "*.gltf" \
   --include "*.bin" \
   --include "Botanical_Gardens_2_quarter.hdr" \
   --include "materials.js" \
   --include "librarythumbnail/*.png" \
+  --include "prototype/*.webp" \
   --dryrun
 
 # 2) 문제 없으면 --dryrun 빼고 실제 실행
 aws s3 sync . s3://bucketplace-data-static/prod/branddesign/3Dassetlibrary/ \
   --exclude "*" \
   --include "3Dassetlibrary.html" \
+  --include "prototype.html" \
   --include "*.glb" \
   --include "*.gltf" \
   --include "*.bin" \
   --include "Botanical_Gardens_2_quarter.hdr" \
   --include "materials.js" \
-  --include "librarythumbnail/*.png"
+  --include "librarythumbnail/*.png" \
+  --include "prototype/*.webp"
 ```
 
 **include 패턴 설계 원칙** — 이 화이트리스트가 곧 "배포 대상 파일 정의"다. 새로운 확장자/폴더가 생기면 이 목록에도 반드시 추가해야 한다. 제외해야 할 대상(절대 올리면 안 되는 것):
@@ -384,9 +388,9 @@ CDN 캐시 때문에 라이브에 반영이 늦을 수 있음 → 강력 새로�
 ### UI
 - **좌측 팔레트** — 재질 선택 + ⚙ 세부 조절 슬라이더
 - **우측 에셋** — 에셋 전환 + PNG 출력
-- **하단** — 뷰 프리셋 (1/2/3, 트윈 애니메이션) + 배경색 + 그림자 토글
+- **하단** — 뷰 프리셋 (1/2/3/4, 트윈 애니메이션) + 배경색 + 그림자 토글
 - **랜딩 페이지** — 에셋 썸네일 그리드 + 검색
-- **브랜드 원칙** — 4단계 슬라이드쇼 (부드러움→다정함→명확성→안정감)
+- **브랜드 원칙** — 3단계 슬라이드쇼 (Softness→Clarity→Stability, 미션 "모두가 나다운 집에서 살아갈 수 있도록")
 
 ### 출력
 - **PNG 출력** — 1080×1080 (그림자 ON 시 1480×1080), 투명 배경, HDR 반사 포함
