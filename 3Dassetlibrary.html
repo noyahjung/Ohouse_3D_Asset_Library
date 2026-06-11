@@ -1755,7 +1755,7 @@ let currentAssetId = 'box';
 // Declared here so admin UI / landing preview code running earlier
 // in the module can reference it without a temporal-dead-zone error.
 const VIEW_DIRS = {
-  '1': [0.85, 0.70, 1.00],   // Isometric — default iso angle
+  '1': [1.00, 1.00, 1.00],   // True isometric — equal axes (45° azimuth, 35.26° elevation)
   '2': [0.85, 0.40, 1.00],   // Slight top-down — gentle overhead, front-heavy
   '3': [0.60, 0.00, 1.00],   // Side-front — front-weighted with side depth
   '4': [0.612, -0.479, 1.268], // Low-angle — looking up from below-front
@@ -1859,7 +1859,6 @@ const ASSETS = {
     keepOriginalNormals: true,
     frameScale: 1.7,
     viewOverrides: {
-      '1': [1.039, 0.774, 0.790],
       '2': [1.299, 0.442, -0.002],
       '3': [1.126, -0.001, 0.303],
     },
@@ -2057,30 +2056,32 @@ const ASSETS = {
     // with maxDim — so the tightening has to live in frameScale.
     frameScale: 1.57,
     // Strong negative shift biases the gradient toward the saturated
-    // top color across most of the bolt — the bolt is tall and narrow,
-    // so without this it reads washed out toward the bottom tip. Push
-    // further than typical (-0.85) so the bottom point still reads
-    // saturated red instead of falling off to the pale gradient end.
-    gradientYShift: -0.85,
+    // bottom color across most of the bolt — the bolt is tall and
+    // narrow, so without this it reads washed out toward the tip.
+    // Pushed past the usual -0.85 so the whole silhouette sits in the
+    // dense lower band of whichever variant's gradient is active.
+    gradientYShift: -1.1,
     // Weld co-located vertices before normal recompute so the bolt's
     // bevels read smooth across any C4D UV/material splits.
     weldVertices: true,
     // The bolt's thin profile (source maxDim 312 with min extent ~34)
     // means its large flat faces catch the key/front directionals
     // nearly head-on; the shared FROSTED_PRESET's envMap + clearcoat
-    // contribution then lifts those faces toward white and the red
-    // reads coral instead of the cube-asset saturation. Dial both
-    // back on the body clone so the gradient color dominates the
-    // shading rather than the surface reflection. The gradient also
-    // gets a custom red→red ramp (instead of the shared peach→red)
-    // because the bolt's silhouette exposes the full vertical span
-    // of the texture — keeping the pale top end leaves a washed-out
-    // tail; locking both endpoints inside the saturated red band
-    // gives the bolt the same red density as the cube assets.
+    // contribution then lifts those faces toward white and the color
+    // reads washed-out instead of the cube-asset saturation. Dial both
+    // back so the gradient color dominates the shading rather than the
+    // surface reflection. We do NOT hardcode a gradient here — the bolt
+    // must follow whichever frosted variant the user picks — so density
+    // comes from gradientYShift + cut transmission + short attenuation
+    // (same thin-disc recipe as woncoin/checkcircle) instead of locking
+    // the ramp to a single color.
     materialOverrides: {
       envMapIntensity: 0.1,
       clearcoat: 0.2,
-      gradient: { top: '#FFB5A8', bottom: '#F04848' },
+      // Deepen the tone: cut white-background bleed-through and shorten
+      // the volume absorption path so the bolt reads denser/darker.
+      transmission: 0.45,
+      attenuationDistance: 2.5,
     },
     materialFor() {
       return 'body';
@@ -3060,7 +3061,7 @@ function loadAsset(assetId) {
     const maxDim = Math.max(size.x, size.y, size.z);
     currentMaxDim = maxDim;
     const dist = maxDim * 2.0;
-    const v1 = asset.viewOverrides?.['1'] || [0.85, 0.70, 1.00];
+    const v1 = asset.viewOverrides?.['1'] || VIEW_DIRS['1'];
     camera.position.set(v1[0] * dist, v1[1] * dist, v1[2] * dist);
     // Reset the view selector to the isometric preset on every new load.
     document.querySelectorAll('#viewSelector .view-btn')
