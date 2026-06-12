@@ -1390,6 +1390,7 @@
     <button class="asset-chip" data-asset="clock">시계</button>
     <button class="asset-chip" data-asset="woncoin">원화 코인</button>
     <button class="asset-chip" data-asset="checkcircle">체크 코인</button>
+    <button class="asset-chip" data-asset="pointcoin">포인트 코인</button>
     <button class="asset-chip" data-asset="couponEnvelope">10% 할인 쿠폰</button>
     <button class="asset-chip" data-asset="camera">카메라</button>
     <button class="asset-chip" data-asset="packagebox">패키지 할인 박스</button>
@@ -1398,6 +1399,14 @@
     <button class="asset-chip" data-asset="purifier">정수기</button>
     <button class="asset-chip" data-asset="wifi">와이파이 라우터</button>
     <button class="asset-chip" data-asset="cleaningtool">청소 도구</button>
+    <!-- 어드민 전용: 최소 기하 도형 (admin-only — hidden for end users) -->
+    <button class="asset-chip admin-only" data-asset="primCone">원뿔</button>
+    <button class="asset-chip admin-only" data-asset="primCube">정육면체</button>
+    <button class="asset-chip admin-only" data-asset="primSphere">구</button>
+    <button class="asset-chip admin-only" data-asset="primHex">6각기둥</button>
+    <button class="asset-chip admin-only" data-asset="primOct">8각기둥</button>
+    <button class="asset-chip admin-only" data-asset="primPyramid">피라미드</button>
+    <button class="asset-chip admin-only" data-asset="primDiamond">다이아몬드</button>
   </div>
   <button class="asset-chip" id="exportPng">PNG 출력</button>
 
@@ -1988,10 +1997,13 @@ const ASSETS = {
       // sibling of the body color. `lens-mat` was the name in the
       // older camera source; `Disc` plays the same role in camera6.
       if (matches('lens-mat') || matches('disc')) return 'harmony2';
-      // Tape bands + the shutter button pick up the body variant's
+      // Lens tape band + the shutter button pick up the body variant's
       // harmony accent color via the ribbonGray material — a tonal
-      // companion of the active body tone.
-      if (matches('body-tape') || matches('lens-tape') || matches('button')) {
+      // companion of the active body tone. `body-tape` is intentionally
+      // excluded: per design it joins the frosted body so the lower
+      // body band reads as one continuous frosted color instead of a
+      // two-tone harmony split.
+      if (matches('lens-tape') || matches('button')) {
         return 'ribbonGray';
       }
       // Flat-white luminance accent — the front `lens spot` highlight
@@ -2109,6 +2121,34 @@ const ASSETS = {
     // in the saturated lower half and reads with the same density as
     // single-bodied assets like Moving Box.
     gradientYShift: -0.75,
+    // Widen each antenna's base stem (`bar`, Ø≈1546) out to the rod's
+    // diameter (`bar_head`, Ø≈2320) so the antenna reads as one uniform
+    // cylinder running straight down into the body — instead of a slim
+    // neck stepping down from the rod. Runs on raw geometry before the
+    // body merge, scaling X/Z about each stem's own axis so it stays
+    // centered on the rod. Both antennas carry a `bar` node, so traverse
+    // every match (getObjectByName would only catch the first).
+    preprocess(root, THREE) {
+      const FACTOR = 2320 / 1546; // ≈1.50 — stem Ø → rod Ø
+      const center = new THREE.Vector3();
+      root.traverse((obj) => {
+        if (!obj.isMesh) return;
+        const pn = (obj.parent?.name || '')
+          .toLowerCase().replace(/\./g, '').replace(/_\d+$/, '');
+        if (pn !== 'bar') return;
+        const g = obj.geometry;
+        g.computeBoundingBox();
+        g.boundingBox.getCenter(center);
+        const p = g.attributes.position;
+        for (let i = 0; i < p.count; i++) {
+          p.setX(i, center.x + (p.getX(i) - center.x) * FACTOR);
+          p.setZ(i, center.z + (p.getZ(i) - center.z) * FACTOR);
+        }
+        p.needsUpdate = true;
+        g.computeBoundingBox();
+        g.computeBoundingSphere();
+      });
+    },
     materialFor(name, parentName) {
       // GLTFLoader auto-suffixes duplicate node names with `_N` (both
       // antennas expose `bar` / `bar_head`) AND strips characters that
@@ -2122,9 +2162,12 @@ const ASSETS = {
       // WiFi waves emblem on the body face — flat luminance white so
       // the symbol reads against any frosted body color.
       if (pn === 'wifi1')       return 'luminance';
-      // Antenna mast: `bar` is the slim harmony accent stem,
-      // `bar_head` is the frosted bulb on top of each antenna.
-      if (pn === 'bar')         return 'ribbonGray';
+      // Antenna mast: per design, the whole antenna is one continuous
+      // frosted form — both the base stem (`bar`) and the rod/bulb
+      // (`bar_head`) flow through the body material so each antenna
+      // reads as an unbroken frosted shape running down into the body,
+      // with no harmony-colored collar at the base.
+      if (pn === 'bar')         return 'body';
       if (pn === 'bar_head')    return 'body';
       // Default to the active frosted body for the main router cube.
       return 'body';
@@ -2382,6 +2425,52 @@ const ASSETS = {
       return 'body';
     },
   },
+  pointcoin: {
+    url: 'pointcoin.glb',
+    label: '포인트 코인',
+    desc: '적립·포인트 혜택을 나타낼 때 쓰는 포인트 코인 에셋',
+    rootName: 'Point',
+    recommended: 'frostedBlue',
+    // Source authored ~100× smaller than the other coins (real maxDim
+    // ≈3 units vs checkcircle's ≈292). Scale up so the body world size
+    // lands near the ~300 reference; otherwise the fixed FROSTED_PRESET
+    // thickness (2.3) reads as nearly the full coin depth and the
+    // transmission tint diverges from the rest of the coin family.
+    modelScale: 97,
+    // Same thin-disc form factor as checkcircle/woncoin — inherit the
+    // same framing + tone recipe so the flat face reads saturated under
+    // the shared FROSTED_PRESET instead of pale/washed.
+    frameScale: 1.7,
+    // keepOriginalNormals (not weldVertices): with the large modelScale,
+    // weldByPosition's world-derived tolerance would be ~10% of the
+    // local coin extent and collapse the disc. gltfpack already keeps
+    // the source's smooth normals, so no recompute is needed.
+    keepOriginalNormals: true,
+    // Push the V range further into the saturated bottom color so the
+    // disc reads as a deep blue like the Moving Box (이사박스).
+    gradientYShift: -2.5,
+    // Deeper blue: on a thin disc, raising transmission just lets the
+    // white background bleed through and lightens it. Instead keep
+    // transmission low so the saturated gradient-map color dominates,
+    // and shorten attenuationDistance so the little light that does
+    // transmit tints hard toward the deep attenuationColor (#1a90ff).
+    materialOverrides: {
+      envMapIntensity: 0.0,
+      clearcoat: 0.2,
+      transmission: 0.28,
+      attenuationDistance: 1.8,
+    },
+    materialFor(name, parentName) {
+      const n  = (name || '').toLowerCase();
+      const pn = (parentName || '').toLowerCase();
+      // gltfpack wraps each source Mesh in an unnamed Group, so the
+      // recognizable name lands on parentName while name is blank —
+      // check both. `P` emblem → flat luminance white; `coin` disc →
+      // active frosted body.
+      if (n === 'p' || pn === 'p') return 'luminance';
+      return 'body';
+    },
+  },
   truck3: {
     url: 'truck3.glb',
     label: '배송 트럭',
@@ -2390,6 +2479,13 @@ const ASSETS = {
     // versioned the file by export name, not by re-labeling the root).
     rootName: 'truck2',
     recommended: 'frostedBlue',
+    // Hide the front/rear lamp layers + the front license plate per
+    // design request — front grill bar, rear lamp strip, front plate.
+    // 'rear lamp' is sanitized to 'rear_lamp' (hideMeshes tries both);
+    // the source 'plate.1' front plate is sanitized to 'plate1' by
+    // Three.js (dot dropped, same as basket.1 → basket1), while the
+    // rear 'plate' is left visible.
+    hideMeshes: ['grill', 'rear lamp', 'plate1'],
     // body-box Y is ~200 source units vs the ~290-unit Moving Box body —
     // scale the whole asset up so transmission path length matches the
     // frosted reference and the body tone reads at the same saturation.
@@ -2454,6 +2550,85 @@ const ASSETS = {
     },
   },
 };
+
+// ── Admin-only minimal geometry primitives ─────────────────
+// Procedural shapes surfaced only in admin mode (?admin=true). They
+// have no GLB — loadAsset() detects the build() hook and feeds the
+// returned mesh through the standard body pipeline. Built at ~260–330
+// unit max extent so the frosted transmission tone matches the
+// existing GLB assets (body maxDim ~300). keepOriginalNormals keeps
+// whatever normals build() bakes: smooth for round forms (cone,
+// sphere), flat per-facet for the polyhedral ones.
+function makePrimitiveMesh(geometry, { flat = false } = {}) {
+  let geo = geometry;
+  if (flat) {
+    // Flat per-face shading: split shared vertices, then recompute so
+    // each triangle carries its own face normal (crisp facets). Some
+    // primitives (octahedron) are already non-indexed — skip the
+    // redundant conversion so Three doesn't warn.
+    if (geo.index) geo = geo.toNonIndexed();
+    geo.computeVertexNormals();
+  }
+  const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial());
+  mesh.name = 'body';
+  return mesh;
+}
+
+Object.assign(ASSETS, {
+  primCone: {
+    label: '원뿔', desc: '최소 기하 도형 — 원뿔', adminOnly: true,
+    recommended: 'frostedBlue', keepOriginalNormals: true,
+    build: () => makePrimitiveMesh(new THREE.ConeGeometry(140, 280, 64)),
+    materialFor: () => 'body',
+  },
+  primCube: {
+    label: '정육면체', desc: '최소 기하 도형 — 정육면체', adminOnly: true,
+    recommended: 'frostedGreen', keepOriginalNormals: true,
+    build: () => makePrimitiveMesh(new THREE.BoxGeometry(230, 230, 230), { flat: true }),
+    materialFor: () => 'body',
+  },
+  primSphere: {
+    label: '구', desc: '최소 기하 도형 — 구', adminOnly: true,
+    recommended: 'frostedPink', keepOriginalNormals: true,
+    build: () => makePrimitiveMesh(new THREE.SphereGeometry(145, 64, 48)),
+    materialFor: () => 'body',
+  },
+  primHex: {
+    label: '6각기둥', desc: '최소 기하 도형 — 육각기둥', adminOnly: true,
+    recommended: 'frostedOrange', keepOriginalNormals: true,
+    build: () => makePrimitiveMesh(new THREE.CylinderGeometry(135, 135, 250, 6), { flat: true }),
+    materialFor: () => 'body',
+  },
+  primOct: {
+    label: '8각기둥', desc: '최소 기하 도형 — 팔각기둥', adminOnly: true,
+    recommended: 'frostedDarkBlue', keepOriginalNormals: true,
+    build: () => makePrimitiveMesh(new THREE.CylinderGeometry(135, 135, 250, 8), { flat: true }),
+    materialFor: () => 'body',
+  },
+  primPyramid: {
+    label: '피라미드', desc: '최소 기하 도형 — 사각뿔', adminOnly: true,
+    recommended: 'frostedViolet', keepOriginalNormals: true,
+    rotationY: Math.PI / 4,
+    // Square base diagonal (≈330) sets maxDim while the solid height is
+    // only 260, so the default frame leaves the pyramid reading small.
+    // Tighten frameScale so its on-screen size matches the other forms.
+    frameScale: 1.4,
+    build: () => makePrimitiveMesh(new THREE.ConeGeometry(165, 260, 4), { flat: true }),
+    materialFor: () => 'body',
+  },
+  primDiamond: {
+    label: '다이아몬드', desc: '최소 기하 도형 — 사각 쌍뿔(다이아몬드)', adminOnly: true,
+    recommended: 'frostedRed', keepOriginalNormals: true,
+    rotationY: Math.PI / 4,
+    // OctahedronGeometry is a square bipyramid — two pyramids meeting
+    // base-to-base, apexes at ±Y — exactly the diamond form requested.
+    // Its silhouette is a thin rhombus inscribed in a 330³ bbox, so the
+    // default frame reads small; tighten frameScale to match.
+    frameScale: 1.4,
+    build: () => makePrimitiveMesh(new THREE.OctahedronGeometry(165), { flat: true }),
+    materialFor: () => 'body',
+  },
+});
 
 // ── Weld vertices by position only ─────────────────────────
 // `mergeVertices` from BufferGeometryUtils compares every attribute
@@ -2627,7 +2802,7 @@ function loadAsset(assetId) {
   currentAssetId = assetId;
 
   return new Promise((resolve, reject) => {
-  loader.load(asset.url, (gltf) => {
+  const onAssetLoaded = (gltf) => {
     // Clear previous asset
     if (currentRoot) {
       group.remove(currentRoot);
@@ -2805,6 +2980,16 @@ function loadAsset(assetId) {
     // can inspect world-space bboxes.
     if (asset.rewriteNames) {
       asset.rewriteNames(root);
+    }
+
+    // Per-asset geometry surgery hook. Runs after matrices settle but
+    // before the bbox/material/merge passes, so an asset can reshape
+    // raw geometry (scale a mesh's cross-section, etc.) and have the
+    // change flow through gradient framing and the body merge. Receives
+    // the resolved root and THREE so the asset can build helpers.
+    if (asset.preprocess) {
+      asset.preprocess(root, THREE);
+      root.updateMatrixWorld(true);
     }
 
     // Pass 1: traverse once — accumulate fullBox, assign non-body
@@ -3150,14 +3335,30 @@ function loadAsset(assetId) {
       }
     }
     resolve();
-  }, undefined, (err) => {
+  };
+  const onAssetError = (err) => {
     console.error('GLTF load error', err);
     const d = document.createElement('div');
     d.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#300;color:#fbb;padding:16px 20px;border-radius:8px;font-family:monospace;';
-    d.textContent = `${asset.url} 로드 실패 — 로컬 서버를 통해 열어주세요.`;
+    d.textContent = `${asset.url || asset.label} 로드 실패 — 로컬 서버를 통해 열어주세요.`;
     document.body.appendChild(d);
     reject(err);
-  });
+  };
+  // Procedural primitives (admin-only minimal geometry) carry a build()
+  // hook instead of a GLB url. Wrap the built Object3D in a synthetic
+  // gltf-like { scene } so the rest of the load pipeline (body material,
+  // UV remap, framing, shadow) runs unchanged.
+  if (typeof asset.build === 'function') {
+    try {
+      const procScene = new THREE.Group();
+      procScene.add(asset.build());
+      onAssetLoaded({ scene: procScene });
+    } catch (err) {
+      onAssetError(err);
+    }
+  } else {
+    loader.load(asset.url, onAssetLoaded, undefined, onAssetError);
+  }
   });
 }
 
@@ -3180,6 +3381,7 @@ const LANDING_ORDER = [
   'clock',         // Clock Large + View2 + Motion
   'woncoin',       // Won Sign Circle
   'checkcircle',   // 체크 코인 — coin family clustering (no Figma usage data yet)
+  'pointcoin',     // 포인트 코인 — coin family clustering
   'couponEnvelope',// Percent Ticket On Coupon Large
   'camera',        // Camera Large + views
   'packagebox',    // Package Surprise Icons
@@ -3194,7 +3396,9 @@ function orderedAssetIds() {
   const ordered = LANDING_ORDER.filter((id) => known.has(id));
   const seen = new Set(ordered);
   for (const id of known) if (!seen.has(id)) ordered.push(id);
-  return ordered;
+  // adminOnly assets (procedural primitives) stay out of the public
+  // library grid — they only surface when ?admin=true.
+  return ordered.filter((id) => IS_ADMIN || !ASSETS[id].adminOnly);
 }
 
 async function buildLanding() {
@@ -5460,7 +5664,10 @@ if (IS_VARIANTS_MODE) {
       for (const id of Object.keys(ASSETS)) {
         await loadAsset(id);
         const asset = ASSETS[id];
-        const v = asset.viewOverrides?.['1'] || VIEW_DIRS['1'];
+        // View 3 to match the library grid's live-render fallback
+        // (buildLanding) so baked PNGs and on-the-fly thumbnails frame
+        // each asset identically.
+        const v = asset.viewOverrides?.['3'] || VIEW_DIRS['3'];
         const d = currentMaxDim * 2.0;
         camera.position.set(v[0] * d, v[1] * d, v[2] * d);
         camera.zoom = 0.8;
