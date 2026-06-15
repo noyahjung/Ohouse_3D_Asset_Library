@@ -644,15 +644,10 @@
   /* Search bar — sits directly above the card grid. Width matches
      the LEFT card column: (100% − 16px gap) / 2. */
   #landing .landing-search {
-    /* Pinned to the top of the scroll area so it never bounces when the
-       grid below reflows during live filtering. Full-width opaque band
-       hides cards that would otherwise peek behind it while scrolling. */
-    position: sticky; top: 0; z-index: 5;
-    width: 100%;
-    margin: 0;
-    padding: 0 0 16px;
-    background: #ffffff;
-    box-sizing: border-box;
+    /* Normal flow — the search row sits above the grid (no overlap).
+       Typing doesn't bounce the page because the grid below is locked
+       to a full-page height in JS (see render()). */
+    margin: 0 0 16px;
   }
   #landing .landing-search-field {
     width: calc((100% - 16px) / 2);
@@ -731,6 +726,13 @@
   #landing .landing-search-field input::placeholder {
     color: rgba(8,19,26,0.5);
   }
+  /* Hide the browser's native type=search clear button — we render our
+     own .clear (#searchClear), otherwise two ✕ icons show up. */
+  #landing .landing-search-field input::-webkit-search-cancel-button,
+  #landing .landing-search-field input::-webkit-search-decoration {
+    -webkit-appearance: none;
+    appearance: none;
+  }
   #landing .landing-search-field .clear {
     background: transparent; border: 0; cursor: pointer;
     color: rgba(8,19,26,0.5); font-size: 14px; line-height: 1;
@@ -773,6 +775,7 @@
   #landing .pager {
     display: flex; justify-content: center; align-items: center;
     gap: 4px; margin-top: 28px;
+    min-height: 32px;
   }
   #landing .pager[hidden] { display: none; }
   #landing .pager .pager-btn {
@@ -794,6 +797,9 @@
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
+    /* Pack rows at content height; the JS min-height reserve becomes
+       empty space at the bottom instead of stretching the cards. */
+    align-content: start;
   }
   #landing .asset-card {
     background: #F5F5F5;
@@ -1444,6 +1450,7 @@
     <button class="asset-chip" data-asset="woncoin">원화 코인</button>
     <button class="asset-chip" data-asset="checkcircle">체크 코인</button>
     <button class="asset-chip" data-asset="pointcoin">포인트 코인</button>
+    <button class="asset-chip" data-asset="shield">방패 + 체크</button>
     <button class="asset-chip" data-asset="couponEnvelope">10% 할인 쿠폰</button>
     <button class="asset-chip" data-asset="camera">카메라</button>
     <button class="asset-chip" data-asset="packagebox">패키지 할인 박스</button>
@@ -2455,7 +2462,7 @@ const ASSETS = {
     url: 'checkcircle.glb',
     label: '체크 코인',
     desc: '완료·인증 혜택을 나타낼 때 쓰는 체크 원형 에셋',
-    keywords: ['인증', '완료', '체크', '검증'],
+    keywords: ['인증', '완료', '체크', '크리에이터'],
     rootName: 'check_circle',
     recommended: 'frostedViolet',
     // Match woncoin's on-screen disc size — default 2.2 frustum leaves
@@ -2538,6 +2545,41 @@ const ASSETS = {
       // active frosted body.
       if (n === 'p' || pn === 'p') return 'luminance';
       return 'body';
+    },
+  },
+  shield: {
+    url: 'shield.glb',
+    label: '방패 + 체크',
+    desc: '인증·보호를 나타낼 때 쓰는 방패 에셋',
+    keywords: ['방패', '보호', '인증', '책임보장'],
+    rootName: 'shield',
+    recommended: 'frostedGreen',
+    // NOTE: the source layer names are swapped vs the visual — the
+    // 'check' layer is actually the large shield silhouette (frosted
+    // body, maxDim ≈337, already near the ~300 reference so no modelScale
+    // needed), and the 'sheild' layer is the small checkmark (luminance).
+    frameScale: 1.6,
+    weldVertices: true,
+    // The shield's broad flat faces catch the env + clearcoat highlight
+    // and read pale under the shared FROSTED_PRESET. Push the gradient
+    // into its saturated band and dial back transmission/env so the body
+    // color dominates and reads deeper.
+    gradientYShift: -1.5,
+    materialOverrides: {
+      envMapIntensity: 0.1,
+      clearcoat: 0.2,
+      transmission: 0.45,
+      attenuationDistance: 2.5,
+    },
+    materialFor(name, parentName) {
+      const n  = (name || '').toLowerCase();
+      const pn = (parentName || '').toLowerCase();
+      // gltfpack wraps each Mesh in an unnamed Group, so the layer name
+      // lands on parentName while name is blank — check both. The 'check'
+      // layer = visual shield body → active frosted variant; everything
+      // else ('sheild' = the checkmark) → flat white luminance.
+      if (/check/.test(n) || /check/.test(pn)) return 'body';
+      return 'luminance';
     },
   },
   truck3: {
@@ -3463,6 +3505,7 @@ const LANDING_ORDER = [
   'woncoinarrow', // 페이백 파생 — 데이터 없음
   'lightning',    // 트럭 합성으로만 등장 — 데이터 없음
   'cleaningtool', // Figma 매치 없음 — 데이터 없음
+  'shield',       // 신규 에셋 — 사용 데이터 없음
 ];
 function orderedAssetIds() {
   const known = new Set(Object.keys(ASSETS));
@@ -3557,6 +3600,7 @@ async function buildLanding() {
   // to the filtered set, and any text input resets to page 1.
   const PAGE_SIZE = 8;
   let currentPage = 1;
+  let lockedHeight = 0;
   const searchInput = document.getElementById('searchInput');
   const searchClear = document.getElementById('searchClear');
   const emptyMsg = landing.querySelector('.empty');
@@ -3575,8 +3619,10 @@ async function buildLanding() {
 
   function renderPager(pageCount) {
     pager.innerHTML = '';
-    if (pageCount <= 1) { pager.hidden = true; return; }
+    // Keep the pager occupying its space even with a single page so the
+    // total page height stays constant (no scroll shift while typing).
     pager.hidden = false;
+    if (pageCount <= 1) return;
     const mk = (label, page, { active = false, disabled = false } = {}) => {
       const b = document.createElement('button');
       b.className = 'pager-btn' + (active ? ' active' : '');
@@ -3586,7 +3632,7 @@ async function buildLanding() {
         currentPage = page;
         render();
         // Bring the top of the grid back into view under the sticky search.
-        landing.scrollTo({ top: grid.offsetTop - 80, behavior: 'smooth' });
+        landing.scrollTo({ top: Math.max(0, grid.offsetTop - 24), behavior: 'smooth' });
       });
       return b;
     };
@@ -3605,10 +3651,21 @@ async function buildLanding() {
     grid.querySelectorAll('.asset-card').forEach(card => {
       card.style.display = pageSet.has(card) ? '' : 'none';
     });
+    // Measure a full page's natural height ONCE, then keep the grid
+    // locked to that constant. Recomputing per-keystroke (from whichever
+    // cards are visible) made the height drift and shifted the scroll
+    // while typing — a fixed reserve keeps the page height stable.
+    const shown = [...pageSet];
+    if (!lockedHeight) {
+      grid.style.minHeight = '';
+      if (shown.length === PAGE_SIZE) lockedHeight = grid.offsetHeight;
+    }
+    grid.style.minHeight = lockedHeight ? lockedHeight + 'px' : '';
     emptyMsg.hidden = matches.length > 0;
     renderPager(pageCount);
   }
 
+  window.addEventListener('resize', () => { lockedHeight = 0; render(); });
   searchInput.addEventListener('input', () => { currentPage = 1; render(); });
   searchClear.addEventListener('click', () => {
     searchInput.value = '';
