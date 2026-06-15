@@ -644,9 +644,19 @@
   /* Search bar — sits directly above the card grid. Width matches
      the LEFT card column: (100% − 16px gap) / 2. */
   #landing .landing-search {
+    /* Pinned to the top of the scroll area so it never bounces when the
+       grid below reflows during live filtering. Full-width opaque band
+       hides cards that would otherwise peek behind it while scrolling. */
+    position: sticky; top: 0; z-index: 5;
+    width: 100%;
+    margin: 0;
+    padding: 0 0 16px;
+    background: #ffffff;
+    box-sizing: border-box;
+  }
+  #landing .landing-search-field {
     width: calc((100% - 16px) / 2);
     height: 43px;
-    margin: 0 0 16px;
     background: #F5F5F5;
     border-radius: 12px;
     display: flex; align-items: center;
@@ -706,10 +716,10 @@
     margin-top: 16px;
   }
   #landing .landing-search[hidden] { display: none; }
-  #landing .landing-search svg.search-icon {
+  #landing .landing-search-field svg.search-icon {
     width: 20px; height: 20px; opacity: 0.3; flex-shrink: 0;
   }
-  #landing .landing-search input {
+  #landing .landing-search-field input {
     flex: 1; min-width: 0;
     background: transparent; border: 0; outline: 0;
     margin-left: 8px;
@@ -718,17 +728,17 @@
     font-size: 16px; font-weight: 500;
     letter-spacing: -0.3px; line-height: 1.5;
   }
-  #landing .landing-search input::placeholder {
+  #landing .landing-search-field input::placeholder {
     color: rgba(8,19,26,0.5);
   }
-  #landing .landing-search .clear {
+  #landing .landing-search-field .clear {
     background: transparent; border: 0; cursor: pointer;
     color: rgba(8,19,26,0.5); font-size: 14px; line-height: 1;
     padding: 6px; border-radius: 4px;
     flex-shrink: 0;
   }
-  #landing .landing-search .clear:hover { color: #08131A; background: rgba(0,0,0,.04); }
-  #landing .landing-search .clear[hidden] { display: none; }
+  #landing .landing-search-field .clear:hover { color: #08131A; background: rgba(0,0,0,.04); }
+  #landing .landing-search-field .clear[hidden] { display: none; }
 
   /* Title block — H1 cap-top lands at Y=100 thanks to #landing
      padding-top: 90 (same trick as brand book content-pad-top). */
@@ -756,6 +766,27 @@
     font-size: 14px; padding: 60px 0;
   }
   #landing .empty[hidden] { display: none; }
+
+  /* Pagination — 8 assets per page. Styled to match the left sidebar
+     nav rows (.landing-cta): transparent/muted by default, #F5F5F5 on
+     hover, #F5F5F5 + dark text when active. */
+  #landing .pager {
+    display: flex; justify-content: center; align-items: center;
+    gap: 4px; margin-top: 28px;
+  }
+  #landing .pager[hidden] { display: none; }
+  #landing .pager .pager-btn {
+    min-width: 32px; height: 32px; padding: 6px 10px;
+    background: transparent; border: 0; border-radius: 8px;
+    color: rgba(8,19,26,0.6);
+    font-family: inherit; font-size: 13px; font-weight: 500;
+    letter-spacing: -0.3px; line-height: 20px;
+    cursor: pointer;
+    transition: color var(--transition), background var(--transition);
+  }
+  #landing .pager .pager-btn:hover:not(:disabled) { background: #F5F5F5; color: rgba(8,19,26,0.6); }
+  #landing .pager .pager-btn.active { background: #F5F5F5; color: #08131A; }
+  #landing .pager .pager-btn:disabled { opacity: 0.35; cursor: default; }
 
   /* Card grid — 2 columns, cards stretch to fill. Each card matches
      Figma 75:1246 (bg #F5F5F5, 20px padding, 12px radius, 38px gap). */
@@ -840,7 +871,7 @@
     #landing { padding: 32px 24px 80px 24px; }
     #landing .grid { grid-template-columns: 1fr; }
     #landing .landing-sidebar { display: none; }
-    #landing .landing-search { width: 100%; }
+    #landing .landing-search-field { width: 100%; }
     #landing .landing-title-block h1 { font-size: 34px; }
   }
 
@@ -1241,17 +1272,20 @@
     <div class="landing-hero"><img src="prototype/3dkv3.webp" alt=""></div>
 
     <div class="landing-search">
+      <div class="landing-search-field">
       <svg class="search-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <circle cx="9" cy="9" r="6.25" stroke="#08131A" stroke-width="1.5"/>
         <path d="M13.6 13.6L17 17" stroke="#08131A" stroke-width="1.5" stroke-linecap="round"/>
       </svg>
       <input id="searchInput" type="search" placeholder="Search assets" autocomplete="off" spellcheck="false" />
       <button class="clear" id="searchClear" hidden title="Clear">✕</button>
+      </div>
     </div>
 
     <div class="loading">Generating previews…</div>
     <div class="grid" hidden></div>
     <div class="empty" hidden>No matching assets.</div>
+    <nav class="pager" hidden aria-label="라이브러리 페이지"></nav>
   </div>
 </div>
 
@@ -3518,32 +3552,71 @@ async function buildLanding() {
   loading.hidden = true;
   grid.hidden = false;
 
-  // Live search filter — case-insensitive substring match on label,
-  // description, and keywords. The empty-state message replaces the
-  // grid when no card matches.
+  // Live search filter (label + desc + keywords) with 8-per-page
+  // pagination. Search and pagination compose: the page window applies
+  // to the filtered set, and any text input resets to page 1.
+  const PAGE_SIZE = 8;
+  let currentPage = 1;
   const searchInput = document.getElementById('searchInput');
   const searchClear = document.getElementById('searchClear');
   const emptyMsg = landing.querySelector('.empty');
-  function applyFilter() {
+  const pager = landing.querySelector('.pager');
+
+  function getMatches() {
     const q = searchInput.value.trim().toLowerCase();
-    searchClear.hidden = q.length === 0;
-    let visible = 0;
-    grid.querySelectorAll('.asset-card').forEach(card => {
+    return [...grid.querySelectorAll('.asset-card')].filter(card => {
+      if (!q) return true;
       const label = (card.querySelector('.label')?.textContent || '').toLowerCase();
       const desc = (card.querySelector('.desc')?.textContent || '').toLowerCase();
       const keywords = (card.dataset.keywords || '').toLowerCase();
-      const match = !q || (label + ' ' + desc + ' ' + keywords).includes(q);
-      card.style.display = match ? '' : 'none';
-      if (match) visible++;
+      return (label + ' ' + desc + ' ' + keywords).includes(q);
     });
-    emptyMsg.hidden = visible > 0;
   }
-  searchInput.addEventListener('input', applyFilter);
+
+  function renderPager(pageCount) {
+    pager.innerHTML = '';
+    if (pageCount <= 1) { pager.hidden = true; return; }
+    pager.hidden = false;
+    const mk = (label, page, { active = false, disabled = false } = {}) => {
+      const b = document.createElement('button');
+      b.className = 'pager-btn' + (active ? ' active' : '');
+      b.textContent = label;
+      if (disabled) b.disabled = true;
+      else b.addEventListener('click', () => {
+        currentPage = page;
+        render();
+        // Bring the top of the grid back into view under the sticky search.
+        landing.scrollTo({ top: grid.offsetTop - 80, behavior: 'smooth' });
+      });
+      return b;
+    };
+    pager.appendChild(mk('‹', currentPage - 1, { disabled: currentPage === 1 }));
+    for (let i = 1; i <= pageCount; i++) pager.appendChild(mk(String(i), i, { active: i === currentPage }));
+    pager.appendChild(mk('›', currentPage + 1, { disabled: currentPage === pageCount }));
+  }
+
+  function render() {
+    searchClear.hidden = searchInput.value.trim().length === 0;
+    const matches = getMatches();
+    const pageCount = Math.max(1, Math.ceil(matches.length / PAGE_SIZE));
+    currentPage = Math.min(Math.max(currentPage, 1), pageCount);
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const pageSet = new Set(matches.slice(start, start + PAGE_SIZE));
+    grid.querySelectorAll('.asset-card').forEach(card => {
+      card.style.display = pageSet.has(card) ? '' : 'none';
+    });
+    emptyMsg.hidden = matches.length > 0;
+    renderPager(pageCount);
+  }
+
+  searchInput.addEventListener('input', () => { currentPage = 1; render(); });
   searchClear.addEventListener('click', () => {
     searchInput.value = '';
-    applyFilter();
+    currentPage = 1;
+    render();
     searchInput.focus();
   });
+  render();
 }
 
 // Hide the landing, sync the right-side asset chip state, load the
