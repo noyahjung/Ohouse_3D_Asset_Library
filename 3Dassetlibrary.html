@@ -789,6 +789,9 @@
   #landing .asset-card .meta {
     display: flex; flex-direction: column; gap: 8px;
     min-width: 0; flex: 1;
+    /* Match the thumbnail height so the keyword line (margin-top:auto)
+       lands flush with the thumbnail's bottom edge. */
+    min-height: 116px;
   }
   #landing .asset-card .label {
     color: #08131A;
@@ -801,6 +804,22 @@
     font-size: 16px; font-weight: 500;
     letter-spacing: -0.3px; line-height: 1.5;
     word-break: break-word;
+  }
+  /* Faint search-keyword chips, pinned to the bottom of the meta
+     column so they sit at the thumbnail's lower edge. Low-contrast
+     pills — present for scanning/search, but quiet in the layout. */
+  #landing .asset-card .keywords {
+    margin-top: auto;
+    display: flex; flex-wrap: wrap; gap: 4px;
+  }
+  #landing .asset-card .keywords .kw {
+    font-size: 12px; font-weight: 500;
+    letter-spacing: -0.2px; line-height: 1;
+    color: rgba(8,19,26,0.32);
+    background: rgba(8,19,26,0.045);
+    padding: 5px 9px;
+    border-radius: 999px;
+    white-space: nowrap;
   }
   #landing.hidden { display: none; }
 
@@ -1783,6 +1802,7 @@ const ASSETS = {
     url: 'box.gltf',
     label: '이사박스',
     desc: '이사 서비스를 나타낼 때 쓰는 이사 박스 에셋',
+    keywords: ['이사', '박스', '포장', '이삿짐'],
     rootName: 'newbox_blue_moving',
     recommended: 'frostedBlue',
     gradientYShift: -0.12,
@@ -1794,6 +1814,7 @@ const ASSETS = {
     url: 'Coupon.gltf',
     label: '할인쿠폰',
     desc: '프로모션 할인 혜택을 나타낼 때 쓰는 쿠폰 에셋',
+    keywords: ['쿠폰', '할인', '프로모션', '혜택'],
     rootName: 'coupon',
     recommended: 'frostedPink',
     // Source body extent ~392×283×36. Old modelScale 6.3 inflated the
@@ -1820,6 +1841,7 @@ const ASSETS = {
     url: 'gift.gltf',
     label: '선물상자',
     desc: '프로모션·이벤트를 나타낼 때 쓰는 선물 상자 에셋',
+    keywords: ['선물', '기프트', '선물하기', '이벤트'],
     rootName: 'gift_save',
     recommended: 'frostedRed',
     rotationY: Math.PI / 2,
@@ -1842,6 +1864,7 @@ const ASSETS = {
     url: 'waterpurifier.gltf',
     label: '정수기',
     desc: '생활 서비스의 렌탈을 나타낼 때 쓰는 정수기 에셋',
+    keywords: ['정수기', '렌탈', '생활가전', '구독'],
     rootName: 'water purifier',
     recommended: 'frostedBlue',
     rotationY: Math.PI,
@@ -1858,6 +1881,7 @@ const ASSETS = {
     url: 'basket3.glb',
     label: '장바구니',
     desc: '마트·장보기를 나타낼 때 쓰는 장바구니 에셋',
+    keywords: ['장바구니', '장보기', '마트', '쇼핑'],
     // basket3.glb wraps the assembly in a `basket.1` parent group
     // (sanitized by Three.js to `basket1`), with `basket`, `handle`,
     // and `handle_mat` as siblings underneath. Use the parent so the
@@ -1910,6 +1934,7 @@ const ASSETS = {
     url: 'clock.glb?v=2',
     label: '시계',
     desc: '시간성 이벤트를 나타낼 때 쓰는 탁상 시계 에셋',
+    keywords: ['시계', '시간', '마감', '타이머'],
     rootName: 'clock',
     recommended: 'frostedViolet',
     keepOriginalNormals: true,
@@ -1929,6 +1954,7 @@ const ASSETS = {
     url: 'camera6.glb',
     label: '카메라',
     desc: '집꾸미기 촬영을 나타낼 때 쓰는 카메라 에셋',
+    keywords: ['카메라', '촬영', '집들이', '사진'],
     rootName: 'camera',
     recommended: 'frostedDarkBlue',
     // Tighter framing than the default 2.2 so the camera reads about
@@ -2016,6 +2042,7 @@ const ASSETS = {
     url: 'packagebox.glb',
     label: '패키지 할인 박스',
     desc: '패키지 할인을 나타낼 때 쓰는 할인 상자 에셋',
+    keywords: ['패키지', '할인', '묶음', '세트'],
     // Source file has the root node name spelled "pakagebox" (missing
     // the second 'c'); preserve the typo here so the loader resolves.
     rootName: 'pakagebox',
@@ -2054,6 +2081,7 @@ const ASSETS = {
     url: 'lightning.glb',
     label: '오늘의딜 번개',
     desc: '오늘의딜을 나타낼 때 쓰는 번개 에셋',
+    keywords: ['오늘의딜', '번개', '특가', '타임딜'],
     // Source file ships the root node spelled `ligtning` (missing the
     // second 'h'); match the actual name so the loader can resolve it.
     rootName: 'ligtning',
@@ -2103,6 +2131,7 @@ const ASSETS = {
     url: 'wifi.glb',
     label: '와이파이 라우터',
     desc: '인터넷 설치를 나타낼 때 쓰는 라우터 에셋',
+    keywords: ['와이파이', '인터넷', '라우터', '설치'],
     rootName: 'new_wifi',
     recommended: 'frostedDarkBlue',
     // Body (300×120×300) + two antennas with bar_head (137 tall) on
@@ -2177,6 +2206,7 @@ const ASSETS = {
     url: 'cleaningtool.glb',
     label: '청소 도구',
     desc: '청소 서비스를 나타낼 때 쓰는 청소 도구 에셋',
+    keywords: ['청소', '입주청소', '홈클린', '청소도구'],
     rootName: 'cleaning tool',
     recommended: 'frostedBlue',
     weldVertices: true,
@@ -2241,6 +2271,7 @@ const ASSETS = {
     url: 'arrowcoin.glb',
     label: '원화 코인',
     desc: '현금·포인트 혜택을 나타낼 때 쓰는 원화 동전 에셋',
+    keywords: ['현금', '동전', '캐시', '원화'],
     rootName: 'arrow_coin',
     recommended: 'frostedOrange',
     weldVertices: true,
@@ -2299,6 +2330,7 @@ const ASSETS = {
     url: 'arrowcoin.glb',
     label: '원화 코인 + 페이백',
     desc: '페이백 혜택을 나타낼 때 쓰는 동전·화살표 에셋',
+    keywords: ['페이백', '환급', '캐시백', '적립'],
     rootName: 'arrow_coin',
     recommended: 'frostedOrange',
     weldVertices: true,
@@ -2343,6 +2375,7 @@ const ASSETS = {
     url: 'couponEnvelope.glb',
     label: '10% 할인 쿠폰',
     desc: '할인 이벤트를 나타낼 때 쓰는 쿠폰·봉투 에셋',
+    keywords: ['쿠폰', '할인', '10%', '이벤트'],
     rootName: '10%coupon',
     recommended: 'frostedPink',
     // Source meshes are ~100× smaller than the standard asset (paper
@@ -2388,6 +2421,7 @@ const ASSETS = {
     url: 'checkcircle.glb',
     label: '체크 코인',
     desc: '완료·인증 혜택을 나타낼 때 쓰는 체크 원형 에셋',
+    keywords: ['인증', '완료', '체크', '검증'],
     rootName: 'check_circle',
     recommended: 'frostedViolet',
     // Match woncoin's on-screen disc size — default 2.2 frustum leaves
@@ -2429,6 +2463,7 @@ const ASSETS = {
     url: 'pointcoin.glb',
     label: '포인트 코인',
     desc: '적립·포인트 혜택을 나타낼 때 쓰는 포인트 코인 에셋',
+    keywords: ['포인트', '적립', '리워드', '혜택'],
     rootName: 'Point',
     recommended: 'frostedBlue',
     // Source authored ~100× smaller than the other coins (real maxDim
@@ -2475,6 +2510,7 @@ const ASSETS = {
     url: 'truck3.glb',
     label: '배송 트럭',
     desc: '배송·물류 서비스를 나타낼 때 쓰는 트럭 에셋',
+    keywords: ['배송', '트럭', '택배', '물류'],
     // Source file ships the root node still named 'truck2' (designer
     // versioned the file by export name, not by re-labeling the root).
     rootName: 'truck2',
@@ -3373,23 +3409,26 @@ function loadAsset(assetId) {
 // Unlisted assets fall through to the end so adding a new entry to
 // ASSETS doesn't silently disappear from the grid.
 const LANDING_ORDER = [
-  'gift',          // Gift Large series — top usage
-  'coupon',        // Percent Ticket Large variants
-  'box',           // Moving Boxes on Dolly + Glossy Delivery Box
-  'truck3',        // Bolt Truck + Shipping Truck variants
-  'basket',        // Cart + Grocery Shopping Bag
-  'clock',         // Clock Large + View2 + Motion
-  'woncoin',       // Won Sign Circle
-  'checkcircle',   // 체크 코인 — coin family clustering (no Figma usage data yet)
-  'pointcoin',     // 포인트 코인 — coin family clustering
-  'couponEnvelope',// Percent Ticket On Coupon Large
-  'camera',        // Camera Large + views
-  'packagebox',    // Package Surprise Icons
-  'woncoinarrow',  // woncoin derivative
-  'lightning',     // Bolt only appears as truck composite
-  'purifier',      // Glossy Water Purifier (~1 use)
-  'wifi',          // Glossy Wi-Fi Router (~0 use)
-  'cleaningtool',  // no Figma match
+  // 라이브러리 노출 순서 = 에셋 우선순위 기준 (docs/asset-priority.md).
+  // 최근 1년 Figma 삽입 횟수(inserts_1y) 내림차순 — 많이 쓰이는 에셋부터.
+  // 숫자 = 해당 에셋의 모든 변형(View/Motion 등) inserts_1y 합산.
+  'pointcoin',    // P Circle 계열 — 2,530
+  'truck3',       // Bolt/Shipping Truck — 439
+  'woncoin',      // Won Sign Circle — 396
+  'gift',         // Gift Large 계열 — 386
+  'box',          // Moving Boxes + Delivery Box — 374
+  'basket',       // Cart + Grocery Bag — 351
+  'clock',        // Clock Large 계열 — 348
+  'couponEnvelope',// Percent Ticket On Coupon — 328
+  'coupon',       // Percent Ticket Large — 190
+  'camera',       // Camera Large 계열 — 67
+  'packagebox',   // Package Surprise Icons — 54
+  'checkcircle',  // Lucky Check (추정) — 20
+  'wifi',         // Glossy Wi-Fi Router — 9
+  'purifier',     // Glossy Water Purifier — 7
+  'woncoinarrow', // 페이백 파생 — 데이터 없음
+  'lightning',    // 트럭 합성으로만 등장 — 데이터 없음
+  'cleaningtool', // Figma 매치 없음 — 데이터 없음
 ];
 function orderedAssetIds() {
   const known = new Set(Object.keys(ASSETS));
@@ -3461,11 +3500,16 @@ async function buildLanding() {
     // under the card title. Falls back to the layout placeholder until
     // real copy lands.
     const desc = asset.desc || '에셋 설명 설명';
+    // Faint keyword chips at the thumbnail's bottom edge. The raw list
+    // is also stashed on data-keywords as a search-match haystack.
+    const keywords = asset.keywords || [];
+    card.dataset.keywords = keywords.join(' ');
     card.innerHTML = `
       <div class="thumb"><img src="${thumbs[id]}" alt="${asset.label}" /></div>
       <div class="meta">
         <div class="label">${asset.label}</div>
         <div class="desc">${desc}</div>
+        ${keywords.length ? `<div class="keywords">${keywords.map(k => `<span class="kw">${k}</span>`).join('')}</div>` : ''}
       </div>
     `;
     card.addEventListener('click', () => selectAsset(id));
@@ -3474,8 +3518,9 @@ async function buildLanding() {
   loading.hidden = true;
   grid.hidden = false;
 
-  // Live search filter — case-insensitive substring match on label.
-  // The empty-state message replaces the grid when no card matches.
+  // Live search filter — case-insensitive substring match on label,
+  // description, and keywords. The empty-state message replaces the
+  // grid when no card matches.
   const searchInput = document.getElementById('searchInput');
   const searchClear = document.getElementById('searchClear');
   const emptyMsg = landing.querySelector('.empty');
@@ -3485,7 +3530,9 @@ async function buildLanding() {
     let visible = 0;
     grid.querySelectorAll('.asset-card').forEach(card => {
       const label = (card.querySelector('.label')?.textContent || '').toLowerCase();
-      const match = !q || label.includes(q);
+      const desc = (card.querySelector('.desc')?.textContent || '').toLowerCase();
+      const keywords = (card.dataset.keywords || '').toLowerCase();
+      const match = !q || (label + ' ' + desc + ' ' + keywords).includes(q);
       card.style.display = match ? '' : 'none';
       if (match) visible++;
     });
