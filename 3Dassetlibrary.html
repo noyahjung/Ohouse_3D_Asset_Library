@@ -802,6 +802,7 @@
     align-content: start;
   }
   #landing .asset-card {
+    position: relative;
     background: #F5F5F5;
     border: 0;
     border-radius: 12px;
@@ -812,6 +813,19 @@
     display: flex; align-items: flex-start; gap: 38px;
     transition: background var(--transition);
   }
+  /* Figma asset-library badge, bottom-right of the card. */
+  #landing .asset-card .figma-link {
+    position: absolute;
+    right: 20px; bottom: 20px;
+    width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 6px;
+    cursor: pointer;
+    opacity: 0.95;
+    transition: opacity var(--transition), background var(--transition);
+  }
+  #landing .asset-card .figma-link:hover { opacity: 1; background: rgba(0,0,0,0.05); }
+  #landing .asset-card .figma-link svg { width: 12px; height: 18px; display: block; }
   #landing .asset-card:hover { background: #eeeeee; }
   #landing .asset-card .thumb {
     width: 116px; height: 116px; flex-shrink: 0;
@@ -1444,7 +1458,9 @@
     <button class="asset-chip active" data-asset="gift">선물상자</button>
     <button class="asset-chip" data-asset="coupon">할인쿠폰</button>
     <button class="asset-chip" data-asset="box">이사박스</button>
+    <button class="asset-chip" data-asset="boxMulti">이사박스 멀티</button>
     <button class="asset-chip" data-asset="truck3">배송 트럭</button>
+    <button class="asset-chip" data-asset="truck">트럭</button>
     <button class="asset-chip" data-asset="basket">장바구니</button>
     <button class="asset-chip" data-asset="clock">시계</button>
     <button class="asset-chip" data-asset="woncoin">원화 코인</button>
@@ -1844,6 +1860,7 @@ const ASSETS = {
     label: '이사박스',
     desc: '이사 서비스를 나타낼 때 쓰는 이사 박스 에셋',
     keywords: ['이사', '박스', '포장', '이삿짐'],
+    figma: 'https://www.figma.com/design/rPcOL4d3UF4uOWRNLyAE5a/Asset-Library?m=auto&node-id=8242-207&t=yHhJrRuHD5nrXZSP-1',
     rootName: 'newbox_blue_moving',
     recommended: 'frostedBlue',
     gradientYShift: -0.12,
@@ -1851,11 +1868,40 @@ const ASSETS = {
       return /ribbon/i.test(name) ? 'luminance' : 'body';
     },
   },
+  boxMulti: {
+    url: 'box.gltf',
+    label: '이사박스 멀티',
+    desc: '더 많은 이사짐·대량 물량을 나타낼 때 쓰는 멀티 이사 박스 에셋',
+    keywords: ['이사', '박스', '멀티', '이삿짐'],
+    rootName: 'newbox_blue_moving',
+    recommended: 'frostedBlue',
+    gradientYShift: -0.12,
+    frameScale: 1.55,
+    // Reuse the single box geometry as a 3-box cluster — two on the
+    // bottom (side by side) + one on top, pushed back & centered
+    // (pyramid). Each scaled 0.62 so the whole cluster lands near the
+    // single box's footprint (similar overall volume).
+    instances: [
+      { f: [-0.32, -0.26,  0.16], scale: 0.62 },  // bottom-left
+      { f: [ 0.32, -0.26,  0.16], scale: 0.62 },  // bottom-right
+      { f: [ 0.00,  0.34,  0.16], scale: 0.62 },  // top center — front aligned with the bottom two
+    ],
+    materialFor(name) {
+      return /ribbon/i.test(name) ? 'luminance' : 'body';
+    },
+    // Each instance (suffix __iN) is its own gradient group so every box
+    // shows the full top→bottom gradient like the single box.
+    bodyGroupFor(name) {
+      const m = /__i(\d+)/.exec(name || '');
+      return m ? 'i' + m[1] : '__default__';
+    },
+  },
   coupon: {
     url: 'Coupon.gltf',
     label: '할인쿠폰',
     desc: '프로모션 할인 혜택을 나타낼 때 쓰는 쿠폰 에셋',
     keywords: ['쿠폰', '할인', '프로모션', '혜택'],
+    figma: 'https://www.figma.com/design/rPcOL4d3UF4uOWRNLyAE5a/Asset-Library?m=auto&node-id=8242-213&t=yHhJrRuHD5nrXZSP-1',
     rootName: 'coupon',
     recommended: 'frostedPink',
     // Source body extent ~392×283×36. Old modelScale 6.3 inflated the
@@ -1883,6 +1929,7 @@ const ASSETS = {
     label: '선물상자',
     desc: '프로모션·이벤트를 나타낼 때 쓰는 선물 상자 에셋',
     keywords: ['선물', '기프트', '선물하기', '이벤트'],
+    figma: 'https://www.figma.com/design/rPcOL4d3UF4uOWRNLyAE5a/Asset-Library?m=auto&node-id=8242-201&t=yHhJrRuHD5nrXZSP-1',
     rootName: 'gift_save',
     recommended: 'frostedRed',
     rotationY: Math.PI / 2,
@@ -1906,6 +1953,7 @@ const ASSETS = {
     label: '정수기',
     desc: '생활 서비스의 렌탈을 나타낼 때 쓰는 정수기 에셋',
     keywords: ['정수기', '렌탈', '생활가전', '구독'],
+    figma: 'https://www.figma.com/design/rPcOL4d3UF4uOWRNLyAE5a/Asset-Library?m=auto&node-id=8242-216&t=yHhJrRuHD5nrXZSP-1',
     rootName: 'water purifier',
     recommended: 'frostedBlue',
     rotationY: Math.PI,
@@ -1923,6 +1971,7 @@ const ASSETS = {
     label: '장바구니',
     desc: '마트·장보기를 나타낼 때 쓰는 장바구니 에셋',
     keywords: ['장바구니', '장보기', '마트', '쇼핑'],
+    figma: 'https://www.figma.com/design/rPcOL4d3UF4uOWRNLyAE5a/Asset-Library?m=auto&node-id=8242-192&t=yHhJrRuHD5nrXZSP-1',
     // basket3.glb wraps the assembly in a `basket.1` parent group
     // (sanitized by Three.js to `basket1`), with `basket`, `handle`,
     // and `handle_mat` as siblings underneath. Use the parent so the
@@ -1976,6 +2025,9 @@ const ASSETS = {
     label: '시계',
     desc: '시간성 이벤트를 나타낼 때 쓰는 탁상 시계 에셋',
     keywords: ['시계', '시간', '마감', '타이머'],
+    // Figma 에셋 라이브러리 링크 — 카드 우하단 Figma 심볼 클릭 시 이 노드로
+    // 이동. 다른 에셋도 이 `figma` 필드만 추가하면 동일하게 동작한다.
+    figma: 'https://www.figma.com/design/rPcOL4d3UF4uOWRNLyAE5a/Asset-Library?m=auto&node-id=8242-198&t=evJmLf5iVTgJAUbj-1',
     rootName: 'clock',
     recommended: 'frostedViolet',
     keepOriginalNormals: true,
@@ -2084,6 +2136,7 @@ const ASSETS = {
     label: '패키지 할인 박스',
     desc: '패키지 할인을 나타낼 때 쓰는 할인 상자 에셋',
     keywords: ['패키지', '할인', '묶음', '세트'],
+    figma: 'https://www.figma.com/design/rPcOL4d3UF4uOWRNLyAE5a/Asset-Library?m=auto&node-id=8242-210&t=yHhJrRuHD5nrXZSP-1',
     // Source file has the root node name spelled "pakagebox" (missing
     // the second 'c'); preserve the typo here so the loader resolves.
     rootName: 'pakagebox',
@@ -2123,6 +2176,7 @@ const ASSETS = {
     label: '오늘의딜 번개',
     desc: '오늘의딜을 나타낼 때 쓰는 번개 에셋',
     keywords: ['오늘의딜', '번개', '특가', '타임딜'],
+    figma: 'https://www.figma.com/design/rPcOL4d3UF4uOWRNLyAE5a/Asset-Library?m=auto&node-id=8242-204&t=yHhJrRuHD5nrXZSP-1',
     // Source file ships the root node spelled `ligtning` (missing the
     // second 'h'); match the actual name so the loader can resolve it.
     rootName: 'ligtning',
@@ -2173,6 +2227,7 @@ const ASSETS = {
     label: '와이파이 라우터',
     desc: '인터넷 설치를 나타낼 때 쓰는 라우터 에셋',
     keywords: ['와이파이', '인터넷', '라우터', '설치'],
+    figma: 'https://www.figma.com/design/rPcOL4d3UF4uOWRNLyAE5a/Asset-Library?m=auto&node-id=8242-219&t=yHhJrRuHD5nrXZSP-1',
     rootName: 'new_wifi',
     recommended: 'frostedDarkBlue',
     // Body (300×120×300) + two antennas with bar_head (137 tall) on
@@ -2248,6 +2303,7 @@ const ASSETS = {
     label: '청소 도구',
     desc: '청소 서비스를 나타낼 때 쓰는 청소 도구 에셋',
     keywords: ['청소', '입주청소', '홈클린', '청소도구'],
+    figma: 'https://www.figma.com/design/rPcOL4d3UF4uOWRNLyAE5a/Asset-Library?m=auto&node-id=8337-192&t=yHhJrRuHD5nrXZSP-1',
     rootName: 'cleaning tool',
     recommended: 'frostedBlue',
     weldVertices: true,
@@ -2372,6 +2428,7 @@ const ASSETS = {
     label: '원화 코인 + 페이백',
     desc: '페이백 혜택을 나타낼 때 쓰는 동전·화살표 에셋',
     keywords: ['페이백', '환급', '캐시백', '적립'],
+    figma: 'https://www.figma.com/design/rPcOL4d3UF4uOWRNLyAE5a/Asset-Library?m=auto&node-id=8654-199&t=yHhJrRuHD5nrXZSP-1',
     rootName: 'arrow_coin',
     recommended: 'frostedOrange',
     weldVertices: true,
@@ -2463,6 +2520,7 @@ const ASSETS = {
     label: '체크 코인',
     desc: '완료·인증 혜택을 나타낼 때 쓰는 체크 원형 에셋',
     keywords: ['인증', '완료', '체크', '크리에이터'],
+    figma: 'https://www.figma.com/design/rPcOL4d3UF4uOWRNLyAE5a/Asset-Library?m=auto&node-id=8772-198&t=yHhJrRuHD5nrXZSP-1',
     rootName: 'check_circle',
     recommended: 'frostedViolet',
     // Match woncoin's on-screen disc size — default 2.2 frustum leaves
@@ -2661,6 +2719,18 @@ const ASSETS = {
       return 'body';
     },
   },
+};
+
+// 트럭 — 배송 트럭(truck3)에서 번개 로고 레이어('lightining', 소스 오타)까지
+// 추가로 숨긴 일반 트럭. 나머지 설정(modelScale·frameScale·materialFor·
+// bodyGroupFor 등)은 truck3에서 그대로 상속한다.
+ASSETS.truck = {
+  ...ASSETS.truck3,
+  label: '트럭',
+  desc: '이사 서비스를 나타낼 때 쓰는 트럭 에셋',
+  keywords: ['트럭', '이사', '운송', '차량'],
+  recommended: 'frostedDarkBlue',
+  hideMeshes: [...ASSETS.truck3.hideMeshes, 'lightining'],
 };
 
 // ── Admin-only minimal geometry primitives ─────────────────
@@ -2932,6 +3002,34 @@ function loadAsset(assetId) {
       }
     }
     currentRoot = root;
+    // Composite/instanced asset: clone the resolved subtree into N
+    // positioned + scaled copies (e.g. boxMulti reuses the single box
+    // geometry as a 3-box cluster). Offsets `f` are fractions of the
+    // source subtree's own per-axis size, so they're independent of its
+    // units. Geometry is deep-cloned per copy (the gradient UV-remap and
+    // weld passes mutate geometry in place). Node names get an `__i{idx}`
+    // suffix so materialFor still matches (regex) and bodyGroupFor can
+    // give each copy its own gradient group (independent vertical
+    // gradient per box, like the single asset).
+    if (asset.instances) {
+      root.updateMatrixWorld(true);
+      const srcSize = new THREE.Box3().setFromObject(root).getSize(new THREE.Vector3());
+      const container = new THREE.Group();
+      asset.instances.forEach((inst, idx) => {
+        const c = root.clone(true);
+        c.traverse((o) => {
+          if (o.isMesh && o.geometry) o.geometry = o.geometry.clone();
+          if (o.name) o.name += '__i' + idx;
+        });
+        const f = inst.f || [0, 0, 0];
+        c.position.set(f[0] * srcSize.x, f[1] * srcSize.y, f[2] * srcSize.z);
+        if (inst.scale != null) c.scale.multiplyScalar(inst.scale);
+        if (inst.rotY) c.rotation.y += inst.rotY;
+        container.add(c);
+      });
+      root = container;
+      currentRoot = root;
+    }
     if (asset.modelScale) root.scale.setScalar(asset.modelScale);
     if (asset.rotationY) root.rotation.y = asset.rotationY;
     // Per-mesh position nudges (e.g. lift the camera button so its
@@ -3495,6 +3593,7 @@ const LANDING_ORDER = [
   'box',          // Moving Boxes + Delivery Box — 374
   'basket',       // Cart + Grocery Bag — 351
   'clock',        // Clock Large 계열 — 348
+  'shield',       // 방패+체크 — 수동 배치(1페이지, 시계 다음)
   'couponEnvelope',// Percent Ticket On Coupon — 328
   'coupon',       // Percent Ticket Large — 190
   'camera',       // Camera Large 계열 — 67
@@ -3505,7 +3604,8 @@ const LANDING_ORDER = [
   'woncoinarrow', // 페이백 파생 — 데이터 없음
   'lightning',    // 트럭 합성으로만 등장 — 데이터 없음
   'cleaningtool', // Figma 매치 없음 — 데이터 없음
-  'shield',       // 신규 에셋 — 사용 데이터 없음
+  'boxMulti',     // box 재활용 합성 에셋 — 사용 데이터 없음
+  'truck',        // 배송 트럭에서 번개 숨긴 일반 트럭 — 사용 데이터 없음
 ];
 function orderedAssetIds() {
   const known = new Set(Object.keys(ASSETS));
@@ -3581,6 +3681,14 @@ async function buildLanding() {
     // is also stashed on data-keywords as a search-match haystack.
     const keywords = asset.keywords || [];
     card.dataset.keywords = keywords.join(' ');
+    // Figma badge (bottom-right) — shown only when the asset declares a
+    // `figma` link (i.e. it exists in the team's Figma asset library).
+    // Clicking it opens that Figma node in a new tab without triggering
+    // the card's selectAsset. Register another asset later by just adding
+    // its `figma` URL — no other change needed.
+    const figmaBadge = asset.figma
+      ? `<span class="figma-link" role="link" tabindex="0" aria-label="Figma 에셋 라이브러리에서 열기" title="Figma 에셋 라이브러리에서 열기"><svg viewBox="0 0 400 600" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M0 500C0 444.772 44.772 400 100 400H200V500C200 555.228 155.228 600 100 600C44.772 600 0 555.228 0 500Z" fill="#24CB71"/><path d="M200 0V200H300C355.228 200 400 155.228 400 100C400 44.772 355.228 0 300 0H200Z" fill="#FF7237"/><path d="M299.167 400C354.395 400 399.167 355.228 399.167 300C399.167 244.772 354.395 200 299.167 200C243.939 200 199.167 244.772 199.167 300C199.167 355.228 243.939 400 299.167 400Z" fill="#00B6FF"/><path d="M0 100C0 155.228 44.772 200 100 200H200V0H100C44.772 0 0 44.772 0 100Z" fill="#FF3737"/><path d="M0 300C0 355.228 44.772 400 100 400H200V200H100C44.772 200 0 244.772 0 300Z" fill="#874FFF"/></svg></span>`
+      : '';
     card.innerHTML = `
       <div class="thumb"><img src="${thumbs[id]}" alt="${asset.label}" /></div>
       <div class="meta">
@@ -3588,8 +3696,17 @@ async function buildLanding() {
         <div class="desc">${desc}</div>
         ${keywords.length ? `<div class="keywords">${keywords.map(k => `<span class="kw">${k}</span>`).join('')}</div>` : ''}
       </div>
+      ${figmaBadge}
     `;
     card.addEventListener('click', () => selectAsset(id));
+    if (asset.figma) {
+      const fig = card.querySelector('.figma-link');
+      const openFigma = (e) => { e.stopPropagation(); window.open(asset.figma, '_blank', 'noopener'); };
+      fig.addEventListener('click', openFigma);
+      fig.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openFigma(e); }
+      });
+    }
     grid.appendChild(card);
   }
   loading.hidden = true;
