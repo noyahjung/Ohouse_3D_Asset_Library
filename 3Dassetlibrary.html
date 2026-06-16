@@ -1458,7 +1458,6 @@
     <button class="asset-chip active" data-asset="gift">선물상자</button>
     <button class="asset-chip" data-asset="coupon">할인쿠폰</button>
     <button class="asset-chip" data-asset="box">이사박스</button>
-    <button class="asset-chip" data-asset="boxMulti">이사박스 멀티</button>
     <button class="asset-chip" data-asset="truck3">배송 트럭</button>
     <button class="asset-chip" data-asset="truck">트럭</button>
     <button class="asset-chip" data-asset="basket">장바구니</button>
@@ -1871,6 +1870,8 @@ const ASSETS = {
   boxMulti: {
     url: 'box.gltf',
     label: '이사박스 멀티',
+    // 일단 비공개 — 공개 라이브러리 그리드/검색에서 숨김(?admin=true에서만 노출).
+    adminOnly: true,
     desc: '더 많은 이사짐·대량 물량을 나타낼 때 쓰는 멀티 이사 박스 에셋',
     keywords: ['이사', '박스', '멀티', '이삿짐'],
     rootName: 'newbox_blue_moving',
@@ -2610,6 +2611,7 @@ const ASSETS = {
     label: '방패 + 체크',
     desc: '인증·보호를 나타낼 때 쓰는 방패 에셋',
     keywords: ['방패', '보호', '인증', '책임보장'],
+    figma: 'https://www.figma.com/design/rPcOL4d3UF4uOWRNLyAE5a/Asset-Library?m=auto&node-id=9024-304&t=yHhJrRuHD5nrXZSP-1',
     rootName: 'shield',
     recommended: 'frostedGreen',
     // NOTE: the source layer names are swapped vs the visual — the
@@ -2730,6 +2732,7 @@ ASSETS.truck = {
   desc: '이사 서비스를 나타낼 때 쓰는 트럭 에셋',
   keywords: ['트럭', '이사', '운송', '차량'],
   recommended: 'frostedDarkBlue',
+  figma: 'https://www.figma.com/design/rPcOL4d3UF4uOWRNLyAE5a/Asset-Library?m=auto&node-id=9084-307&t=yHhJrRuHD5nrXZSP-1',
   hideMeshes: [...ASSETS.truck3.hideMeshes, 'lightining'],
 };
 
