@@ -1460,13 +1460,13 @@
     <button class="asset-chip" data-asset="box">이사박스</button>
     <button class="asset-chip" data-asset="truck3">배송 트럭</button>
     <button class="asset-chip" data-asset="truck">트럭</button>
+    <button class="asset-chip" data-asset="bell">알림벨</button>
     <button class="asset-chip" data-asset="basket">장바구니</button>
     <button class="asset-chip" data-asset="clock">시계</button>
     <button class="asset-chip" data-asset="woncoin">원화 코인</button>
     <button class="asset-chip" data-asset="checkcircle">체크 코인</button>
     <button class="asset-chip" data-asset="pointcoin">포인트 코인</button>
     <button class="asset-chip" data-asset="shield">방패 + 체크</button>
-    <button class="asset-chip" data-asset="couponEnvelope">10% 할인 쿠폰</button>
     <button class="asset-chip" data-asset="camera">카메라</button>
     <button class="asset-chip" data-asset="packagebox">패키지 할인 박스</button>
     <button class="asset-chip" data-asset="woncoinarrow">원화 코인 + 페이백</button>
@@ -2473,6 +2473,8 @@ const ASSETS = {
   couponEnvelope: {
     url: 'couponEnvelope.glb',
     label: '10% 할인 쿠폰',
+    // 일단 비공개 — 공개 라이브러리 그리드/검색에서 숨김(?admin=true에서만 노출).
+    adminOnly: true,
     desc: '할인 이벤트를 나타낼 때 쓰는 쿠폰·봉투 에셋',
     keywords: ['쿠폰', '할인', '10%', '이벤트'],
     rootName: '10%coupon',
@@ -2718,6 +2720,64 @@ const ASSETS = {
       // ribbon strips).
       if (/mirror/.test(n)  || /mirror/.test(pn))  return 'harmony2';
       // body-box, wheels-box, Cube (cab) → frosted body.
+      return 'body';
+    },
+  },
+  bell: {
+    url: 'bell.glb',
+    label: '알림벨',
+    desc: '알림·소식을 나타낼 때 쓰는 알림벨 에셋',
+    keywords: ['알림', '벨', '알림벨', '공지'],
+    rootName: 'bell',
+    recommended: 'frostedOrange',
+    floatOffset: 0.10,
+    viewOverrides: { '2': [0.870, 0.277, 1.024], '4': [0.635, -0.278, 1.316] },
+    // body maxDim ≈292, already near the ~300 reference — no modelScale.
+    // (Source shipped 1.45M tris; simplified to ~73K via gltfpack -si.)
+    // Bell silhouette is narrower than its bbox, so tighten the frustum
+    // more than a cube asset to read at a comparable on-screen size to
+    // the Moving Box.
+    frameScale: 1.75,
+    // Deepen the frosted tone — the dome reads pale under the shared
+    // FROSTED_PRESET. Push the gradient into its saturated band and dial
+    // back transmission/env so the body color dominates.
+    gradientYShift: -1.1,
+    materialOverrides: {
+      envMapIntensity: 0.2,
+      clearcoat: 0.3,
+      transmission: 0.5,
+      attenuationDistance: 3.0,
+    },
+    // Keep gltfpack's post-simplify normals — recomputing them after a
+    // position-weld on the simplified surface left speckle artifacts on
+    // the frosted dome. The simplifier's own normals read clean.
+    // Keep gltfpack's post-simplify normals — they read smooth/clean.
+    // Recomputing (weld→compute speckles; plain compute facets) is worse
+    // on the simplified, vertex-split mesh. A genuinely rounder surface
+    // would need re-optimizing the original high-poly source at a higher
+    // poly budget (gltfpack -si 0.15+), not a normals pass.
+    keepOriginalNormals: true,
+    // Designer tweak: shorten the bell body a touch and enlarge the
+    // harmony ball. Scale the NODES (not geometry) so the renderer's
+    // normal matrix keeps shading correct under the non-uniform squash.
+    preprocess(root) {
+      const body = root.getObjectByName('body');
+      const circle = root.getObjectByName('circle');
+      if (body) body.scale.y = 0.93;
+      if (circle) {
+        circle.scale.setScalar(1.05);
+        circle.position.y += 8;   // nudge the harmony ball up a touch
+      }
+    },
+    materialFor(name, parentName) {
+      const n  = (name || '').toLowerCase();
+      const pn = (parentName || '').toLowerCase();
+      // gltfpack wraps each Mesh in an unnamed Group, so the layer name
+      // lands on parentName while name is blank — check both. The top
+      // knob (circle_upper) reads as frosted body like the dome; the
+      // bottom ball (circle) → harmony accent (ribbonGray tracks tint).
+      if (/circle_upper/.test(n) || /circle_upper/.test(pn)) return 'body';
+      if (/circle/.test(n) || /circle/.test(pn)) return 'ribbonGray';
       return 'body';
     },
   },
@@ -3450,6 +3510,11 @@ function loadAsset(assetId) {
     const center = bbox.getCenter(new THREE.Vector3());
     root.position.sub(center);
     if (asset.yOffset) root.position.y += size.y * asset.yOffset;
+    // floatOffset lifts the asset above its ground shadow (objectCenterY
+    // below is computed from yOffset only, so the contact shadow stays at
+    // the un-floated base) — the asset reads as hovering with a visible
+    // gap between it and the shadow.
+    if (asset.floatOffset) root.position.y += size.y * asset.floatOffset;
     if (asset.zOffset) root.position.z += size.z * asset.zOffset;
     group.add(root);
 
@@ -3599,6 +3664,7 @@ const LANDING_ORDER = [
   'shield',       // 방패+체크 — 수동 배치(1페이지, 시계 다음)
   'couponEnvelope',// Percent Ticket On Coupon — 328
   'coupon',       // Percent Ticket Large — 190
+  'bell',         // Bell Large 계열 — ~141
   'camera',       // Camera Large 계열 — 67
   'packagebox',   // Package Surprise Icons — 54
   'checkcircle',  // Lucky Check (추정) — 20
