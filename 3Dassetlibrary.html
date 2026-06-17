@@ -1461,6 +1461,7 @@
     <button class="asset-chip" data-asset="truck3">배송 트럭</button>
     <button class="asset-chip" data-asset="truck">트럭</button>
     <button class="asset-chip" data-asset="bell">알림벨</button>
+    <button class="asset-chip" data-asset="house">집</button>
     <button class="asset-chip" data-asset="basket">장바구니</button>
     <button class="asset-chip" data-asset="clock">시계</button>
     <button class="asset-chip" data-asset="woncoin">원화 코인</button>
@@ -2781,6 +2782,40 @@ const ASSETS = {
       return 'body';
     },
   },
+  house: {
+    url: 'house.glb',
+    label: '집',
+    desc: '집·인테리어를 나타낼 때 쓰는 하우스 에셋',
+    keywords: ['집', '하우스', '인테리어', '주택'],
+    rootName: 'house',
+    recommended: 'frostedBlue',
+    // Clean low-poly architectural mesh (2.6K tris) — keep the designer's
+    // normals so wall/roof hard edges stay crisp (recomputing would blur
+    // or facet them). body maxDim ≈342, near enough to the ~300 ref.
+    frameScale: 2.0,
+    keepOriginalNormals: true,
+    // Deepen the frosted body — the walls read pale under the shared
+    // FROSTED_PRESET. Push the gradient into its saturated band and dial
+    // back transmission/env so the body color dominates.
+    gradientYShift: -1.1,
+    materialOverrides: {
+      envMapIntensity: 0.2,
+      clearcoat: 0.3,
+      transmission: 0.5,
+      attenuationDistance: 3.0,
+    },
+    materialFor(name, parentName) {
+      const n  = (name || '').toLowerCase();
+      const pn = (parentName || '').toLowerCase();
+      // gltfpack wraps each Mesh in an unnamed Group, so the layer name
+      // lands on parentName while name is blank — check both. window →
+      // flat white luminance; roof → harmony accent (ribbonGray tracks
+      // the body tint); house body → active frosted variant.
+      if (/window/.test(n) || /window/.test(pn)) return 'luminance';
+      if (/roof/.test(n)   || /roof/.test(pn))   return 'ribbonGray';
+      return 'body';
+    },
+  },
 };
 
 // 트럭 — 배송 트럭(truck3)에서 번개 로고 레이어('lightining', 소스 오타)까지
@@ -3667,6 +3702,7 @@ const LANDING_ORDER = [
   'bell',         // Bell Large 계열 — ~141
   'camera',       // Camera Large 계열 — 67
   'packagebox',   // Package Surprise Icons — 54
+  'house',        // House With Drill 계열 추정 — ~53
   'checkcircle',  // Lucky Check (추정) — 20
   'wifi',         // Glossy Wi-Fi Router — 9
   'purifier',     // Glossy Water Purifier — 7
