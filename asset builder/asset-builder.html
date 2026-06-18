@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>오늘의집 3D 에셋 빌더</title>
+<style>
+  :root{
+    --bg:#0e1116; --panel:#161b22; --line:#232a33; --ink:#e8edf3;
+    --muted:#8b97a6; --accent:#1A90FF; --ok:#2ea043; --warn:#f0883e;
+    --radius:14px; --mono:"SFMono-Regular",ui-monospace,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Pretendard",Roboto,sans-serif;
+    line-height:1.55; padding:32px 20px;
+  }
+  .wrap{max-width:760px; margin:0 auto}
+  header{margin-bottom:24px}
+  h1{font-size:20px; margin:0 0 4px; letter-spacing:-.01em}
+  .sub{color:var(--muted); font-size:13px}
+  .card{
+    background:var(--panel); border:1px solid var(--line);
+    border-radius:var(--radius); padding:20px; margin-bottom:16px;
+  }
+  label{display:block; font-size:13px; color:var(--muted); margin-bottom:8px}
+  input[type=text],input[type=password]{
+    width:100%; background:#0c1014; border:1px solid var(--line);
+    color:var(--ink); border-radius:10px; padding:12px 14px; font-size:15px;
+  }
+  input:focus{outline:none; border-color:var(--accent)}
+  .swatches{display:flex; flex-wrap:wrap; gap:10px}
+  .sw{
+    border:2px solid transparent; border-radius:10px; padding:8px 12px;
+    cursor:pointer; font-size:13px; color:#fff; display:flex; align-items:center; gap:8px;
+    user-select:none;
+  }
+  .sw[data-on="1"]{border-color:#fff; box-shadow:0 0 0 2px var(--bg),0 0 0 4px #fff}
+  .dot{width:14px;height:14px;border-radius:50%}
+  .row{display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap}
+  .row .grow{flex:1; min-width:200px}
+  button.go{
+    background:var(--accent); color:#fff; border:none; border-radius:10px;
+    padding:13px 22px; font-size:15px; font-weight:600; cursor:pointer;
+  }
+  button.go:disabled{opacity:.5; cursor:not-allowed}
+  .hint{font-size:12px; color:var(--muted); margin-top:8px}
+  .hint a{color:var(--accent)}
+  .stage{
+    min-height:320px; display:flex; align-items:center; justify-content:center;
+    background:
+      linear-gradient(45deg,#1a2029 25%,transparent 25%),
+      linear-gradient(-45deg,#1a2029 25%,transparent 25%),
+      linear-gradient(45deg,transparent 75%,#1a2029 75%),
+      linear-gradient(-45deg,transparent 75%,#1a2029 75%);
+    background-size:24px 24px; background-position:0 0,0 12px,12px -12px,-12px 0;
+    background-color:#0c1014; border-radius:10px; position:relative; overflow:hidden;
+  }
+  .stage img{max-width:100%; max-height:520px; display:block}
+  .ph{color:var(--muted); font-size:13px; text-align:center; padding:40px}
+  .spin{
+    width:34px;height:34px;border:3px solid var(--line);
+    border-top-color:var(--accent);border-radius:50%;animation:r .8s linear infinite;
+  }
+  @keyframes r{to{transform:rotate(360deg)}}
+  .err{color:#ff8585; font-size:13px; margin-top:10px; white-space:pre-wrap}
+  .meta{font-size:12px;color:var(--muted);margin-top:10px;font-family:var(--mono)}
+  .keyrow{margin-bottom:16px}
+  details{margin-top:8px}
+  summary{cursor:pointer;color:var(--muted);font-size:12px}
+  .dlbtn{margin-top:12px;display:inline-block;background:#0c1014;border:1px solid var(--line);
+    color:var(--ink);padding:8px 14px;border-radius:8px;text-decoration:none;font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>오늘의집 3D 에셋 빌더 <span style="font-size:12px;color:var(--muted)">prototype</span></h1>
+    <div class="sub">키워드와 색상을 고르면 브랜드 스타일의 3D 에셋이 생성됩니다.</div>
+  </header>
+
+  <div class="card">
+    <div class="row">
+      <div class="grow">
+        <label>만들 에셋 (키워드)</label>
+        <input id="kw" type="text" placeholder="예: 트로피, 정수기, 동전, 선물상자">
+      </div>
+    </div>
+
+    <div style="margin-top:16px">
+      <label>색상 (선택 안 하면 키워드에 맞춰 자동 지정)</label>
+      <div class="swatches" id="sw"></div>
+    </div>
+
+    <div class="row" style="margin-top:18px">
+      <button class="go" id="go">에셋 생성</button>
+      <div class="meta" id="meta"></div>
+    </div>
+    <div class="err" id="err"></div>
+  </div>
+
+  <div class="card">
+    <div class="stage" id="stage">
+      <div class="ph">생성된 에셋이 여기에 표시됩니다</div>
+    </div>
+    <a id="dl" class="dlbtn" style="display:none" download="asset.png">PNG 다운로드</a>
+    <details>
+      <summary>이 빌더가 적용하는 스타일 규칙 보기</summary>
+      <div class="hint" id="ruletext"></div>
+    </details>
+  </div>
+</div>
+
+<script>
+/* ---------- 백엔드 엔드포인트 (키는 백엔드에만 존재) ---------- */
+// 로컬 검증: backend/server.mjs 실행 후 그대로 사용.
+// 팀 배포: 아래를 배포된 Lambda Function URL로 교체 (?backend= 쿼리로도 덮어쓰기 가능).
+const BACKEND_URL =
+  new URLSearchParams(location.search).get('backend') ||
+  "http://localhost:8787/generate";
+
+/* ---------- 브랜드 설정 (우리가 정의한 v2.1 규칙 내장) ---------- */
+const PALETTE = {
+  Blue:      {top:"#6FB2FD", bottom:"#1A90FF"},
+  Green:     {top:"#6EE5AF", bottom:"#00C785"},
+  Orange:    {top:"#F7A462", bottom:"#F7691D"},
+  Red:       {top:"#FFA294", bottom:"#FF4747"},
+  Violet:    {top:"#CE8BFC", bottom:"#B54AF7"},
+  "Dark Blue":{top:"#6B97EF", bottom:"#286BE6"},
+  Pink:      {top:"#FC86A4", bottom:"#FF3D6E"},
+};
+const KO = {Blue:"블루",Green:"그린",Orange:"오렌지",Red:"레드",Violet:"바이올렛","Dark Blue":"다크블루",Pink:"핑크"};
+
+// 색상 미지정 시 키워드 라우팅
+const ROUTING = [
+  [/쿠폰|할인|coupon/i,"Pink"],[/이사|박스|box|package|패키지/i,"Blue"],
+  [/선물|gift/i,"Red"],[/정수기|purifier/i,"Blue"],[/장바구니|basket|바구니/i,"Green"],
+  [/시계|clock|watch/i,"Pink"],[/페이백|payback|적립/i,"Orange"],[/카메라|camera/i,"Dark Blue"],
+  [/딜|번개|bolt|deal|lightning/i,"Orange"],[/라우터|와이파이|wifi|router/i,"Blue"],
+  [/청소|clean/i,"Blue"],[/코인|coin|원화/i,"Orange"],[/트로피|순위|trophy|rank|메달|medal/i,"Orange"],
+];
+function routeColor(kw){
+  for(const [re,c] of ROUTING){ if(re.test(kw)) return c; }
+  return "Blue"; // 기본: 서비스·유틸리티
+}
+
+// 프롬프트 빌더 (v2.1 규칙 핵심을 이미지 프롬프트로)
+function buildPrompt(keyword, colorName){
+  const c = PALETTE[colorName];
+  return `Create a single 3D icon asset of "${keyword}", to be placed in the same series as the two attached reference images.
+
+REFERENCE ROLES:
+- Reference A (icon sheet): defines the MATERIAL, color density, edge/surface finish, and overall mood. Match its look.
+- Reference B (geometric shapes): defines the SHAPE SIMPLICITY, detail-density ceiling, and the isometric camera angle. The asset must be built from simple geometric primitives (cube/cylinder/sphere/cone/pyramid) and must NOT exceed the detail density of these shapes.
+
+HARD RULES:
+- Form: simplify the object into basic geometric primitives. Keep only the minimum forms needed to recognize it. No fine details, no extra parts, no realistic modeling. Detail density must not exceed Reference B.
+- View: orthographic isometric only, exactly like the shapes in Reference B. No perspective, no vanishing point, vertical edges perfectly parallel, ~35-degree top-down 3/4 angle, no camera roll, not a front view, not a top view.
+- Material: mostly matte with only a very faint satin sheen. No glossy shine, no strong reflections, no big highlights, no plastic gloss, no mirror, no photoreal texture (no wood/fabric/paper/metal grain). Smooth single surface.
+- Color: a single smooth vertical gradient, brighter at top to deeper at bottom, from ${c.top} (top) to ${c.bottom} (bottom). No other colors except pure white for small accents. Do not use oversaturated primary colors or a flat single-color fill.
+- Composition: one single object, centered. No text, no numbers, no letters, no labels, no logos, no UI. Simple shape symbols (star/arrow/heart/check/%) are allowed but never readable text.
+- Background: fully transparent.
+
+Output one clean asset only.`;
+}
+
+/* ---------- UI ---------- */
+let selected = null;
+const swEl = document.getElementById('sw');
+Object.entries(PALETTE).forEach(([name,c])=>{
+  const d=document.createElement('div');
+  d.className='sw'; d.dataset.name=name; d.dataset.on="0";
+  d.style.background=`linear-gradient(135deg,${c.top},${c.bottom})`;
+  d.innerHTML=`<span class="dot" style="background:${c.bottom}"></span>${KO[name]}`;
+  d.onclick=()=>{
+    if(selected===name){selected=null; d.dataset.on="0"; return;}
+    selected=name;
+    document.querySelectorAll('.sw').forEach(x=>x.dataset.on="0");
+    d.dataset.on="1";
+  };
+  swEl.appendChild(d);
+});
+
+document.getElementById('ruletext').textContent =
+  "형태: 기하 도형 수준으로 단순화 · 시점: 아이소메트릭 정투영 강제 · 재질: 매트(은은한 새틴) · "+
+  "색상: 7색 팔레트 세로 그라데이션 · 단일 오브젝트 · 텍스트 없음 · 투명 배경. "+
+  "두 레퍼런스 이미지를 매 생성에 함께 전달해 스타일을 고정합니다.";
+
+const stage=document.getElementById('stage');
+const err=document.getElementById('err');
+const meta=document.getElementById('meta');
+const dl=document.getElementById('dl');
+const go=document.getElementById('go');
+
+go.onclick = async ()=>{
+  err.textContent=""; meta.textContent="";
+  const kw = document.getElementById('kw').value.trim();
+  if(!kw){ err.textContent="만들 에셋 키워드를 입력하세요."; return; }
+
+  const colorName = selected || routeColor(kw);
+  const prompt = buildPrompt(kw, colorName);
+
+  go.disabled=true; dl.style.display="none";
+  stage.innerHTML='<div class="spin"></div>';
+  meta.textContent=`${kw} · ${colorName} 생성 중…`;
+
+  try{
+    // 키 없이 백엔드에만 요청 — 레퍼런스 첨부·키 주입·OpenAI 호출은 서버가 처리.
+    const res = await fetch(BACKEND_URL,{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ prompt, size:"1024x1024" })
+    });
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok){
+      throw new Error(data.error || ("요청 실패 ("+res.status+")"));
+    }
+    const src = "data:image/png;base64,"+data.b64_json;
+    stage.innerHTML="";
+    const img=new Image(); img.src=src; stage.appendChild(img);
+    dl.href=src; dl.download=`${kw}_${colorName}.png`; dl.style.display="inline-block";
+    meta.textContent=`${kw} · ${colorName} · 매트/아이소/단순도/투명`;
+  }catch(e){
+    stage.innerHTML='<div class="ph">생성 실패</div>';
+    err.textContent="오류: "+e.message+
+      "\n\n자주 나는 원인:\n- 백엔드 미실행/주소 불일치(BACKEND_URL 확인)\n- 조직 인증 미완료(콘솔에서 Organization Verification 필요)\n- 키 권한/크레딧 부족\n- 모델명이 바뀐 경우(서버 OPENAI_MODEL=gpt-image-1 로 시도)";
+  }finally{
+    go.disabled=false;
+  }
+};
+</script>
+</body>
+</html>
