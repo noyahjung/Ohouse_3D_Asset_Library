@@ -1457,6 +1457,7 @@
   <div class="asset-chip-list">
     <button class="asset-chip active" data-asset="gift">선물상자</button>
     <button class="asset-chip" data-asset="coupon">할인쿠폰</button>
+    <button class="asset-chip" data-asset="couponEnvelope5">5% 할인 쿠폰</button>
     <button class="asset-chip" data-asset="box">이사박스</button>
     <button class="asset-chip" data-asset="truck3">배송 트럭</button>
     <button class="asset-chip" data-asset="truck">트럭</button>
@@ -2482,8 +2483,6 @@ const ASSETS = {
   couponEnvelope: {
     url: 'couponEnvelope.glb',
     label: '10% 할인 쿠폰',
-    // 일단 비공개 — 공개 라이브러리 그리드/검색에서 숨김(?admin=true에서만 노출).
-    adminOnly: true,
     desc: '할인 이벤트를 나타낼 때 쓰는 쿠폰·봉투 에셋',
     keywords: ['쿠폰', '할인', '10%', '이벤트'],
     rootName: '10%coupon',
@@ -2521,6 +2520,40 @@ const ASSETS = {
       // check both arguments.
       // 10% emblem on the coupon paper → flat white luminance.
       if (n === '10%' || pn === '10%') return 'luminance';
+      // Envelope → harmony accent (tracks the active body tint).
+      if (n === 'envelope' || pn === 'envelope') return 'ribbonGray';
+      // coupon.2 / paper → frosted body.
+      return 'body';
+    },
+  },
+  couponEnvelope5: {
+    url: 'couponEnvelope5.glb',
+    label: '5% 할인 쿠폰',
+    desc: '할인 이벤트를 나타낼 때 쓰는 쿠폰·봉투 에셋',
+    keywords: ['쿠폰', '할인', '5%', '이벤트'],
+    rootName: '5%coupon',
+    recommended: 'frostedPink',
+    // Same source-mesh scale as the 10% envelope (paper body maxDim ~3.7
+    // source units), so reuse modelScale 160 to land the paper at the
+    // ~592×464×48 world size that matches the standalone `coupon`.
+    modelScale: 160,
+    frameScale: 1.6,
+    gradientYShift: -3,
+    weldVertices: true,
+    materialOverrides: {
+      envMapIntensity: 0.0,
+      clearcoat: 0.2,
+      transmission: 0.4,
+      attenuationDistance: 2.5,
+    },
+    materialFor(name, parentName) {
+      const n  = (name || '').toLowerCase();
+      const pn = (parentName || '').toLowerCase();
+      // gltfpack wraps each source Mesh in an unnamed Group, so the
+      // recognizable name lands on parentName while name is blank —
+      // check both arguments.
+      // 5% emblem (both the '5' digit and '5%' glyph) → flat white luminance.
+      if (n === '5%' || pn === '5%' || n === '5' || pn === '5') return 'luminance';
       // Envelope → harmony accent (tracks the active body tint).
       if (n === 'envelope' || pn === 'envelope') return 'ribbonGray';
       // coupon.2 / paper → frosted body.
@@ -3871,6 +3904,7 @@ const LANDING_ORDER = [
   'clock',        // Clock Large 계열 — 348
   'shield',       // 방패+체크 — 수동 배치(1페이지, 시계 다음)
   'couponEnvelope',// Percent Ticket On Coupon — 328
+  'couponEnvelope5',// 5% 할인 쿠폰 — couponEnvelope 5% 변형
   'coupon',       // Percent Ticket Large — 190
   'bell',         // Bell Large 계열 — ~141
   'camera',       // Camera Large 계열 — 67
