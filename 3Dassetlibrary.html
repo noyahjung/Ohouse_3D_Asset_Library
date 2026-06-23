@@ -1457,7 +1457,6 @@
   <div class="asset-chip-list">
     <button class="asset-chip active" data-asset="gift">선물상자</button>
     <button class="asset-chip" data-asset="coupon">할인쿠폰</button>
-    <button class="asset-chip" data-asset="couponEnvelope5">5% 할인 쿠폰</button>
     <button class="asset-chip" data-asset="box">이사박스</button>
     <button class="asset-chip" data-asset="truck3">배송 트럭</button>
     <button class="asset-chip" data-asset="truck">트럭</button>
@@ -1469,6 +1468,8 @@
     <button class="asset-chip" data-asset="clock">시계</button>
     <button class="asset-chip" data-asset="woncoin">원화 코인</button>
     <button class="asset-chip" data-asset="checkcircle">체크 코인</button>
+    <button class="asset-chip" data-asset="calculator">계산기</button>
+    <button class="asset-chip" data-asset="couponEnvelope5">5% 할인 쿠폰</button>
     <button class="asset-chip" data-asset="pointcoin">포인트 코인</button>
     <button class="asset-chip" data-asset="shield">방패 + 체크</button>
     <button class="asset-chip" data-asset="camera">카메라</button>
@@ -2557,6 +2558,43 @@ const ASSETS = {
       // Envelope → harmony accent (tracks the active body tint).
       if (n === 'envelope' || pn === 'envelope') return 'ribbonGray';
       // coupon.2 / paper → frosted body.
+      return 'body';
+    },
+  },
+  calculator: {
+    url: 'calculator.glb',
+    label: '계산기',
+    desc: '정산·계산·금액 관련을 나타낼 때 쓰는 계산기 에셋',
+    keywords: ['계산기', '계산', '정산', '숫자', '금액'],
+    rootName: 'calculator',
+    recommended: 'frostedViolet',
+    // body world maxDim ~343 — 기존 norm(~300)과 같은 자릿수라 modelScale 불필요.
+    // On-screen size ∝ 1/frameScale. 기본 2.2 기준 1.65 = 약 1.33배 크게
+    // (1.1로 2배였던 것을 다시 2/3로 축소).
+    frameScale: 1.65,
+    // body 곡면(꺾이는 라운드)에 부드러운 원본 노멀이 있어서 weldVertices의
+    // computeVertexNormals가 면 단위로 각지게(찌그러져 보이게) 만든다.
+    // basket/clock처럼 원본 노멀을 보존해 곡면을 매끄럽게 유지.
+    keepOriginalNormals: true,
+    // plus(+ 기호) 레이어 숨김 — gltfpack이 mesh를 감싼 'plus' 그룹을
+    // visible=false 로 끄면 자식 mesh까지 렌더/섀도우에서 빠진다.
+    preprocess(root) {
+      const plus = root.getObjectByName('plus');
+      if (plus) plus.visible = false;
+    },
+    materialFor(name, parentName) {
+      const n  = (name || '').toLowerCase();
+      const pn = (parentName || '').toLowerCase();
+      // gltfpack wraps each source Mesh in an unnamed Group, so the
+      // recognizable name lands on parentName while name is blank —
+      // check both arguments.
+      // screen → 평평한 흰색 luminance 마킹.
+      if (n === 'screen' || pn === 'screen') return 'luminance';
+      // plus(+ 기호) → harmony 액센트(ribbonGray, body 틴트 추종).
+      if (n === 'plus' || pn === 'plus') return 'ribbonGray';
+      // button_long → harmony1(ribbonGray, 밝은 라벤더 액센트).
+      if (n === 'button_long' || pn === 'button_long') return 'ribbonGray';
+      // 정사각형 button 4개 + body → frosted body.
       return 'body';
     },
   },
@@ -3903,14 +3941,15 @@ const LANDING_ORDER = [
   'basket',       // Cart + Grocery Bag — 351
   'clock',        // Clock Large 계열 — 348
   'shield',       // 방패+체크 — 수동 배치(1페이지, 시계 다음)
-  'couponEnvelope',// Percent Ticket On Coupon — 328
-  'couponEnvelope5',// 5% 할인 쿠폰 — couponEnvelope 5% 변형
   'coupon',       // Percent Ticket Large — 190
   'bell',         // Bell Large 계열 — ~141
   'camera',       // Camera Large 계열 — 67
   'packagebox',   // Package Surprise Icons — 54
   'house',        // House With Drill 계열 추정 — ~53
   'checkcircle',  // Lucky Check (추정) — 20
+  'calculator',   // 계산기 — 신규, 체크 코인 뒤 수동 배치
+  'couponEnvelope5',// 5% 할인 쿠폰 — 체크 코인 뒤 수동 배치
+  'couponEnvelope',// 10% 할인 쿠폰 (Percent Ticket On Coupon) — 체크 코인 뒤 수동 배치
   'wifi',         // Glossy Wi-Fi Router — 9
   'purifier',     // Glossy Water Purifier — 7
   'woncoinarrow', // 페이백 파생 — 데이터 없음
