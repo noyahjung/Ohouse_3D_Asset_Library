@@ -609,7 +609,7 @@
   #landing .landing-sidebar-foot-links {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 10px;
     margin-bottom: 28px;
     font-size: 13.5px;
   }
@@ -1283,6 +1283,7 @@
       </nav>
       <div class="landing-sidebar-foot">
         <nav class="landing-sidebar-foot-links">
+          <a href="https://ohou-se.slack.com/archives/C08D7GRCJVB" target="_blank" rel="noopener">신규 그래픽 에셋 제작 요청</a>
           <span>오늘의집 브랜드 센터</span>
         </nav>
         <div class="landing-sidebar-foot-copy">© 2026 Ohouse. All rights reserved.</div>
@@ -2119,10 +2120,10 @@ const ASSETS = {
         const k = norm(key);
         return n === k || pn === k;
       };
-      // Front lens disc — dedicated camera-lens material: dark near-
-      // black base + chrome-like reflection, mimicking the coated
-      // optical glass of a real photographic lens.
-      if (matches('glass')) return 'cameraLens';
+      // Front lens disc (`glass`) → frosted body. Previously the
+      // chrome-like `cameraLens` metal; per design it now reads as the
+      // active frosted color so the lens isn't a separate metallic tone.
+      if (matches('glass')) return 'body';
       // Recessed inner lens face — harmony-2 (the dimmer companion of
       // the body's accent) so the recess reads as a deeper tonal
       // sibling of the body color. `lens-mat` was the name in the
