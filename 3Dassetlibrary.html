@@ -1470,6 +1470,7 @@
     <button class="asset-chip" data-asset="woncoin">원화 코인</button>
     <button class="asset-chip" data-asset="checkcircle">체크 코인</button>
     <button class="asset-chip" data-asset="calculator">계산기</button>
+    <button class="asset-chip" data-asset="movingpass">무빙패스 심볼</button>
     <button class="asset-chip" data-asset="couponEnvelope5">5% 할인 쿠폰</button>
     <button class="asset-chip" data-asset="pointcoin">포인트 코인</button>
     <button class="asset-chip" data-asset="shield">방패 + 체크</button>
@@ -2608,6 +2609,42 @@ const ASSETS = {
       // button_long → harmony1(ribbonGray, 밝은 라벤더 액센트).
       if (n === 'button_long' || pn === 'button_long') return 'ribbonGray';
       // 정사각형 button 4개 + body → frosted body.
+      return 'body';
+    },
+  },
+  movingpass: {
+    url: 'movingpass.glb',
+    label: '무빙패스 심볼',
+    desc: '무빙패스(이사·배송 패스)를 나타낼 때 쓰는 심볼 에셋',
+    keywords: ['무빙패스', '심볼', '패스', '이사', '배송'],
+    rootName: 'movingpass copy',
+    recommended: 'frostedBlue',
+    // 단일 심볼 레이어(`layer` 메시 하나). world maxDim ~353 ≈ 기존 norm(~300)이라
+    // modelScale 불필요.
+    // On-screen size ∝ 1/frameScale. 할인쿠폰(coupon 계열)과 동일 크기로 1.6.
+    frameScale: 1.6,
+    // 원본(소재 export) 노멀을 그대로 사용한다. 로더의 computeVertexNormals나
+    // 각도 기반 스무딩은 이 심볼의 토폴로지(스무딩 그룹 부재)에서 평평한 앞면에
+    // 주름을 만들거나 90° 모서리를 뭉개므로 쓰지 않는다. 원본 노멀이 가장 깨끗함.
+    keepOriginalNormals: true,
+    // 색 농도는 transmission이 아니라 '그라디언트'로 올린다. 기본 frosted 소재를
+    // 그대로 두고(투과·환경반사 기본값), gradientYShift를 크게 음수로 줘서 심볼이
+    // 그라디언트의 진한(saturated) 대역을 쓰게 한다. box(-0.12)는 두꺼운 입체라
+    // 약한 값으로 충분하지만, 얇은 심볼은 더 강하게 밀어야 같은 농도로 읽힌다.
+    useFullGradientBox: true,
+    // 색은 할인쿠폰(couponEnvelope)의 검증된 '얇은 시트 톤 보정' 레시피를 그대로
+    // 따른다: gradient를 진한 대역으로 크게 내리고(-3), 투과·환경반사·흡수거리를
+    // 낮춰 색을 채운다. (modelScale은 쿠폰 소스 특유값이라 제외 — movingpass는
+    // 이미 적정 크기.) hue는 frostedBlue 유지.
+    gradientYShift: -3,
+    materialOverrides: {
+      envMapIntensity: 0.0,
+      clearcoat: 0.2,
+      transmission: 0.4,
+      attenuationDistance: 2.5,
+    },
+    materialFor() {
+      // 단일 심볼 — 전체를 frosted body 단일 톤으로.
       return 'body';
     },
   },
@@ -4031,6 +4068,7 @@ const LANDING_ORDER = [
   'house',        // House With Drill 계열 추정 — ~53
   'checkcircle',  // Lucky Check (추정) — 20
   'calculator',   // 계산기 — 신규, 체크 코인 뒤 수동 배치
+  'movingpass',   // 무빙패스 심볼 — 신규
   'couponEnvelope5',// 5% 할인 쿠폰 — 체크 코인 뒤 수동 배치
   'couponEnvelope',// 10% 할인 쿠폰 (Percent Ticket On Coupon) — 체크 코인 뒤 수동 배치
   'wifi',         // Glossy Wi-Fi Router — 9
