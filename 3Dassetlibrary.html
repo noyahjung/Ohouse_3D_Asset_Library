@@ -1471,6 +1471,8 @@
     <button class="asset-chip" data-asset="checkcircle">체크 코인</button>
     <button class="asset-chip" data-asset="calculator">계산기</button>
     <button class="asset-chip" data-asset="movingpass">무빙패스 심볼</button>
+    <button class="asset-chip" data-asset="drill">드릴</button>
+    <button class="asset-chip" data-asset="interior">인테리어</button>
     <button class="asset-chip" data-asset="couponEnvelope5">5% 할인 쿠폰</button>
     <button class="asset-chip" data-asset="pointcoin">포인트 코인</button>
     <button class="asset-chip" data-asset="shield">방패 + 체크</button>
@@ -2646,6 +2648,119 @@ const ASSETS = {
     materialFor() {
       // 단일 심볼 — 전체를 frosted body 단일 톤으로.
       return 'body';
+    },
+  },
+  drill: {
+    url: 'drill.glb',
+    label: '드릴',
+    desc: '집수리·시공·DIY를 나타낼 때 쓰는 드릴 에셋',
+    keywords: ['드릴', '공구', '시공', '집수리', 'DIY'],
+    rootName: 'drill',
+    recommended: 'frostedGreen',
+    // overall world maxDim ~419 (head 본체가 볼륨감 있는 입체) — norm(~300)과 같은
+    // 자릿수라 modelScale 불필요. 모델링된 하드 엣지/UV를 살리려고 weldVertices의
+    // 노멀 재계산 대신 원본 노멀을 보존한다.
+    // On-screen size ∝ 1/frameScale. 기본 2.2 기준 1.65 (1.375에서 다시 5/6로 축소).
+    frameScale: 1.65,
+    // 뷰 3(Side)·4(Low Angle) 카메라 방향 오버라이드 — 어드민에서 잡은 좌표.
+    viewOverrides: { '3': [1.014, -0.026, 0.576], '4': [0.950, -0.665, 0.931] },
+    keepOriginalNormals: true,
+    materialFor(name, parentName) {
+      const n  = (name || '').toLowerCase();
+      const pn = (parentName || '').toLowerCase();
+      // gltfpack이 mesh를 unnamed Group으로 감싸므로 인식 이름이 parentName에
+      // 실린다 — name/parentName 둘 다 체크.
+      // ring(원형 밴드) → harmony 액센트(ribbonGray, body 틴트 추종).
+      if (n === 'ring' || pn === 'ring') return 'ribbonGray';
+      // upper + head(본체) + 나머지 → frosted body.
+      return 'body';
+    },
+  },
+  interior: {
+    url: 'interior.glb',
+    label: '인테리어',
+    desc: '집수리·인테리어 시공을 나타낼 때 쓰는 집+드릴 조합 에셋',
+    keywords: ['인테리어', '집수리', '시공', '리모델링', '드릴'],
+    rootName: 'interior',
+    recommended: 'frostedBlue',
+    // On-screen size ∝ 1/frameScale. 기본 2.2 → 1.114 (1.225에서 다시 1.1배 확대).
+    frameScale: 1.114,
+    // 전체를 에셋 높이의 10%만큼 위로, 폭의 10%만큼 좌측으로 이동.
+    yOffset: 0.1,
+    xOffset: -0.1,
+    // 집(walls)이 얇아 shared transmission/env에서 연해지므로 house처럼 gradient를
+    // 진한 대역으로 내리고, 모델링 하드 엣지 유지를 위해 원본 노멀을 보존한다.
+    gradientYShift: -1.1,
+    keepOriginalNormals: true,
+    // roof 메시는 소스에 NORMAL이 없어(POSITION만), keepOriginalNormals로 노멀
+    // 재계산을 건너뛰면 body 병합(mergeGeometries) 시 attribute 불일치로 예외가
+    // 나 그리드 로딩이 멈춘다. 노멀이 없는 메시에만 노멀을 계산해 채워준다.
+    preprocess(root) {
+      root.traverse((obj) => {
+        if (obj.isMesh && obj.geometry && !obj.geometry.attributes.normal) {
+          obj.geometry.computeVertexNormals();
+        }
+      });
+      // 집(window/roof/body)만 1.1배 확대. 집 파츠는 interior 루트의 개별 자식
+      // 이라 각자 스케일하면 제각각 어긋난다. 공통 월드 중심에 둔 그룹으로 묶어
+      // (attach로 월드변환 보존) 그룹을 1.1배 → 집 전체가 제자리에서 균일 확대.
+      // 드릴 파츠는 손대지 않으므로 1배 유지.
+      root.updateMatrixWorld(true);
+      const houseNames = new Set(['window', 'roof', 'body']);
+      const houseNodes = [];
+      root.traverse((obj) => { if (houseNames.has(obj.name)) houseNodes.push(obj); });
+      const drillGroup = root.children.find((c) => /drill/i.test(c.name));
+      if (houseNodes.length) {
+        const hBox = new THREE.Box3();
+        houseNodes.forEach((nd) => hBox.expandByObject(nd));
+        const Ch = hBox.getCenter(new THREE.Vector3());
+        // 집-드릴 간격 벌리기: 드릴을 (드릴−집) 방향으로 분리거리의 16%만큼 이동.
+        // (root는 순수 translation이라 월드 벡터를 로컬 position에 그대로 더함.)
+        if (drillGroup) {
+          const Cd = new THREE.Box3().setFromObject(drillGroup).getCenter(new THREE.Vector3());
+          drillGroup.position.addScaledVector(Cd.sub(Ch), 0.16);
+        }
+        // 집(window/roof/body)만 1.1배 — 공통 중심 Ch 기준 그룹 스케일.
+        const g = new THREE.Group();
+        g.position.copy(Ch);
+        root.add(g);
+        houseNodes.forEach((nd) => g.attach(nd));
+        g.scale.setScalar(1.1);
+        root.updateMatrixWorld(true);
+      }
+    },
+    // 드릴 파츠 두 개가 모두 'drill.2-tape'라 이름으로 ring을 못 가린다. 원형
+    // (XZ 비율 ~1) tape을 'ring'으로 재명명해 materialFor가 구분하게 한다.
+    // GLTFLoader가 '.'을 정화해 런타임 이름이 달라질 수 있으므로 'tape'를 정규식
+    // 으로 느슨하게 매칭한다.
+    rewriteNames(root) {
+      const s = new THREE.Vector3();
+      root.traverse((obj) => {
+        if (!obj.isMesh || !/tape/i.test(obj.parent?.name || '')) return;
+        obj.geometry.computeBoundingBox();
+        obj.geometry.boundingBox.getSize(s);
+        if (Math.min(s.x, s.z) / Math.max(s.x, s.z) > 0.9) obj.parent.name = 'ring';
+      });
+    },
+    materialFor(name, parentName) {
+      const n  = (name || '').toLowerCase();
+      const pn = (parentName || '').toLowerCase();
+      // 집·드릴 각 오브젝트의 원래 재질을 그대로 인테리어에 적용:
+      // 집 window → 흰색 luminance, 집 roof → harmony(ribbonGray).
+      if (n === 'window' || pn === 'window') return 'luminance';
+      if (n === 'roof'   || pn === 'roof')   return 'ribbonGray';
+      // 드릴 ring → harmony(ribbonGray).
+      if (n === 'ring'   || pn === 'ring')   return 'ribbonGray';
+      // 집 body + 드릴 box/upper → frosted body.
+      return 'body';
+    },
+    // 드릴 파츠는 그림자에서 제외 — 드릴 밑/우측에 생기던 그림자를 없애고
+    // AO blob(shadowBox)도 집 실루엣에만 맞춰 집 쪽 그림자만 남긴다.
+    // (ring은 rewriteNames로 개명된 드릴 파츠라 함께 제외.)
+    shadowExclude(name, parentName) {
+      const n  = (name || '').toLowerCase();
+      const pn = (parentName || '').toLowerCase();
+      return /drill/.test(n) || /drill/.test(pn) || n === 'ring' || pn === 'ring';
     },
   },
   checkcircle: {
@@ -3909,6 +4024,8 @@ function loadAsset(assetId) {
     const center = bbox.getCenter(new THREE.Vector3());
     root.position.sub(center);
     if (asset.yOffset) root.position.y += size.y * asset.yOffset;
+    // xOffset: 에셋 폭 기준 비율만큼 좌우 이동(음수=좌, 양수=우).
+    if (asset.xOffset) root.position.x += size.x * asset.xOffset;
     // floatOffset lifts the asset above its ground shadow (objectCenterY
     // below is computed from yOffset only, so the contact shadow stays at
     // the un-floated base) — the asset reads as hovering with a visible
@@ -4069,6 +4186,8 @@ const LANDING_ORDER = [
   'checkcircle',  // Lucky Check (추정) — 20
   'calculator',   // 계산기 — 신규, 체크 코인 뒤 수동 배치
   'movingpass',   // 무빙패스 심볼 — 신규
+  'drill',        // 드릴 — 신규
+  'interior',     // 인테리어(집+드릴) — 신규
   'couponEnvelope5',// 5% 할인 쿠폰 — 체크 코인 뒤 수동 배치
   'couponEnvelope',// 10% 할인 쿠폰 (Percent Ticket On Coupon) — 체크 코인 뒤 수동 배치
   'wifi',         // Glossy Wi-Fi Router — 9
