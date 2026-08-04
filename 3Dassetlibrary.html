@@ -1414,6 +1414,18 @@
       ">⚙</button>
     </div>
 
+    <!-- KV용 재질 (어드민 전용): 인테리어를 파트별 컬러웨이로 렌더 -->
+    <button class="bf-standalone admin-only" id="kvButton" data-mat="kv" data-mat-type="kv">
+      <span class="cat-thumb" style="background:linear-gradient(135deg,#dcdcdc 0 33%,#1a90ff 33% 66%,#286be6 66% 100%);"></span>
+      KV용 재질
+    </button>
+
+    <!-- Grey (어드민 전용): 신규 frosted 회색 — body에 적용·값 조절용 -->
+    <div class="chip admin-only" data-mat="frostedGrey" data-mat-type="frosted" style="--top:#c7c7c7; --bot:#ffffff;">
+      <button class="swatch"><span class="dot"></span> Grey</button>
+      <button class="gear" title="Settings">⚙</button>
+    </div>
+
     <div class="palette-category admin-only" data-category="builtin">
       <button class="palette-category-header">
         <span class="cat-thumb" style="background:linear-gradient(180deg,#888,#333);"></span>
@@ -1473,6 +1485,7 @@
     <button class="asset-chip" data-asset="movingpass">무빙패스 심볼</button>
     <button class="asset-chip" data-asset="drill">드릴</button>
     <button class="asset-chip" data-asset="interior">인테리어</button>
+    <button class="asset-chip" data-asset="helmet">헬멧</button>
     <button class="asset-chip" data-asset="couponEnvelope5">5% 할인 쿠폰</button>
     <button class="asset-chip" data-asset="pointcoin">포인트 코인</button>
     <button class="asset-chip" data-asset="shield">방패 + 체크</button>
@@ -1717,8 +1730,26 @@ const materials = {
   frostedViolet:   createFrosted('frostedViolet'),
   frostedDarkBlue: createFrosted('frostedDarkBlue'),
   frostedPink:     createFrosted('frostedPink'),
+  frostedGrey:     createFrosted('frostedGrey'),
   blackFriday:     createBlackFriday(),
 };
+
+// frostedGrey 전용 튜닝값(어드민에서 잡은 값) — KV 집 body에 적용될 기본 상태.
+// 공유 FROSTED_PRESET과 달리 grey만 이 물성으로 렌더한다. INITIAL_STATE가
+// 이 값을 스냅샷하므로 설정 패널 기본값·Reset도 이 값을 따른다.
+(() => {
+  const m = materials.frostedGrey;
+  m.transmission        = 0.21;
+  m.roughness           = 0.50;
+  m.thickness           = 3.82;
+  m.ior                 = 2.33;
+  m.clearcoat           = 0.0;
+  m.clearcoatRoughness  = 0.38;
+  m.attenuationDistance = 2.09;
+  m.attenuationColor.set('#ffffff');
+  m.map = makeVerticalGradient('#c7c7c7', '#ffffff', 0.0);
+  m.needsUpdate = true;
+})();
 
 // ── Per-asset body material clones ─────────────────────────
 // Thin-body assets (e.g. lightning) read washed-out under the shared
@@ -1760,6 +1791,17 @@ function getBodyMaterial(asset, variantId) {
   return mat;
 }
 
+// body 그룹(gid)이 실제로 쓸 frosted 변형 id를 해석한다.
+// - 에셋에 colorways[activeVariantId]가 있으면(예: interior의 'kv') 그룹별
+//   지정 변형을 사용(집=frostedGrey, 지붕=frostedBlue, 드릴=frostedDarkBlue).
+// - activeVariantId가 실제 frosted 변형이면 그대로 사용.
+// - 그 외(colorway인데 해당 에셋에 정의 없음)엔 옅은 회색으로 폴백.
+function bodyVariantForGroup(asset, gid) {
+  const cw = asset && asset.colorways && asset.colorways[activeVariantId];
+  if (cw) return cw[gid] || cw.__default__ || 'frostedGrey';
+  return materials[activeVariantId] ? activeVariantId : 'frostedGrey';
+}
+
 // Admin tuning of a variant mutates the shared base material in-place,
 // but assets with materialOverrides hold a cached clone whose params
 // were copied at clone time and whose `.map` may point to a now-disposed
@@ -1789,6 +1831,13 @@ function invalidateAssetBodyClonesFor(variantId) {
 // Built-in material chips — not exposed in the palette UI.
 const tapeMat       = createLuminanceWhite();
 const tapeBlackMat  = createLuminanceBlack();
+// KV 컬러웨이용 플랫 회색(무조명 luminance). frosted는 투과로 흰색이 되어버려서,
+// 집 body는 이 flat #dcdcdc 회색을 쓴다.
+const tapeGreyMat   = createLuminanceWhite();
+tapeGreyMat.color.set('#dcdcdc');
+// KV 지붕용 플랫 blue(무조명 luminance) #00a1ff.
+const tapeKvRoofMat = createLuminanceWhite();
+tapeKvRoofMat.color.set('#00a1ff');
 const ribbonGrayMat = createRibbonGray();
 // Double-sided so flat single-face accents (e.g. confetti chips oriented
 // every which way) render from behind too. On solid ribbon/roof/tape
@@ -2691,6 +2740,9 @@ const ASSETS = {
     // 집(walls)이 얇아 shared transmission/env에서 연해지므로 house처럼 gradient를
     // 진한 대역으로 내리고, 모델링 하드 엣지 유지를 위해 원본 노멀을 보존한다.
     gradientYShift: -1.1,
+    // 집 바닥이 라운드(베벨)라 그림자가 실제 bbox 바닥에 깔려 시각적 바닥과의
+    // 사이에 흰 여백이 생긴다. 그림자를 에셋 높이의 2%만큼 올려 여백을 닫는다.
+    bevelComp: 0.02,
     keepOriginalNormals: true,
     // roof 메시는 소스에 NORMAL이 없어(POSITION만), keepOriginalNormals로 노멀
     // 재계산을 건너뛰면 body 병합(mergeGeometries) 시 attribute 불일치로 예외가
@@ -2718,14 +2770,14 @@ const ASSETS = {
         // (root는 순수 translation이라 월드 벡터를 로컬 position에 그대로 더함.)
         if (drillGroup) {
           const Cd = new THREE.Box3().setFromObject(drillGroup).getCenter(new THREE.Vector3());
-          drillGroup.position.addScaledVector(Cd.sub(Ch), 0.16);
+          drillGroup.position.addScaledVector(Cd.sub(Ch), 0.28);
         }
         // 집(window/roof/body)만 1.1배 — 공통 중심 Ch 기준 그룹 스케일.
         const g = new THREE.Group();
         g.position.copy(Ch);
         root.add(g);
         houseNodes.forEach((nd) => g.attach(nd));
-        g.scale.setScalar(1.1);
+        g.scale.setScalar(1.21); // 집만 확대(기존 1.1 × 추가 1.1)
         root.updateMatrixWorld(true);
       }
     },
@@ -2742,17 +2794,43 @@ const ASSETS = {
         if (Math.min(s.x, s.z) / Math.max(s.x, s.z) > 0.9) obj.parent.name = 'ring';
       });
     },
+    // KV용 컬러웨이(어드민 전용). activeVariantId==='kv'일 때 파트를 그룹별로
+    // 나눠(bodyGroupFor) 각기 다른 frosted 변형을 입힌다:
+    //  집 body → frostedGrey(#dcdcdc), 집 지붕 → frostedBlue, 드릴 → frostedDarkBlue.
+    // KV 컬러웨이: 집 body=frostedGrey(조절용), 지붕=frostedBlue, 드릴=frostedDarkBlue.
+    colorways: {
+      kv: { house: 'frostedGrey', drill: 'frostedDarkBlue' },
+    },
+    // KV 모드 전용 뷰 오버라이드(뷰 버튼). 일반 모드엔 영향 없음.
+    viewOverridesByColorway: {
+      kv: { '2': [0.898, 0.400, 0.957] },
+    },
     materialFor(name, parentName) {
       const n  = (name || '').toLowerCase();
       const pn = (parentName || '').toLowerCase();
-      // 집·드릴 각 오브젝트의 원래 재질을 그대로 인테리어에 적용:
-      // 집 window → 흰색 luminance, 집 roof → harmony(ribbonGray).
+      const kv = activeVariantId === 'kv';
+      // window는 두 모드 모두 흰색 luminance.
       if (n === 'window' || pn === 'window') return 'luminance';
-      if (n === 'roof'   || pn === 'roof')   return 'ribbonGray';
-      // 드릴 ring → harmony(ribbonGray).
-      if (n === 'ring'   || pn === 'ring')   return 'ribbonGray';
-      // 집 body + 드릴 box/upper → frosted body.
+      if (kv) {
+        // KV 컬러웨이 — 지붕=flat luminance #00a1ff, 드릴 ring=harmony(ribbonGray),
+        // 집 body·드릴 나머지는 그룹별 frosted(집=grey, 드릴=darkblue).
+        if (n === 'roof' || pn === 'roof') return 'luminanceKvRoof';
+        if (n === 'ring' || pn === 'ring') return 'ribbonGray';
+        return 'body';
+      }
+      // 일반 모드: 지붕·드릴 ring → harmony(ribbonGray), 나머지 body.
+      if (n === 'roof' || pn === 'roof') return 'ribbonGray';
+      if (n === 'ring' || pn === 'ring') return 'ribbonGray';
       return 'body';
+    },
+    // KV 모드에서만 body 메시를 집/지붕/드릴 그룹으로 분리해 각기 다른 색을 입힌다.
+    // 일반 모드는 단일 그룹(__default__).
+    bodyGroupFor(name, parentName) {
+      if (activeVariantId !== 'kv') return '__default__';
+      const n  = (name || '').toLowerCase();
+      const pn = (parentName || '').toLowerCase();
+      if (/drill/.test(n) || /drill/.test(pn) || n === 'ring' || pn === 'ring') return 'drill';
+      return 'house';
     },
     // 드릴 파츠는 그림자에서 제외 — 드릴 밑/우측에 생기던 그림자를 없애고
     // AO blob(shadowBox)도 집 실루엣에만 맞춰 집 쪽 그림자만 남긴다.
@@ -2761,6 +2839,58 @@ const ASSETS = {
       const n  = (name || '').toLowerCase();
       const pn = (parentName || '').toLowerCase();
       return /drill/.test(n) || /drill/.test(pn) || n === 'ring' || pn === 'ring';
+    },
+  },
+  helmet: {
+    url: 'helmet.glb',
+    label: '헬멧',
+    desc: '안전·시공·라이딩을 나타낼 때 쓰는 헬멧 에셋',
+    keywords: ['헬멧', '안전', '안전모', '공사', '보호'],
+    rootName: 'helmet',
+    recommended: 'frostedOrange',
+    // On-screen size ∝ 1/frameScale. 기본 2.2 → 1.47 로 화면상 약 1.5배 크게.
+    frameScale: 1.47,
+    // helmet shell world maxDim ~311 ≈ 기존 norm(~300) → modelScale 불필요.
+    // 셸을 하나의 연속 곡면으로 웰드해 부드러운 노멀을 재계산한다. 원본 노멀은
+    // 면 단위로 각져 보여서(로우폴리 셰이딩) 매끈하지 않았다. smoothAngle 1.8rad
+    // (~103°)로 돔·챙 곡면은 부드럽게 이으면서, 그보다 꺾이는 진짜 하드 엣지만
+    // 각지게 보존한다.
+    weldVertices: true,
+    smoothAngle: 1.8,
+    // frosted 오렌지가 연하게 떠서 진하게: helmet 전용 오버라이드로 투과·환경반사를
+    // 낮춰 색이 solid하게 차게 하고, gradient를 진한 대역으로 내린다. 흡수거리는
+    // 살짝만 줄여 탁함은 피한다. (전역 frostedOrange·다른 에셋엔 영향 없음.)
+    // 계산기의 망고 오렌지(기본 frosted 프리셋을 큰 solid 볼륨에 입혀 채도가 진함)
+    // 수준으로 채도·진하기를 올린다. 얇은 곡면 셸이라 같은 오렌지가 연하게 뜨므로
+    //  · transmission 0.45→0.36 : 흰 배경 블리드를 더 줄여 발색(채도)↑
+    //  · attenuationDistance 3.0→2.5 : 볼륨 틴트를 더 깊게(채도·진하기)↑, 2.5는
+    //    frosted가 탁해지지 않는 clean 대역(2.0 이하는 muddy).
+    //  · gradientYShift -1.2→-1.5 : V대역을 더 진한 하단으로 당겨 진하기↑
+    gradientYShift: -1.5,
+    materialOverrides: {
+      envMapIntensity: 0.1,
+      transmission: 0.36,
+      attenuationDistance: 2.5,
+    },
+    materialFor(name, parentName) {
+      const n  = (name || '').toLowerCase();
+      const pn = (parentName || '').toLowerCase();
+      // 밴드 중앙의 별도 재질(band-RS Standard.7) → harmony2(어두운 액센트).
+      // ('band'보다 먼저 검사 — band-RS도 'band'를 포함하므로.)
+      if (/standard/.test(n) || /standard/.test(pn)) return 'harmony2';
+      // 턱끈 밴드(band / band-box) → harmony(ribbonGray, body 틴트 추종).
+      if (/band/.test(n) || /band/.test(pn)) return 'ribbonGray';
+      // helmet shell → frosted body(기본 오렌지).
+      return 'body';
+    },
+    // 헬멧은 떠 있어(밴드가 아래로) AO blob과 실제 캐스트 섀도우가 어긋나 원형이
+    // 2개로 보인다. 실제 캐스트 섀도우를 끄고 AO blob 타원 하나만 남긴다.
+    castShadow: false,
+    // 밴드는 shadowBox에서 제외 → AO blob이 헬멧 셸 실루엣 기준으로 잡히게.
+    shadowExclude(name, parentName) {
+      const n  = (name || '').toLowerCase();
+      const pn = (parentName || '').toLowerCase();
+      return /band/.test(n) || /band/.test(pn);
     },
   },
   checkcircle: {
@@ -3802,12 +3932,17 @@ function loadAsset(assetId) {
       const noShadow = asset.shadowExclude
         ? asset.shadowExclude(obj.name, obj.parent?.name)
         : false;
-      obj.castShadow = !noShadow;
+      // asset.castShadow === false → 실제 방향광 캐스트 섀도우를 끄고 AO blob만
+      // 남긴다(떠 있는 큰 물체에서 blob과 캐스트 섀도우가 어긋나 원형이 2개로
+      // 보이는 것 방지). shadowBox(=blob 크기)는 noShadow 기준으로 그대로 유지.
+      obj.castShadow = asset.castShadow === false ? false : !noShadow;
       obj.receiveShadow = true;
       if (!noShadow) shadowBox.expandByObject(obj);
       switch (kind) {
         case 'luminance':      obj.material = tapeMat;        return;
         case 'luminanceBlack': obj.material = tapeBlackMat;   return;
+        case 'luminanceGrey':  obj.material = tapeGreyMat;    return;
+        case 'luminanceKvRoof': obj.material = tapeKvRoofMat; return;
         case 'ribbonGray':     obj.material = ribbonGrayMat;  return;
         case 'harmony2':       obj.material = harmony2Mat;    return;
         case 'glass':          obj.material = glassMat;       return;
@@ -3887,7 +4022,8 @@ function loadAsset(assetId) {
         obj.geometry = weldByPosition(obj.geometry, tol);
       }
       if (!keepNormals) obj.geometry.computeVertexNormals();
-      obj.material = getBodyMaterial(asset, activeVariantId);
+      obj.userData.groupVariant = bodyVariantForGroup(asset, gid);
+      obj.material = getBodyMaterial(asset, obj.userData.groupVariant);
       remapUVsToWorldY(obj, yMin, yMax);
       bodyMeshes.push(obj);
     } else if (bodyToMerge.length > 1) {
@@ -3991,7 +4127,9 @@ function loadAsset(assetId) {
       } else if (!keepNormals) {
         smoothNormalsByAngle(merged);
       }
-      const mergedMesh = new THREE.Mesh(merged, getBodyMaterial(asset, activeVariantId));
+      const groupVariant = bodyVariantForGroup(asset, gid);
+      const mergedMesh = new THREE.Mesh(merged, getBodyMaterial(asset, groupVariant));
+      mergedMesh.userData.groupVariant = groupVariant;
       mergedMesh.castShadow = true;
       mergedMesh.receiveShadow = true;
       // Add to root BEFORE the UV remap so mergedMesh.matrixWorld picks
@@ -4109,10 +4247,11 @@ function loadAsset(assetId) {
     // Frosted (basic) mode: each asset loads in its recommended color.
     // Black Friday mode: keep the BF material across asset switches.
     const isBlackFriday = activeVariantId === 'blackFriday';
-    if (!isBlackFriday && asset.recommended && materials[asset.recommended]) {
+    const isColorway = !materials[activeVariantId] && !isBlackFriday; // 예: 'kv'
+    if (!isBlackFriday && !isColorway && asset.recommended && materials[asset.recommended]) {
       setActiveMaterial(asset.recommended);
     } else {
-      setActiveMaterial(activeVariantId);
+      setActiveMaterial(activeVariantId); // BF·colorway는 에셋 전환 후에도 유지
     }
 
     // Always update the Recommended tag to reflect each asset's designer pick.
@@ -4188,6 +4327,7 @@ const LANDING_ORDER = [
   'movingpass',   // 무빙패스 심볼 — 신규
   'drill',        // 드릴 — 신규
   'interior',     // 인테리어(집+드릴) — 신규
+  'helmet',       // 헬멧 — 신규
   'couponEnvelope5',// 5% 할인 쿠폰 — 체크 코인 뒤 수동 배치
   'couponEnvelope',// 10% 할인 쿠폰 (Percent Ticket On Coupon) — 체크 코인 뒤 수동 배치
   'wifi',         // Glossy Wi-Fi Router — 9
@@ -4662,6 +4802,7 @@ const editableMaterials = {
   frostedViolet:   materials.frostedViolet,
   frostedDarkBlue: materials.frostedDarkBlue,
   frostedPink:     materials.frostedPink,
+  frostedGrey:     materials.frostedGrey,
   blackFriday:     materials.blackFriday,
   glass:           glassMat,
   chrome:          chromeMat,
@@ -4718,6 +4859,7 @@ const INITIAL_STATE = {
   frostedViolet:   frostedInitial('frostedViolet'),
   frostedDarkBlue: frostedInitial('frostedDarkBlue'),
   frostedPink:     frostedInitial('frostedPink'),
+  frostedGrey:     frostedInitial('frostedGrey'),
   blackFriday:     snapshotBlackFriday(materials.blackFriday),
   glass:           snapshotMaterial(glassMat,  CONTROL_SCHEMAS.glass),
   chrome:          snapshotMaterial(chromeMat, CONTROL_SCHEMAS.chrome),
@@ -4732,6 +4874,7 @@ const state = {
   frostedViolet:   { ...INITIAL_STATE.frostedViolet },
   frostedDarkBlue: { ...INITIAL_STATE.frostedDarkBlue },
   frostedPink:     { ...INITIAL_STATE.frostedPink },
+  frostedGrey:     { ...INITIAL_STATE.frostedGrey },
   blackFriday:     { ...INITIAL_STATE.blackFriday },
   glass:           { ...INITIAL_STATE.glass },
   chrome:          { ...INITIAL_STATE.chrome },
@@ -4873,9 +5016,22 @@ function snapshotMaterial(mat, schema) {
 function setActiveMaterial(id) {
   activeVariantId = id;
   const asset = ASSETS[currentAssetId];
-  const mat = getBodyMaterial(asset, id);
-  for (const mesh of bodyMeshes) mesh.material = mat;
+  // colorway(예: 'kv')는 실제 frosted 변형이 아니라 그룹별 색을 쓴다. 이 경우
+  // 단일 재질로 덮지 않고, body merge에서 저장해 둔 그룹 변형으로 각각 재적용.
+  const isColorway = !materials[id] && id !== 'blackFriday';
+  if (isColorway) {
+    for (const mesh of bodyMeshes) {
+      mesh.material = getBodyMaterial(asset, mesh.userData.groupVariant || bodyVariantForGroup(asset, '__default__'));
+    }
+    // KV 드릴 ring(ribbonGray 액센트)은 드릴 색(frostedDarkBlue)의 harmony로.
+    ribbonGrayMat.color.set(HARMONY_BY_BODY.frostedDarkBlue);
+  } else {
+    const mat = getBodyMaterial(asset, id);
+    for (const mesh of bodyMeshes) mesh.material = mat;
+  }
   chips.forEach(c => c.classList.toggle('active', c.dataset.mat === id));
+  const kvBtn = document.getElementById('kvButton');
+  if (kvBtn) kvBtn.classList.toggle('active', id === 'kv');
 
   // Update category & BF button highlights.
   const bfBtn = document.getElementById('bfButton');
@@ -4892,19 +5048,23 @@ function setActiveMaterial(id) {
     }
   }
 
-  // Retint the ground shadow
-  if (FROSTED_VARIANTS[id]) {
-    shadowMat.color.set(FROSTED_VARIANTS[id].bottom);
+  // Retint the ground shadow. colorway(KV)는 집 body가 회색이라 variant.bottom
+  // (#ffffff)을 쓰면 그림자가 흰색이 되어 안 보인다 → 어두운 중성 회색으로 고정.
+  const shadowVar = id;
+  if (isColorway) {
+    shadowMat.color.set('#5a5a5a');
+  } else if (FROSTED_VARIANTS[shadowVar]) {
+    shadowMat.color.set(FROSTED_VARIANTS[shadowVar].bottom);
   } else if (id === 'blackFriday') {
     shadowMat.color.set('#1a0052');
   }
 
-  // Auto-switch background: black for Black Friday, white for basic
+  // Auto-switch background: black for Black Friday, white for basic/colorway
   if (id === 'blackFriday') {
     scene.background = new THREE.Color('#000000');
     document.querySelectorAll('#bgSelector .bg-swatch')
       .forEach(b => b.classList.toggle('active', b.dataset.bg === '#000000'));
-  } else if (FROSTED_VARIANTS[id]) {
+  } else if (FROSTED_VARIANTS[id] || isColorway) {
     scene.background = new THREE.Color('#ffffff');
     document.querySelectorAll('#bgSelector .bg-swatch')
       .forEach(b => b.classList.toggle('active', b.dataset.bg === '#ffffff'));
@@ -4932,6 +5092,7 @@ function openSettingsFor(matKey, matType) {
     frostedViolet:   'Violet',
     frostedDarkBlue: 'Dark Blue',
     frostedPink:     'Candy Pink',
+    frostedGrey:     'Grey',
     blackFriday:     'Purple Chrome',
     glass:           'Glass (Built-in)',
     chrome:          'Chrome (Built-in)',
@@ -5061,14 +5222,37 @@ document.querySelectorAll('.palette-category-header').forEach(header => {
   });
 });
 
+// 재질 선택 진입점. colorway(예: 'kv')↔일반 전환은 materialFor/bodyGroupFor가
+// 바뀌어 파트 구성이 달라지므로 에셋을 다시 로드해야 한다. 그 외(일반↔일반,
+// 일반↔BF)는 기존처럼 in-place 리틴트.
+function selectMaterial(id) {
+  const isCw = (v) => !materials[v] && v !== 'blackFriday';
+  if (isCw(activeVariantId) || isCw(id)) {
+    activeVariantId = id;
+    Promise.resolve(loadAsset(currentAssetId)).then(() => {
+      activeVariantId = id;      // loadAsset이 recommended로 되돌렸을 수 있어 재지정
+      setActiveMaterial(id);
+    });
+  } else {
+    setActiveMaterial(id);
+  }
+}
+
 // Chip events
 chips.forEach(chip => {
   const id = chip.dataset.mat;
   const type = chip.dataset.matType;
   const isBuiltin = chip.classList.contains('builtin');
+  // 현재 colorway(예: KV)에 이 변형이 포함돼 있으면, 클릭 시 active를 바꾸지 않고
+  // (colorway 유지) 설정만 연다 → 값 조절이 해당 파트(예: KV 집 body)에 실시간 반영.
+  const inActiveColorway = () => {
+    const cw = ASSETS[currentAssetId]?.colorways?.[activeVariantId];
+    return !!(cw && Object.values(cw).includes(id));
+  };
   chip.querySelector('.swatch').addEventListener('click', () => {
     if (isBuiltin) return;
-    setActiveMaterial(id);
+    if (inActiveColorway()) { openSettingsFor(id, type); return; }
+    selectMaterial(id);
     if (!settingsPanel.hidden && openMatKey) openSettingsFor(id, type);
   });
   chip.querySelector('.gear')?.addEventListener('click', (e) => {
@@ -5077,15 +5261,18 @@ chips.forEach(chip => {
     if (isOpenForThis) {
       closeSettings();
     } else {
-      if (!isBuiltin) setActiveMaterial(id);
+      if (!isBuiltin && !inActiveColorway()) selectMaterial(id);
       openSettingsFor(id, type);
     }
   });
 });
 
+// KV용 재질 (어드민 전용) — 인테리어 파트별 컬러웨이로 전환.
+document.getElementById('kvButton')?.addEventListener('click', () => selectMaterial('kv'));
+
 // Black Friday standalone button
 document.getElementById('bfButton').addEventListener('click', () => {
-  setActiveMaterial('blackFriday');
+  selectMaterial('blackFriday');
   if (!settingsPanel.hidden && openMatKey === 'blackFriday') {
     // already open — keep it
   } else if (!settingsPanel.hidden) {
@@ -5372,6 +5559,9 @@ document.getElementById('shadowToggle').addEventListener('click', (e) => {
 
 function getViewDir(viewId) {
   const asset = ASSETS[currentAssetId];
+  // colorway(예: 'kv') 전용 뷰 오버라이드가 있으면 우선 적용.
+  const cw = asset?.viewOverridesByColorway?.[activeVariantId];
+  if (cw?.[viewId]) return cw[viewId];
   if (asset?.viewOverrides?.[viewId]) return asset.viewOverrides[viewId];
   return VIEW_DIRS[viewId];
 }

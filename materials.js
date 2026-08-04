@@ -37,6 +37,10 @@ export const COLORS = {
   frostedPinkTop: '#FBACC1',
   frostedPinkBottom: '#FF3D6E',
 
+  // Grey — KV용 컬러웨이의 집 body. 어드민 튜닝값(top 회색 → bottom 화이트).
+  frostedGreyTop: '#c7c7c7',
+  frostedGreyBottom: '#ffffff',
+
   // Pure luminance white — unaffected by scene lighting
   luminanceWhite: '#FFFFFF',
   // Pure luminance black — unaffected by scene lighting
@@ -105,6 +109,11 @@ export const FROSTED_VARIANTS = {
     label: 'Candy Pink',
     top: COLORS.frostedPinkTop,
     bottom: COLORS.frostedPinkBottom,
+  },
+  frostedGrey: {
+    label: 'Grey',
+    top: COLORS.frostedGreyTop,
+    bottom: COLORS.frostedGreyBottom,
   },
 };
 
@@ -209,6 +218,7 @@ export const HARMONY_BY_BODY = {
   frostedViolet: '#D7ACF9',
   frostedDarkBlue: '#9CBCFF',
   frostedPink: '#FFC1D9',
+  frostedGrey: '#cfcfcf',
   blackFriday: '#D7ACF9',
 };
 
