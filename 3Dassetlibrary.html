@@ -2032,6 +2032,8 @@ const ASSETS = {
     rootName: 'water purifier',
     recommended: 'frostedBlue',
     rotationY: Math.PI,
+    // On-screen size ∝ 1/frameScale. 기본 2.2 → 1.91 (약 1.15배 확대).
+    frameScale: 1.91,
     materialFor(name, parentName) {
       const n = (name || '').toLowerCase();
       const pn = (parentName || '').toLowerCase();
@@ -2709,8 +2711,12 @@ const ASSETS = {
     // overall world maxDim ~419 (head 본체가 볼륨감 있는 입체) — norm(~300)과 같은
     // 자릿수라 modelScale 불필요. 모델링된 하드 엣지/UV를 살리려고 weldVertices의
     // 노멀 재계산 대신 원본 노멀을 보존한다.
-    // On-screen size ∝ 1/frameScale. 기본 2.2 기준 1.65 (1.375에서 다시 5/6로 축소).
-    frameScale: 1.65,
+    // On-screen size ∝ 1/frameScale. 기본 2.2 기준 1.5 (1.65에서 1.1배 확대).
+    frameScale: 1.5,
+    // 폭의 5%만큼 우측으로 이동(양수=우측).
+    xOffset: 0.05,
+    // 깊이의 5%만큼 앞쪽(카메라 쪽)으로 이동(양수=앞).
+    zOffset: 0.05,
     // 뷰 3(Side)·4(Low Angle) 카메라 방향 오버라이드 — 어드민에서 잡은 좌표.
     viewOverrides: { '3': [1.014, -0.026, 0.576], '4': [0.950, -0.665, 0.931] },
     keepOriginalNormals: true,
