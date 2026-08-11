@@ -1420,6 +1420,14 @@
       KV용 재질
     </button>
 
+    <!-- KV용 재질 2 (어드민 전용): KV보다 약한 배색 — 기본 frosted 색을 그대로
+         두고 일부 파트만 플랫 톤으로 교체한다. 에셋이 colorways.kv2를 선언한
+         경우에만 의미가 있고, 없으면 다른 컬러웨이와 같이 회색으로 폴백한다. -->
+    <button class="bf-standalone admin-only" id="kv2Button" data-mat="kv2" data-mat-type="kv">
+      <span class="cat-thumb" style="background:linear-gradient(135deg,#1a90ff 0 50%,#ededed 50% 75%,#333333 75% 100%);"></span>
+      KV용 재질 2
+    </button>
+
     <!-- Grey (어드민 전용): 신규 frosted 회색 — body에 적용·값 조절용 -->
     <div class="chip admin-only" data-mat="frostedGrey" data-mat-type="frosted" style="--top:#c7c7c7; --bot:#ffffff;">
       <button class="swatch"><span class="dot"></span> Grey</button>
@@ -1460,6 +1468,10 @@
         </div>
         <div class="chip builtin" data-mat="kvGrey" data-mat-type="flatColor">
           <button class="swatch"><span class="dot" style="background:#ededed;"></span> KV Grey</button>
+          <button class="gear" title="Settings">⚙</button>
+        </div>
+        <div class="chip builtin" data-mat="kvDarkBlue" data-mat-type="flatColor">
+          <button class="swatch"><span class="dot" style="background:#286be6;"></span> KV Dark Blue</button>
           <button class="gear" title="Settings">⚙</button>
         </div>
       </div>
@@ -1868,6 +1880,12 @@ tapeKvWheelMat.userData.paletteId = 'kvWheel';
 const tapeKvGreyMat = createLuminanceWhite();
 tapeKvGreyMat.color.set('#ededed');
 tapeKvGreyMat.userData.paletteId = 'kvGrey';
+// darkBlue: 팔레트 Dark Blue의 진한 끝(#286BE6)을 플랫으로 굳힌 톤. 두께가
+// 1~2 유닛인 얇은 판(와이파이 인디케이터 등)은 frosted를 쓰면 투과로 색이
+// 날아가므로, 같은 자리에 Dark Blue를 확실히 앉히려면 이 플랫이 필요하다.
+const tapeKvDarkBlueMat = createLuminanceWhite();
+tapeKvDarkBlueMat.color.set('#286be6');
+tapeKvDarkBlueMat.userData.paletteId = 'kvDarkBlue';
 const ribbonGrayMat = createRibbonGray();
 // Double-sided so flat single-face accents (e.g. confetti chips oriented
 // every which way) render from behind too. On solid ribbon/roof/tape
@@ -2370,10 +2388,14 @@ const ASSETS = {
     // 라운드 패널 KV Grey #ededed. 상단 wifi 심볼은 일반 모드와 동일.
     // frosted가 한 덩어리라 bodyGroupFor 없이 단일 버킷(`__default__`)을
     // 그대로 쓴다 — 그라디언트 창도 일반 모드와 같은 전체 실루엣이다.
+    // KV용 재질 2(kv2)는 위 kv를 그대로 베이스로 쓰되, 점 3개만 KV Wheel
+    // #333333 대신 KV Dark Blue #286be6로 바꾼 변형이다. 라운드 패널
+    // (KV Grey)과 본체·안테나(Genuine Blue)는 kv와 동일.
     colorways: {
-      kv: { __default__: 'frostedBlue' },
+      kv:  { __default__: 'frostedBlue' },
+      kv2: { __default__: 'frostedBlue' },
     },
-    colorwayHarmony: { kv: 'frostedBlue' },
+    colorwayHarmony: { kv: 'frostedBlue', kv2: 'frostedBlue' },
     // Widen each antenna's base stem (`bar`, Ø≈1546) out to the rod's
     // diameter (`bar_head`, Ø≈2320) so the antenna reads as one uniform
     // cylinder running straight down into the body — instead of a slim
@@ -2413,8 +2435,9 @@ const ASSETS = {
       // KV에선 앞면 인디케이터를 통째로 갈아끼운다 — 점 3개는 KV Wheel
       // #333333, 그 뒤 라운드 패널은 KV Grey #ededed. 둘 다 두께 0.5~2의
       // 얇은 판이라 frosted가 아닌 무조명 플랫이어야 색이 그대로 나온다.
-      if (activeVariantId === 'kv') {
-        if (pn === 'light')      return 'luminanceKvWheel';
+      if (activeVariantId === 'kv' || activeVariantId === 'kv2') {
+        // 점 3개 — kv는 KV Wheel #333333, kv2는 KV Dark Blue #286be6.
+        if (pn === 'light')      return activeVariantId === 'kv' ? 'luminanceKvWheel' : 'luminanceKvDarkBlue';
         if (pn === 'light_area') return 'luminanceKvGrey';
       }
       if (pn === 'light')       return 'ribbonGray';
@@ -2472,10 +2495,14 @@ const ASSETS = {
     // colorwayHarmony가 없으면 컬러웨이엔 단일 body 색이 없어 harmony 색을
     // 유도하지 못하고 기본값(Dark Blue 계열)으로 튄다 — 칼라(neck) 등 남은
     // 액센트를 일반 모드와 같게 유지하려면 body 색을 기준으로 고정해야 한다.
+    // KV용 재질 2(kv2)는 위 kv를 그대로 베이스로 쓰되, 노즐 끝(head_front)만
+    // KV Wheel #333333 대신 칼라(neck)와 같은 harmony 색으로 바꾼 변형이다.
+    // frosted 파트 구성은 kv와 동일.
     colorways: {
-      kv: { spray: 'frostedBlue', brush: 'frostedDarkBlue' },
+      kv:  { spray: 'frostedBlue', brush: 'frostedDarkBlue' },
+      kv2: { spray: 'frostedBlue', brush: 'frostedDarkBlue' },
     },
-    colorwayHarmony: { kv: 'frostedBlue' },
+    colorwayHarmony: { kv: 'frostedBlue', kv2: 'frostedBlue' },
     // Source authoring leaves the brush bristles ~2.3 units above the
     // spray bottle base. Nudge the brush subgroup down so both bottoms
     // sit flush on the ground plane.
@@ -2495,9 +2522,11 @@ const ASSETS = {
       //    ('brush-mat'은 'brush'와 다른 문자열이라 여기 안 걸린다).
       //  - head_front(노즐 끝) : harmony → KV Wheel #333333 플랫. 안쪽 흰
       //    디스크(head_front-Mat)도 마찬가지로 아래 규칙대로 흰색 유지.
-      if (activeVariantId === 'kv') {
-        if (pn === 'brush')      return 'luminanceKvGrey';
-        if (pn === 'head_front') return 'luminanceKvWheel';
+      if (activeVariantId === 'kv' || activeVariantId === 'kv2') {
+        if (pn === 'brush') return 'luminanceKvGrey';
+        // 노즐 끝 — kv는 KV Wheel #333333, kv2는 아래 일반 규칙으로 흘려보내
+        // 칼라(neck)와 같은 harmony(ribbonGray)를 쓰게 한다.
+        if (activeVariantId === 'kv' && pn === 'head_front') return 'luminanceKvWheel';
       }
       // Spray sub-object
       //  - body, head      → frosted body (bottle + trigger silhouette)
@@ -2806,23 +2835,27 @@ const ASSETS = {
     //   링 앞쪽(척·비트 쪽) → frosted Dark Blue
     //   링 밴드            → frostedGrey  ※ 일반 모드에선 harmony 액센트
     //   링 뒤쪽(손잡이 body·upper) → frosted Genuine Blue
+    // KV용 재질 2(kv2)는 위 kv를 그대로 베이스로 쓰되, 링 밴드만 frostedGrey
+    // 대신 청소도구 솔과 같은 플랫 KV Grey #ededed로 바꾼 변형이다.
+    // 링이 플랫으로 빠지므로 kv2의 frosted 그룹은 front/back 둘뿐.
     colorways: {
-      kv: { front: 'frostedDarkBlue', ring: 'frostedGrey', back: 'frostedBlue' },
+      kv:  { front: 'frostedDarkBlue', ring: 'frostedGrey', back: 'frostedBlue' },
+      kv2: { front: 'frostedDarkBlue', back: 'frostedBlue' },
     },
     // KV 전용 그라디언트 창(어드민 Asset Settings의 Gradient Y Shift).
     // 일반 모드는 0 그대로 — 이 값은 KV일 때만 적용된다.
-    gradientYShiftByColorway: { kv: -1.0 },
+    gradientYShiftByColorway: { kv: -1.0, kv2: -1.0 },
     // 링 앞쪽만 위 -1.0보다 더 내려 Dark Blue를 진하게 뺀다. 그룹 키는 KV에서만
     // 생기므로(일반 모드는 '__default__') 일반 모드엔 영향이 없다.
     gradientYShiftByGroup: { front: -2.2 },
-    colorwayHarmony: { kv: 'frostedBlue' },
+    colorwayHarmony: { kv: 'frostedBlue', kv2: 'frostedBlue' },
     // 원본 head는 척부터 손잡이까지가 삼각형 10,887개짜리 단일 메시라, 재질
     // 배정만으로는 링 앞/뒤를 나눌 수 없다. KV일 때만 링의 중심 z 평면에서
     // 삼각형을 앞/뒤로 갈라 head_front / head_back 두 메시로 쪼갠다. 절단면은
     // 링 밴드(z −76…−28, 본체보다 굵게 돌출)에 가려 보이지 않는다.
     // 일반 모드에선 손대지 않아 단일 메시 경로가 그대로 유지된다.
     preprocess(root, THREE) {
-      if (activeVariantId !== 'kv') return;
+      if (activeVariantId !== 'kv' && activeVariantId !== 'kv2') return;
       let headMesh = null;
       const ringBox = new THREE.Box3();
       let hasRing = false;
@@ -2883,9 +2916,10 @@ const ASSETS = {
     },
     // 일반 모드는 전부 한 버킷(`__default__`)이라 지금까지와 동일하게 동작한다.
     bodyGroupFor(name, parentName) {
-      if (activeVariantId !== 'kv') return '__default__';
+      if (activeVariantId !== 'kv' && activeVariantId !== 'kv2') return '__default__';
       const n  = (name || '').toLowerCase();
       const pn = (parentName || '').toLowerCase();
+      // kv2는 링이 플랫이라 이 분기에 오지 않는다(kv 전용).
       if (n === 'ring' || pn === 'ring') return 'ring';
       if (n === 'head_front') return 'front';
       // head_back + upper(손잡이 상단) → 링 뒤쪽 body와 같은 색.
@@ -2896,10 +2930,13 @@ const ASSETS = {
       const pn = (parentName || '').toLowerCase();
       // gltfpack이 mesh를 unnamed Group으로 감싸므로 인식 이름이 parentName에
       // 실린다 — name/parentName 둘 다 체크.
-      // ring(원형 밴드) → 일반 모드는 harmony 액센트(ribbonGray, body 틴트
-      // 추종), KV에선 frosted body로 돌려 'ring' 그룹에서 frostedGrey를 받는다.
+      // ring(원형 밴드) — 일반 모드는 harmony 액센트(ribbonGray, body 틴트
+      // 추종), kv는 frosted body로 돌려 'ring' 그룹에서 frostedGrey를 받고,
+      // kv2는 플랫 KV Grey #ededed를 그대로 쓴다.
       if (n === 'ring' || pn === 'ring') {
-        return activeVariantId === 'kv' ? 'body' : 'ribbonGray';
+        if (activeVariantId === 'kv')  return 'body';
+        if (activeVariantId === 'kv2') return 'luminanceKvGrey';
+        return 'ribbonGray';
       }
       // upper + head(본체) + 나머지 → frosted body.
       return 'body';
@@ -3256,15 +3293,20 @@ const ASSETS = {
     //   wheels-tape(휠)        : 밝은 흰색 #e5f9ff
     // frosted를 쓰는 두 파트를 bodyGroupFor가 body/cargo로 갈라 각기 다른
     // 변형을 받는다.
+    //
+    // KV용 재질 2(kv2)는 위 kv 배색을 그대로 베이스로 쓰되, 타이어만
+    // 플랫 #333333 대신 frosted Dark Blue로 바꾼 변형이다(검정이 너무 강해서).
+    // 나머지(차체·화물박스·창문·휠 링)는 kv와 동일.
     colorways: {
-      kv: { body: 'frostedBlue', cargo: 'frostedDarkBlue' },
+      kv:  { body: 'frostedBlue', cargo: 'frostedDarkBlue' },
+      kv2: { body: 'frostedBlue', cargo: 'frostedDarkBlue', wheels: 'frostedDarkBlue' },
     },
     // KV 전용 그라디언트 창(어드민 Asset Settings의 Gradient Y Shift).
-    // 일반 모드는 0 그대로 — 이 값은 KV일 때만 적용된다.
-    gradientYShiftByColorway: { kv: -1.0 },
+    // 일반 모드는 0 그대로 — 이 값은 두 KV 컬러웨이에서만 적용된다.
+    gradientYShiftByColorway: { kv: -1.0, kv2: -1.0 },
     // harmony/harmony2는 단일 body 색이 없는 컬러웨이에선 자동 유도가 안 되므로
-    // 차체 색(frostedBlue) 기준으로 고정한다(사이드미러 harmony2 등).
-    colorwayHarmony: { kv: 'frostedBlue' },
+    // 차체 색(frostedBlue) 기준으로 고정한다(사이드미러 harmony2, kv2의 휠 링 등).
+    colorwayHarmony: { kv: 'frostedBlue', kv2: 'frostedBlue' },
     // Compound asset — bucket the wheels into their own body group so
     // they don't share a weld/normal pass with body-box. Otherwise
     // weldByPosition fuses the body and wheel vertices where they
@@ -3272,35 +3314,41 @@ const ASSETS = {
     // body-side faces with curved wheel faces, fanning out the seam
     // normals into visible facet artifacts on the body around each
     // wheel hub.
-    // KV에선 화물박스(Cube)가 'cargo' 그룹으로 빠져 'body' 버킷엔 body-box만
-    // 남는다. 그러면 body 그룹 박스가 Cube 높이(y 297→340)만큼 짧아져 차체의
-    // 세로 그라디언트 창이 일반 모드와 달라진다. Cube는 자기 그룹에서 자기
-    // 재질(frostedDarkBlue)을 받되, 'body' 그룹의 bbox 계산에도 계속 참여시켜
-    // 차체 톤을 일반 모드와 같은 창에서 뽑는다.
+    // 두 KV 컬러웨이에선 화물박스(Cube)가 'cargo' 그룹으로 빠져 'body' 버킷엔
+    // body-box만 남는다. 그러면 body 그룹 박스가 Cube 높이(y 297→340)만큼
+    // 짧아져 차체의 세로 그라디언트 창이 일반 모드와 달라진다. Cube는 자기
+    // 그룹에서 자기 재질(frostedDarkBlue)을 받되, 'body' 그룹의 bbox 계산에도
+    // 계속 참여시켜 차체 톤을 일반 모드와 같은 창에서 뽑는다.
     gradientBoxFor(name, parentName) {
-      if (activeVariantId !== 'kv') return null;
+      if (activeVariantId !== 'kv' && activeVariantId !== 'kv2') return null;
       const n  = (name || '').toLowerCase();
       const pn = (parentName || '').toLowerCase();
       return (/cube/.test(n) || /cube/.test(pn)) ? 'body' : null;
     },
-    // KV 모드에선 화물박스(Cube)를 'cargo'로 추가 분리해 차체와 다른 frosted
-    // 변형(frostedDarkBlue)을 입힌다. 일반 모드는 기존대로 body/wheels 2그룹.
+    // 두 KV 컬러웨이에선 화물박스(Cube)를 'cargo'로 추가 분리해 차체와 다른
+    // frosted 변형(frostedDarkBlue)을 입힌다. 일반 모드는 기존대로 body/wheels
+    // 2그룹(그 모드에선 Cube가 body에 묶인다).
     bodyGroupFor(name, parentName, grandparentName) {
       const pn = (parentName || '').toLowerCase().replace(/_\d+$/, '');
       const gp = (grandparentName || '').toLowerCase().replace(/_\d+$/, '');
       if (pn === 'wheels-box' || gp === 'wheels') return 'wheels';
-      if (activeVariantId === 'kv' && pn === 'cube') return 'cargo';
+      const isKv = activeVariantId === 'kv' || activeVariantId === 'kv2';
+      if (isKv && pn === 'cube') return 'cargo';
       return 'body';
     },
     materialFor(name, parentName) {
       const n  = (name || '').toLowerCase();
       const pn = (parentName || '').toLowerCase();
-      // KV 컬러웨이 — 바퀴 두 파트만 플랫 재질로 갈리고, 나머지
-      // (lamp/lightining/plate/grill/mirror)는 일반 모드 규칙을 그대로 탄다.
-      // 이 블록은 'tape'를 통으로 잡는 아래 일반 규칙(→ribbonGray)보다 반드시
-      // 먼저 와야 wheels-tape(휠)이 #e5f9ff로, body-tape(창문)이 frosted로 간다.
-      if (activeVariantId === 'kv') {
-        if (/wheels-box/.test(n)  || /wheels-box/.test(pn))  return 'luminanceKvWheel';
+      // 두 KV 컬러웨이의 파트 배정. 나머지(lamp/lightining/plate/grill/mirror)는
+      // 일반 모드 규칙을 그대로 탄다. 이 블록은 'tape'를 통으로 잡는 아래 일반
+      // 규칙(→ribbonGray)보다 반드시 먼저 와야 body-tape(창문)·wheels-tape(휠)이
+      // 의도한 재질로 간다.
+      const kv  = activeVariantId === 'kv';
+      const kv2 = activeVariantId === 'kv2';
+      if (kv || kv2) {
+        // 타이어 — kv는 플랫 KV Wheel #333333, kv2는 frosted Dark Blue
+        // (bodyGroupFor가 'wheels' 그룹으로 빼서 colorways에서 받는다).
+        if (/wheels-box/.test(n)  || /wheels-box/.test(pn))  return kv ? 'luminanceKvWheel' : 'body';
         if (/wheels-tape/.test(n) || /wheels-tape/.test(pn)) return 'luminanceKvGlass';
         // 창문(body-tape) → KV Grey #ededed 플랫.
         if (/body-tape/.test(n)   || /body-tape/.test(pn))   return 'luminanceKvGrey';
@@ -4192,6 +4240,7 @@ function loadAsset(assetId) {
         case 'luminanceKvGlass': obj.material = tapeKvGlassMat; return;
         case 'luminanceKvWheel': obj.material = tapeKvWheelMat; return;
         case 'luminanceKvGrey': obj.material = tapeKvGreyMat;   return;
+        case 'luminanceKvDarkBlue': obj.material = tapeKvDarkBlueMat; return;
         case 'ribbonGray':     obj.material = ribbonGrayMat;  return;
         case 'harmony2':       obj.material = harmony2Mat;    return;
         case 'glass':          obj.material = glassMat;       return;
@@ -5076,6 +5125,7 @@ const editableMaterials = {
   kvGlass:         tapeKvGlassMat,
   kvWheel:         tapeKvWheelMat,
   kvGrey:          tapeKvGreyMat,
+  kvDarkBlue:      tapeKvDarkBlueMat,
 };
 
 // 플랫 단색 재질의 스냅샷 — snapshotMaterial은 mat[key]를 그대로 담아서
@@ -5143,6 +5193,7 @@ const INITIAL_STATE = {
   kvGlass:         snapshotFlatColor(tapeKvGlassMat),
   kvWheel:         snapshotFlatColor(tapeKvWheelMat),
   kvGrey:          snapshotFlatColor(tapeKvGreyMat),
+  kvDarkBlue:      snapshotFlatColor(tapeKvDarkBlueMat),
 };
 const state = {
   frostedBlue:     { ...INITIAL_STATE.frostedBlue },
@@ -5161,6 +5212,7 @@ const state = {
   kvGlass:         { ...INITIAL_STATE.kvGlass },
   kvWheel:         { ...INITIAL_STATE.kvWheel },
   kvGrey:          { ...INITIAL_STATE.kvGrey },
+  kvDarkBlue:      { ...INITIAL_STATE.kvDarkBlue },
 };
 
 // ── Color Vari (admin-vari mode) ────────────────────────────
@@ -5317,6 +5369,8 @@ function setActiveMaterial(id) {
   chips.forEach(c => c.classList.toggle('active', c.dataset.mat === id));
   const kvBtn = document.getElementById('kvButton');
   if (kvBtn) kvBtn.classList.toggle('active', id === 'kv');
+  const kv2Btn = document.getElementById('kv2Button');
+  if (kv2Btn) kv2Btn.classList.toggle('active', id === 'kv2');
 
   // Update category & BF button highlights.
   const bfBtn = document.getElementById('bfButton');
@@ -5386,6 +5440,7 @@ function openSettingsFor(matKey, matType) {
     kvGlass:         'KV Glass (Built-in)',
     kvWheel:         'KV Wheel (Built-in)',
     kvGrey:          'KV Grey (Built-in)',
+    kvDarkBlue:      'KV Dark Blue (Built-in)',
   };
   settingsTitle.textContent = labelMap[matKey] || matKey;
   renderControls(matKey, matType);
@@ -5584,6 +5639,7 @@ chips.forEach(chip => {
 
 // KV용 재질 (어드민 전용) — 인테리어 파트별 컬러웨이로 전환.
 document.getElementById('kvButton')?.addEventListener('click', () => selectMaterial('kv'));
+document.getElementById('kv2Button')?.addEventListener('click', () => selectMaterial('kv2'));
 
 // Black Friday standalone button
 document.getElementById('bfButton').addEventListener('click', () => {
@@ -5942,6 +5998,7 @@ document.getElementById('resetPreset').addEventListener('click', () => {
              : mat.userData.paletteId === 'kvGlass' ? 'flatColor'
              : mat.userData.paletteId === 'kvWheel' ? 'flatColor'
              : mat.userData.paletteId === 'kvGrey'  ? 'flatColor'
+             : mat.userData.paletteId === 'kvDarkBlue' ? 'flatColor'
              : 'frosted';
   // Gradient top/bottom live on FROSTED_VARIANTS — restore them first
   // so any texture regeneration below reads the reset colors.
