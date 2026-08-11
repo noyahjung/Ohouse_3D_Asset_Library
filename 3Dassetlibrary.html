@@ -2366,8 +2366,8 @@ const ASSETS = {
     gradientYShift: -0.75,
     // KV용 컬러웨이(어드민 전용 — 'KV용 재질' 버튼으로만 진입).
     // frosted 파트(body·안테나 두 봉)는 하나의 Genuine Blue로 통일하고,
-    // 앞면 인디케이터 점 3개(light)만 KV Glass #e5f9ff로 뺀다. 나머지
-    // (light_area 라운드 패널·상단 wifi 심볼)는 일반 모드와 동일.
+    // 앞면 인디케이터만 플랫으로 갈아끼운다 — 점 3개 KV Wheel #333333,
+    // 라운드 패널 KV Grey #ededed. 상단 wifi 심볼은 일반 모드와 동일.
     // frosted가 한 덩어리라 bodyGroupFor 없이 단일 버킷(`__default__`)을
     // 그대로 쓴다 — 그라디언트 창도 일반 모드와 같은 전체 실루엣이다.
     colorways: {
@@ -2410,9 +2410,13 @@ const ASSETS = {
       // emblem all resolve through the same rules regardless of how
       // Three.js mangled the source name.
       const pn = (parentName || '').toLowerCase().replace(/\./g, '').replace(/_\d+$/, '');
-      // KV에선 인디케이터 점 3개만 KV Glass(#e5f9ff)로 뺀다. 그 뒤 라운드
-      // 패널(light_area)은 일반 모드와 같은 harmony2를 유지.
-      if (activeVariantId === 'kv' && pn === 'light') return 'luminanceKvGlass';
+      // KV에선 앞면 인디케이터를 통째로 갈아끼운다 — 점 3개는 KV Wheel
+      // #333333, 그 뒤 라운드 패널은 KV Grey #ededed. 둘 다 두께 0.5~2의
+      // 얇은 판이라 frosted가 아닌 무조명 플랫이어야 색이 그대로 나온다.
+      if (activeVariantId === 'kv') {
+        if (pn === 'light')      return 'luminanceKvWheel';
+        if (pn === 'light_area') return 'luminanceKvGrey';
+      }
       if (pn === 'light')       return 'ribbonGray';
       if (pn === 'light_area')  return 'harmony2';
       // WiFi waves emblem on the body face — flat luminance white so
