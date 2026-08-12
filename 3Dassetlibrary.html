@@ -1424,7 +1424,7 @@
          두고 일부 파트만 플랫 톤으로 교체한다. 에셋이 colorways.kv2를 선언한
          경우에만 의미가 있고, 없으면 다른 컬러웨이와 같이 회색으로 폴백한다. -->
     <button class="bf-standalone admin-only" id="kv2Button" data-mat="kv2" data-mat-type="kv">
-      <span class="cat-thumb" style="background:linear-gradient(135deg,#1a90ff 0 50%,#ededed 50% 75%,#333333 75% 100%);"></span>
+      <span class="cat-thumb" style="background:linear-gradient(135deg,#1a90ff 0 50%,#dedede 50% 75%,#333333 75% 100%);"></span>
       KV용 재질 2
     </button>
 
@@ -1467,7 +1467,7 @@
           <button class="gear" title="Settings">⚙</button>
         </div>
         <div class="chip builtin" data-mat="kvGrey" data-mat-type="flatColor">
-          <button class="swatch"><span class="dot" style="background:#ededed;"></span> KV Grey</button>
+          <button class="swatch"><span class="dot" style="background:#dedede;"></span> KV Grey</button>
           <button class="gear" title="Settings">⚙</button>
         </div>
         <div class="chip builtin" data-mat="kvDarkBlue" data-mat-type="flatColor">
@@ -1878,7 +1878,7 @@ tapeKvWheelMat.userData.paletteId = 'kvWheel';
 // 작은 파트(트럭 창문, 청소도구 솔)에서 거의 흰색으로 떠버려서, 같은 자리에
 // 균일한 회색이 필요할 때 쓴다.
 const tapeKvGreyMat = createLuminanceWhite();
-tapeKvGreyMat.color.set('#ededed');
+tapeKvGreyMat.color.set('#dedede');
 tapeKvGreyMat.userData.paletteId = 'kvGrey';
 // darkBlue: 팔레트 Dark Blue의 진한 끝(#286BE6)을 플랫으로 굳힌 톤. 두께가
 // 1~2 유닛인 얇은 판(와이파이 인디케이터 등)은 frosted를 쓰면 투과로 색이
@@ -2083,7 +2083,7 @@ const ASSETS = {
     // On-screen size ∝ 1/frameScale. 기본 2.2 → 1.91 (약 1.15배 확대).
     frameScale: 1.91,
     // KV용 컬러웨이(어드민 전용 — 'KV용 재질' 버튼으로만 진입).
-    // 일반 모드와 완전히 같고, 컵(cup)만 glass → KV Grey #ededed 플랫으로
+    // 일반 모드와 완전히 같고, 컵(cup)만 glass → KV Grey #dedede 플랫으로
     // 바뀐다(청소도구 솔과 동일 재질). frosted는 한 덩어리라 단일 버킷
     // (`__default__`)을 그대로 쓴다.
     colorways: {
@@ -2385,7 +2385,7 @@ const ASSETS = {
     // KV용 컬러웨이(어드민 전용 — 'KV용 재질' 버튼으로만 진입).
     // frosted 파트(body·안테나 두 봉)는 하나의 Genuine Blue로 통일하고,
     // 앞면 인디케이터만 플랫으로 갈아끼운다 — 점 3개 KV Wheel #333333,
-    // 라운드 패널 KV Grey #ededed. 상단 wifi 심볼은 일반 모드와 동일.
+    // 라운드 패널 KV Grey #dedede. 상단 wifi 심볼은 일반 모드와 동일.
     // frosted가 한 덩어리라 bodyGroupFor 없이 단일 버킷(`__default__`)을
     // 그대로 쓴다 — 그라디언트 창도 일반 모드와 같은 전체 실루엣이다.
     // KV용 재질 2(kv2)는 위 kv를 그대로 베이스로 쓰되, 점 3개만 KV Wheel
@@ -2433,7 +2433,7 @@ const ASSETS = {
       // Three.js mangled the source name.
       const pn = (parentName || '').toLowerCase().replace(/\./g, '').replace(/_\d+$/, '');
       // KV에선 앞면 인디케이터를 통째로 갈아끼운다 — 점 3개는 KV Wheel
-      // #333333, 그 뒤 라운드 패널은 KV Grey #ededed. 둘 다 두께 0.5~2의
+      // #333333, 그 뒤 라운드 패널은 KV Grey #dedede. 둘 다 두께 0.5~2의
       // 얇은 판이라 frosted가 아닌 무조명 플랫이어야 색이 그대로 나온다.
       if (activeVariantId === 'kv' || activeVariantId === 'kv2') {
         // 점 3개 — kv는 KV Wheel #333333, kv2는 KV Dark Blue #286be6.
@@ -2488,7 +2488,7 @@ const ASSETS = {
     // KV용 컬러웨이(어드민 전용 — 'KV용 재질' 버튼으로만 진입).
     // 일반 모드 대비 달라지는 건 셋:
     //   brush_body·brush_body_top (손잡이) → frosted Dark Blue (여기)
-    //   brush                     (솔)     → KV Grey  #ededed  (materialFor)
+    //   brush                     (솔)     → KV Grey  #dedede  (materialFor)
     //   head_front                (노즐 끝)→ KV Wheel #333333  (materialFor)
     // 'brush' 그룹에는 손잡이 두 레이어만 남는다 — 솔은 위에서 플랫으로
     // 빠지므로 body 버킷에 들어오지 않는다.
@@ -2503,6 +2503,11 @@ const ASSETS = {
       kv2: { spray: 'frostedBlue', brush: 'frostedDarkBlue' },
     },
     colorwayHarmony: { kv: 'frostedBlue', kv2: 'frostedBlue' },
+    // kv2의 브러시 손잡이(brush_body·brush_body_top)만 Dark Blue를 밝은 대역으로
+    // 끌어올린다. 양수 shift는 그룹 bbox를 위로 늘려 밝은 쪽 V대역을 쓰게 한다.
+    // gradientYShiftByGroup이 아니라 이 컬러웨이 전용 슬롯을 쓰는 이유: 전자는
+    // 컬러웨이를 구분하지 않아 일반 모드·kv의 손잡이까지 함께 밝아진다.
+    gradientYShiftByColorwayGroup: { kv2: { brush: 0.4 } },
     // Source authoring leaves the brush bristles ~2.3 units above the
     // spray bottle base. Nudge the brush subgroup down so both bottoms
     // sit flush on the ground plane.
@@ -2517,7 +2522,7 @@ const ASSETS = {
       // matching keys off the semantic name regardless of dedup.
       const pn = (parentName || '').toLowerCase().replace(/_\d+$/, '');
       // KV 컬러웨이에서 재질 종류가 일반 모드와 갈리는 건 둘:
-      //  - brush(솔)          : harmony → KV Grey #ededed 플랫. 솔 안쪽
+      //  - brush(솔)          : harmony → KV Grey #dedede 플랫. 솔 안쪽
       //    인서트(brush-Mat)는 아래 일반 규칙대로 harmony2 유지
       //    ('brush-mat'은 'brush'와 다른 문자열이라 여기 안 걸린다).
       //  - head_front(노즐 끝) : harmony → KV Wheel #333333 플랫. 안쪽 흰
@@ -2836,7 +2841,7 @@ const ASSETS = {
     //   링 밴드            → frostedGrey  ※ 일반 모드에선 harmony 액센트
     //   링 뒤쪽(손잡이 body·upper) → frosted Genuine Blue
     // KV용 재질 2(kv2)는 위 kv를 그대로 베이스로 쓰되, 링 밴드만 frostedGrey
-    // 대신 청소도구 솔과 같은 플랫 KV Grey #ededed로 바꾼 변형이다.
+    // 대신 청소도구 솔과 같은 플랫 KV Grey #dedede로 바꾼 변형이다.
     // 링이 플랫으로 빠지므로 kv2의 frosted 그룹은 front/back 둘뿐.
     colorways: {
       kv:  { front: 'frostedDarkBlue', ring: 'frostedGrey', back: 'frostedBlue' },
@@ -2932,7 +2937,7 @@ const ASSETS = {
       // 실린다 — name/parentName 둘 다 체크.
       // ring(원형 밴드) — 일반 모드는 harmony 액센트(ribbonGray, body 틴트
       // 추종), kv는 frosted body로 돌려 'ring' 그룹에서 frostedGrey를 받고,
-      // kv2는 플랫 KV Grey #ededed를 그대로 쓴다.
+      // kv2는 플랫 KV Grey #dedede를 그대로 쓴다.
       if (n === 'ring' || pn === 'ring') {
         if (activeVariantId === 'kv')  return 'body';
         if (activeVariantId === 'kv2') return 'luminanceKvGrey';
@@ -3288,7 +3293,7 @@ const ASSETS = {
     // 그대로 옮긴 배색이다. 좌표상 truck_kv ↔ truck3 파트가 1:1로 대응한다:
     //   body-box   (차체)      : frosted Genuine Blue
     //   Cube       (화물박스)  : frosted Dark Blue
-    //   body-tape  (창문)      : KV Grey #ededed 플랫
+    //   body-tape  (창문)      : KV Grey #dedede 플랫
     //   wheels-box (타이어)    : 짙은 그레이 #333333
     //   wheels-tape(휠)        : 밝은 흰색 #e5f9ff
     // frosted를 쓰는 두 파트를 bodyGroupFor가 body/cargo로 갈라 각기 다른
@@ -3350,7 +3355,7 @@ const ASSETS = {
         // (bodyGroupFor가 'wheels' 그룹으로 빼서 colorways에서 받는다).
         if (/wheels-box/.test(n)  || /wheels-box/.test(pn))  return kv ? 'luminanceKvWheel' : 'body';
         if (/wheels-tape/.test(n) || /wheels-tape/.test(pn)) return 'luminanceKvGlass';
-        // 창문(body-tape) → KV Grey #ededed 플랫.
+        // 창문(body-tape) → KV Grey #dedede 플랫.
         if (/body-tape/.test(n)   || /body-tape/.test(pn))   return 'luminanceKvGrey';
         // 화물박스(Cube)는 플랫이 아니라 frosted body로 남긴다 — bodyGroupFor가
         // 'cargo' 그룹으로 빼서 frostedDarkBlue를 입힌다.
@@ -4296,18 +4301,26 @@ function loadAsset(assetId) {
       // instead of sliding the whole window — keeps the transition
       // smooth across the visible body height. Compound assets resolve
       // shift per group; legacy assets use the asset-wide value.
-      // 우선순위: 그룹별 > 컬러웨이별(KV 등) > 에셋 전역 — 구체적인 쪽이 이긴다.
+      // 우선순위(구체적인 쪽이 이긴다):
+      //   컬러웨이+그룹 > 그룹별 > 컬러웨이별 > 에셋 전역
       // 컬러웨이는 파트마다 다른 색을 섞으므로 일반 모드와 다른 그라디언트 창이
-      // 필요할 수 있는데, 여기 값을 쓰면 일반 모드의 gradientYShift는 그대로
-      // 보존된다. 그 컬러웨이 안에서도 특정 파트만 더 진하게 빼야 하면
-      // gradientYShiftByGroup으로 그 그룹만 덮어쓴다(어드민 슬라이더는
-      // 컬러웨이 값을 움직이므로, 덮어쓴 그룹은 슬라이더에 반응하지 않는다).
+      // 필요할 수 있는데, 컬러웨이 값을 쓰면 일반 모드의 gradientYShift는 그대로
+      // 보존된다. 그중에서도 "이 컬러웨이의 이 파트만" 손봐야 하면
+      // gradientYShiftByColorwayGroup을 쓴다 — gradientYShiftByGroup은 컬러웨이를
+      // 구분하지 않아 일반 모드까지 함께 바뀌기 때문이다.
+      // (어드민 슬라이더는 컬러웨이 값을 움직이므로, 위 두 단계로 덮어쓴 그룹은
+      //  슬라이더에 반응하지 않는다.)
+      const cwgShift = asset.gradientYShiftByColorwayGroup
+        && asset.gradientYShiftByColorwayGroup[activeVariantId]
+        && asset.gradientYShiftByColorwayGroup[activeVariantId][gid];
       const cwShift = asset.gradientYShiftByColorway && asset.gradientYShiftByColorway[activeVariantId];
-      const shift = (asset.gradientYShiftByGroup && asset.gradientYShiftByGroup[gid] != null)
-        ? asset.gradientYShiftByGroup[gid]
-        : (cwShift != null)
-          ? cwShift
-          : (asset.gradientYShift || 0);
+      const shift = (cwgShift != null)
+        ? cwgShift
+        : (asset.gradientYShiftByGroup && asset.gradientYShiftByGroup[gid] != null)
+          ? asset.gradientYShiftByGroup[gid]
+          : (cwShift != null)
+            ? cwShift
+            : (asset.gradientYShift || 0);
       const span = groupBox.max.y - groupBox.min.y;
       const yMin = shift < 0 ? groupBox.min.y + shift * span : groupBox.min.y;
       const yMax = shift > 0 ? groupBox.max.y + shift * span : groupBox.max.y;
