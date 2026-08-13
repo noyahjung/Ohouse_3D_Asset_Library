@@ -1512,6 +1512,7 @@
     <button class="asset-chip" data-asset="drill">드릴</button>
     <button class="asset-chip" data-asset="interior">인테리어</button>
     <button class="asset-chip" data-asset="helmet">헬멧</button>
+    <button class="asset-chip" data-asset="ruler">줄자</button>
     <button class="asset-chip" data-asset="couponEnvelope5">5% 할인 쿠폰</button>
     <button class="asset-chip" data-asset="pointcoin">포인트 코인</button>
     <button class="asset-chip" data-asset="shield">방패 + 체크</button>
@@ -2817,6 +2818,86 @@ const ASSETS = {
     },
     materialFor() {
       // 단일 심볼 — 전체를 frosted body 단일 톤으로.
+      return 'body';
+    },
+  },
+  ruler: {
+    url: 'ruler.glb',
+    label: '줄자',
+    desc: '치수 측정·시공을 나타낼 때 쓰는 줄자 에셋',
+    keywords: ['줄자', '측정', '치수', '시공', '공구'],
+    rootName: 'ruler',
+    recommended: 'frostedBlue',
+    // body 메시 240×240×130 — 기준(~300)과 같은 자릿수라 modelScale 불필요.
+    // 다만 테이프 날이 Z로 404까지 뻗어 합집합 bbox가 길쭉해진다. 기본 2.2는
+    // 그 긴 축에 프러스텀을 맞춰 케이스가 셀에서 아주 작게 읽힌다.
+    // 화면 크기 ∝ 1/frameScale. 기본 2.2 대비 1.43은 약 1.5배 크게 잡은 값.
+    frameScale: 1.43,
+    // 에셋 기준 우측으로 폭의 10%만큼 이동. 테이프가 나오는 +Z가 에셋의
+    // 앞이므로, 그 방향을 향해 섰을 때의 오른쪽은 월드 -X다(화면상으로는
+    // 좌측으로 보인다). xOffset은 월드 X 기준이라 음수가 에셋 우측.
+    xOffset: -0.10,
+    // 깊이의 5%만큼 앞쪽(카메라 쪽)으로 이동(양수=앞).
+    zOffset: 0.05,
+    // 뷰 3(Side) 카메라 방향 오버라이드 — 어드민에서 잡은 좌표.
+    viewOverrides: { '3': [0.849, 0.088, 0.794] },
+    keepOriginalNormals: true,
+    // 삐져나온 테이프 길이를 0.75배로 줄인다. 케이스 앞면(body의 max Z)을
+    // 기준 평면으로 잡고, 테이프 계열(날·후크·눈금)의 지오메트리를 그 평면
+    // 기준으로 Z 스케일한다. 케이스 안쪽에 감겨 있는 부분은 그대로 가려지므로
+    // 화면에 보이는 노출 길이만 정확히 0.75배가 된다.
+    // 로컬이 아니라 월드 좌표로 변환해 스케일 후 되돌린다 — 파트마다 노드
+    // 트랜스폼이 달라 로컬 Z를 그대로 건드리면 기준 평면이 어긋난다.
+    // 축(Z) 한 방향 스케일이라 박스형 면의 노멀은 그대로 유효하다
+    // (keepOriginalNormals와 충돌하지 않음).
+    preprocess(root, THREE) {
+      const K = 0.75;
+      const isTape = (o) => {
+        const pn = (o.parent?.name || '').toLowerCase().replace(/_\d+$/, '');
+        return pn === 'ruler' || pn === 'ruler_head' || /^cube2/.test(pn);
+      };
+      root.updateMatrixWorld(true);
+      const bodyBox = new THREE.Box3();
+      root.traverse((o) => {
+        if (o.isMesh && (o.parent?.name || '').toLowerCase() === 'body') bodyBox.expandByObject(o);
+      });
+      if (bodyBox.isEmpty()) return;
+      const anchorZ = bodyBox.max.z;
+      const v = new THREE.Vector3();
+      const inv = new THREE.Matrix4();
+      root.traverse((o) => {
+        if (!o.isMesh || !isTape(o)) return;
+        inv.copy(o.matrixWorld).invert();
+        const pos = o.geometry.attributes.position;
+        for (let k = 0; k < pos.count; k++) {
+          v.fromBufferAttribute(pos, k).applyMatrix4(o.matrixWorld);
+          v.z = anchorZ + (v.z - anchorZ) * K;
+          v.applyMatrix4(inv);
+          pos.setXYZ(k, v.x, v.y, v.z);
+        }
+        pos.needsUpdate = true;
+        o.geometry.computeBoundingBox();
+        o.geometry.computeBoundingSphere();
+      });
+    },
+    materialFor(name, parentName) {
+      // gltfpack이 mesh를 unnamed Group으로 감싸므로 인식 이름이 parentName에
+      // 실린다 — name/parentName 둘 다 체크. 루트도 'ruler'라 테이프 날 노드가
+      // GLTFLoader dedup으로 'ruler_1'이 되므로 숫자 접미사를 떼고 매칭한다.
+      const n  = (name || '').toLowerCase().replace(/_\d+$/, '');
+      const pn = (parentName || '').toLowerCase().replace(/_\d+$/, '');
+      // 눈금 10개 → 흰색 luminance. 소스 이름 'Cube.2 N'이 Three.js 정화로
+      // 'Cube2_N'이 되고 중복 이름엔 접미사가 더 붙으므로 접두사로 느슨하게 잡는다.
+      if (/^cube2/.test(n) || /^cube2/.test(pn)) return 'luminance';
+      // 테이프 릴 축 → 흰색 luminance.
+      if (n === 'cylinder' || pn === 'cylinder') return 'luminance';
+      // ruler_head를 ruler보다 먼저 검사해야 한다(접두사가 겹침).
+      if (n === 'ruler_head' || pn === 'ruler_head') return 'body';
+      // 테이프 날 → harmony 액센트(body 틴트 추종).
+      if (n === 'ruler'  || pn === 'ruler')  return 'ribbonGray';
+      if (n === 'button' || pn === 'button') return 'ribbonGray';
+      if (n === 'deco'   || pn === 'deco')   return 'ribbonGray';
+      // body(케이스) → frosted body.
       return 'body';
     },
   },
@@ -4656,6 +4737,7 @@ const LANDING_ORDER = [
   'drill',        // 드릴 — 신규
   'interior',     // 인테리어(집+드릴) — 신규
   'helmet',       // 헬멧 — 신규
+  'ruler',        // 줄자 — 신규
   'couponEnvelope5',// 5% 할인 쿠폰 — 체크 코인 뒤 수동 배치
   'couponEnvelope',// 10% 할인 쿠폰 (Percent Ticket On Coupon) — 체크 코인 뒤 수동 배치
   'wifi',         // Glossy Wi-Fi Router — 9
