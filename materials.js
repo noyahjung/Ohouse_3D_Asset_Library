@@ -41,6 +41,11 @@ export const COLORS = {
   frostedGreyTop: '#c7c7c7',
   frostedGreyBottom: '#ffffff',
 
+  // Grey 1 — 어드민에서 잡은 두 번째 회색. frostedGrey와 달리 물성은 공유
+  // FROSTED_PRESET을 그대로 쓰고 그라디언트 색만 다르다(더 진한 상단).
+  frostedGrey1Top: '#7a7a7a',
+  frostedGrey1Bottom: '#dedede',
+
   // Pure luminance white — unaffected by scene lighting
   luminanceWhite: '#FFFFFF',
   // Pure luminance black — unaffected by scene lighting
@@ -114,6 +119,11 @@ export const FROSTED_VARIANTS = {
     label: 'Grey',
     top: COLORS.frostedGreyTop,
     bottom: COLORS.frostedGreyBottom,
+  },
+  frostedGrey1: {
+    label: 'Grey 1',
+    top: COLORS.frostedGrey1Top,
+    bottom: COLORS.frostedGrey1Bottom,
   },
 };
 
@@ -219,6 +229,7 @@ export const HARMONY_BY_BODY = {
   frostedDarkBlue: '#9CBCFF',
   frostedPink: '#FFC1D9',
   frostedGrey: '#cfcfcf',
+  frostedGrey1: '#b4b4b4',
   blackFriday: '#D7ACF9',
 };
 

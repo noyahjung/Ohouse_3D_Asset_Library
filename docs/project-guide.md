@@ -64,21 +64,31 @@ Ohouse_3D_Asset_Library/
 
 ## 3. 재질 시스템
 
-### 3-1. 기본 재질 (Frosted) — 7종
+### 3-1. 기본 재질 (Frosted) — 9종
 
 반투명 프로스티드 글래스 느낌. 상단→하단 수직 그라데이션.
+값의 출처는 `materials.js`의 `COLORS` / `FROSTED_VARIANTS`다.
 
-| ID | 라벨 | 상단 색상 | 하단 색상 |
-|---|---|---|---|
-| `frostedBlue` | Genuine Blue | `#EBEFFF` | `#00a1ff` |
-| `frostedGreen` | Jade Green | `#EDFFF4` | `#19BD86` |
-| `frostedOrange` | Mango Orange | `#FFF4EC` | `#FF752C` |
-| `frostedRed` | Coral Red | `#FFEFEF` | `#FF4747` |
-| `frostedViolet` | Violet | `#F7EFFD` | `#C475F5` |
-| `frostedDarkBlue` | Dark Blue | `#E8EEFB` | `#2C65CF` |
-| `frostedPink` | Candy Pink | `#FFF0F4` | `#FF6E92` |
+| ID | 라벨 | 상단 색상 | 하단 색상 | 공개 |
+|---|---|---|---|---|
+| `frostedBlue` | Genuine Blue | `#9BC5FD` | `#1A90FF` | ✓ |
+| `frostedGreen` | Jade Green | `#A8F5C6` | `#00C785` | ✓ |
+| `frostedOrange` | Mango Orange | `#FBA94B` | `#FC6703` | ✓ |
+| `frostedRed` | Coral Red | `#FFD1BD` | `#FF4747` | ✓ |
+| `frostedViolet` | Violet | `#B698FB` | `#8152E9` | ✓ |
+| `frostedDarkBlue` | Dark Blue | `#8FAFF5` | `#286BE6` | ✓ |
+| `frostedPink` | Candy Pink | `#FBACC1` | `#FF3D6E` | ✓ |
+| `frostedGrey` | Grey | `#C7C7C7` | `#FFFFFF` | 어드민 |
+| `frostedGrey1` | Grey 1 | `#7A7A7A` | `#DEDEDE` | 어드민 |
 
-공통 프리셋: `transmission 0.50 / roughness 0.60 / thickness 2.30 / ior 1.70 / clearcoat 0.39`
+공통 프리셋(`FROSTED_PRESET`):
+`transmission 0.85 / roughness 0.60 / thickness 2.30 / ior 1.70 /
+attenuationDistance 4.50 / clearcoat 0.39 / clearcoatRoughness 0.50 /
+envMapIntensity 0.4 / gradientStrength 0.45`
+
+> `frostedGrey`만 공유 프리셋을 쓰지 않고 전용 물성으로 덮어쓴다
+> (`transmission 0.21 / ior 2.33 / clearcoat 0 / gradientStrength 0`).
+> 그래서 그라디언트가 사실상 꺼진 균일한 회색으로 렌더된다.
 
 ### 3-2. 블랙프라이데이 재질 — 1종
 
@@ -100,6 +110,105 @@ Reflectivity 0.68 / Sheen 0.36 / Sheen Roughness 0.58
 | Ribbon Gray (Harmony) | 리본 액센트 (바디 컬러에 연동) | 불가 |
 | Glass | 투명 유리 (정수기 컵) | ⚙ 설정 가능 |
 | Chrome | 금속 반사 (정수기 노즐) | ⚙ 설정 가능 |
+
+---
+
+### 3-4. 재질 카탈로그 (materialFor 반환값 레퍼런스)
+
+새 에셋을 등록할 때 `materialFor(name, parentName)`가 돌려줄 수 있는 값 전체.
+디자이너가 "이 파트는 KV Grey 2" 처럼 말하면 아래 표에서 반환값을 찾아 쓰면 된다.
+
+#### 무조명 플랫 (luminance) — 형태·조명과 무관하게 지정 hex가 그대로 나온다
+
+| 명칭 (어드민 칩) | `materialFor` 반환값 | HEX | 쓰이는 곳 |
+|---|---|---|---|
+| — | `luminance` | `#FFFFFF` | 흰색 심볼·눈금·라벨 전반 |
+| — | `luminanceBlack` | `COLORS.luminanceBlack` | 청소도구 목 등 검은 실루엣 |
+| KV Glass | `luminanceKvGlass` | `#E5F9FF` | 트럭 창문·휠 림 |
+| KV Wheel | `luminanceKvWheel` | `#333333` | 트럭 타이어, 업체찾기 바닥 |
+| KV Grey | `luminanceKvGrey` | `#DEDEDE` | 트럭 창문, 청소도구 솔, 정수기 컵 |
+| KV Grey 2 | `luminanceKvGrey2` | `#A8A8A8` | 업체찾기 몸통·차양의 selected 면 |
+| KV Blue | `luminanceKvBlue` | `#00A1FF` | Genuine Blue의 플랫 버전 |
+| KV Dark Blue | `luminanceKvDarkBlue` | `#286BE6` | 와이파이 KV2 인디케이터 |
+| KV Dark Blue 2 | `luminanceKvDarkBlue2` | `#2C65CF` | 업체찾기 돋보기 프레임·몸통 |
+| Luminance Green | `luminanceGreen` | `#19BD86` | 업체 지도 지면, 시공사례 맨앞 폴더 태그 |
+| Harmony Violet | `luminanceHarmonyViolet` | `#C29BE0` | 현재 미사용 (Violet harmony2와 같은 값) |
+| Harmony Violet 2 | `luminanceHarmonyViolet2` | `#5A2BB8` | 시공사례 캐비닛 안쪽 |
+| — | `luminanceKvRoof` | `#00A1FF` | 인테리어 KV 지붕 (KV Blue와 같은 색, 별도 튜닝용) |
+| — | `luminanceGrey` | `#DCDCDC` | 업체 지도 바닥판 (KV Grey보다 한 톤 어둡다) |
+
+> 곡면 파트에 frosted를 쓰면 광원 각도에 따라 초록 채널이 깎여 의도한 색과
+> 달라진다(업체찾기 돋보기 링이 `#00A1FF` 대신 `#6287F7`로 읽힌 사례).
+> "지정한 hex 그대로"가 필요하면 플랫을 쓴다.
+
+> `ribbonGray`(harmony)와 `harmony2`는 컬러웨이당 **하나의 기준색에서 함께** 유도된다.
+> 한 에셋에서 계열이 다른 두 액센트가 필요하면(시공사례: 서류는 Grey 1 harmony,
+> 캐비닛 안쪽은 Violet 계열) 한쪽을 같은 값의 플랫 재질로 고정해야 한다.
+
+#### frosted 바디 — `materialFor`가 `'body'`를 반환하면 그룹별 변형이 입혀진다
+
+| 명칭 (팔레트 칩) | 변형 id | 그라디언트 (상단 → 하단) |
+|---|---|---|
+| Genuine Blue | `frostedBlue` | `#9BC5FD` → `#1A90FF` |
+| Jade Green | `frostedGreen` | — |
+| Mango Orange | `frostedOrange` | — |
+| Coral Red | `frostedRed` | — |
+| Violet | `frostedViolet` | — |
+| Dark Blue | `frostedDarkBlue` | `#8FAFF5` → `#286BE6` |
+| Candy Pink | `frostedPink` | — |
+| Grey | `frostedGrey` | `#C7C7C7` → `#FFFFFF` (전용 물성: transmission 0.21, gradientStrength 0) |
+| Grey 1 | `frostedGrey1` | `#7A7A7A` → `#DEDEDE` (공유 프리셋 물성) |
+
+어느 변형을 쓸지는 `colorways[컬러웨이][그룹id]`로 지정하고, 그룹은
+`bodyGroupFor`가 나눈다. 컬러웨이·팔레트와 무관하게 한 그룹을 고정하려면
+`bodyVariantPins: { 그룹id: 'frostedGrey' }`.
+
+#### 액센트 · 특수
+
+| `materialFor` 반환값 | 설명 |
+|---|---|
+| `ribbonGray` | harmony. `HARMONY_BY_BODY[기준색]`으로 틴트 — 컬러웨이에선 `colorwayHarmony`가 기준색을 정한다 |
+| `harmony2` | harmony를 10% 어둡게 한 파생색 |
+| `glass` | 투명 유리 |
+| `lensGlass` | 렌즈 유리 (돋보기·카메라) |
+| `chrome` | 크롬 |
+| `cameraLens` | 카메라 렌즈(어두운 코팅) |
+
+**harmony 기준색** — `colorwayHarmony: { kv: 'frostedDarkBlue' }` 처럼 지정하면
+그 컬러웨이의 `ribbonGray`가 아래 값으로 틴트된다.
+
+| 기준 변형 | harmony (`ribbonGray`) |
+|---|---|
+| `frostedBlue` | `#A1CCFD` |
+| `frostedDarkBlue` | `#9CBCFF` |
+| `frostedGreen` | `#83E4C5` |
+| `frostedOrange` | `#FFC3A1` |
+| `frostedRed` | `#FFA0A3` |
+| `frostedViolet` | `#D7ACF9` |
+| `frostedPink` | `#FFC1D9` |
+| `frostedGrey` | `#CFCFCF` |
+| `frostedGrey1` | `#B4B4B4` |
+
+#### 참고 구현 — 업체찾기(`findstore`)
+
+한 에셋에 위 재질이 고루 쓰인 예시. 새 에셋을 같은 방식으로 짤 때 이 항목을
+그대로 베껴 쓰면 된다.
+
+| 파트 (`parentName`) | 재질 | 결과 |
+|---|---|---|
+| `head` · `handle-main` | `luminanceKvDarkBlue2` | `#2C65CF` |
+| `handle-sel` | `ribbonGray` (+ `colorwayHarmony: frostedDarkBlue`) | `#9CBCFF` |
+| `glass` | `lensGlass` | 렌즈 |
+| `upper` | `'body'` → `colorways.kv.upper = frostedBlue` | Genuine Blue |
+| `body-main` | `'body'` → `bodyVariantPins.store = frostedGrey` | 회색 고정 |
+| `body-sel` · `shader-sel` | `luminanceKvGrey2` | `#A8A8A8` |
+| `shader-main` | `luminance` | 흰색 |
+| `bottom` | `luminanceKvWheel` | `#333333` |
+
+- `defaultColorway: 'kv'` — 에셋을 열면 팔레트 색이 아니라 KV 배색으로 진입한다.
+  재질 배정 전에 모드가 정해져야 하므로 `loadAsset` 앞단에서 처리된다.
+- `rewriteNames` — 소스에 같은 이름의 메시가 둘씩 있을 때(C4D 머티리얼 셀렉션)
+  정점 수로 `-main` / `-sel`을 갈라 붙인다.
 
 ---
 
