@@ -3200,6 +3200,9 @@ const ASSETS = {
     // building 본체 실측 2.2×3.08×2.2 — 기존 자산의 frosted body(~300단위)와
     // 자릿수가 달라 97배로 정규화한다(3.08×97 ≈ 299).
     modelScale: 97,
+    // 톤 보정(§4-6 Step 2) — 에셋 전역. upper는 아래 그룹 지정이 우선하므로
+    // 실질적으로 building(벽)에만 걸린다.
+    gradientYShift: -0.4,
     // 톤 보정(§4-6 Step 2) — upper 전용. 지붕은 두께 0.35유닛짜리 얇은 판이라
     // 기본값(0)에선 Grey 1 그라디언트의 밝은 끝(#DEDEDE)만 걸려 #F2F3F3으로
     // 읽히고, 옆 벽(frostedGrey #AFB0AF)과 구분이 안 된다. +2.5로 어두운 끝을
@@ -3208,8 +3211,10 @@ const ASSETS = {
     gradientYShiftByColorwayGroup: { kv: { upper: 2.5 } },
     frameScale: 1.7,
     // building 아래 세 메시는 이름이 전부 'building-Mat'다(C4D 머티리얼 셀렉션
-    // 태그). 본체가 압도적으로 정점이 많으므로(1520 vs 168/104) 정점 수로 갈라
-    // building-main / building-sel1·2 로 개명한다 — sel 쪽이 창문이다.
+    // 태그). 정점 수로 셋을 가른다:
+    //   1520 → 본체(building-main)
+    //    168 → 창문 6개. 소스 실측 1.57×1.32×0.00 — 두께 0인 평면 묶음.
+    //    104 → 1층 아치 문의 안쪽 면. 0.75×0.83×2.20 — 건물 깊이를 관통한다.
     keepOriginalNormals: true,
     rewriteNames(root) {
       const list = [];
@@ -3219,7 +3224,14 @@ const ASSETS = {
         list.push({ node: o.parent, verts: o.geometry.attributes.position.count });
       });
       list.sort((a, b) => b.verts - a.verts);
-      list.forEach((it, i) => { it.node.name = i === 0 ? 'building-main' : `building-sel${i}`; });
+      const names = ['building-main', 'building-win', 'building-arch'];
+      list.forEach((it, i) => { it.node.name = names[i] || `building-sel${i}`; });
+    },
+    // 소스의 루트 노드에 회전 [0.004, 0.007, 0.0115, 0.9999]가 들어 있어
+    // 건물이 1.61° 앞으로 기운 채 서 있다(좌·우 실루엣이 아래로 갈수록 각각
+    // 8px·7px 밀림). 회전을 없애 수직으로 세운다.
+    preprocess(root) {
+      root.quaternion.identity();
     },
     // KV에서만 본체(Grey)와 지붕(Grey 1)을 나눈다.
     // 일반 모드는 단일 버킷이라 팔레트 색이 frosted 파트 전체에 적용된다.
@@ -3231,7 +3243,8 @@ const ASSETS = {
       // gltfpack이 mesh를 unnamed Group으로 감싸므로 인식 이름이 parentName에 실린다.
       const pn = (parentName || '').toLowerCase().replace(/\./g, '').replace(/_\d+$/, '');
       if (pn === 'bottom')             return 'luminanceKvWheel';  // 바닥 #333333
-      if (/^building-sel/.test(pn))    return 'luminance';         // 창문 #FFFFFF
+      if (pn === 'building-win')       return 'luminance';         // 창문 #FFFFFF
+      if (pn === 'building-arch')      return 'luminanceKvGrey2';  // 아치 안쪽 #A8A8A8
       // building-main → Grey, upper → Grey 1 (컬러웨이가 가른다)
       return 'body';
     },
