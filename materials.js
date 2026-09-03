@@ -250,6 +250,35 @@ export const HARMONY2_BY_BODY = Object.fromEntries(
   Object.entries(HARMONY_BY_BODY).map(([k, v]) => [k, darkenHex(v, 0.9)])
 );
 
+function luminanceOf(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  return 0.2126 * ((n >> 16) & 0xff) + 0.7152 * ((n >> 8) & 0xff) + 0.0722 * (n & 0xff);
+}
+// Harmony 3 — a deep companion for parts that sit *behind* a transmissive
+// body: a folder's inner lining, a recessed inner wall. harmony and harmony2
+// are both pastel, so laying either one inside a frosted shell can backfire —
+// a thin front panel transmits it and the whole body reads washed out. This
+// one is derived from the body gradient's *saturated end* rather than from
+// harmony: it lands darker than the body and presses the outer tone down
+// instead of lifting it. Variants with no gradient (blackFriday) fall back to
+// a darkened harmony.
+//
+// No asset uses it yet — 시공사례 2가 이 케이스로 보였지만 원인이 소스의 앞판
+// 노멀 뒤집힘이었고, 메쉬를 고친 뒤에는 안쪽면이 주머니에서만 보여 플랫 지정색을
+// 쓴다. 투과 body 안쪽에 파스텔이 비쳐 톤이 뜨는 파트가 나오면 materialFor에서
+// 'harmony3'을 돌려주면 된다.
+export const HARMONY3_BY_BODY = Object.fromEntries(
+  Object.keys(HARMONY_BY_BODY).map((k) => {
+    const v = FROSTED_VARIANTS[k];
+    // Grey/Grey 1 run their gradient the other way round (top is the dark
+    // end), so take whichever stop is actually darker rather than `bottom`.
+    const base = v
+      ? (luminanceOf(v.top) < luminanceOf(v.bottom) ? v.top : v.bottom)
+      : HARMONY_BY_BODY[k];
+    return [k, darkenHex(base, 0.78)];
+  })
+);
+
 // ── Ribbon Gray (flat luminance accent) ──────────────────────
 /**
  * Flat gray tone for ribbon / accent parts — same shading model as

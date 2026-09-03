@@ -136,6 +136,8 @@ Reflectivity 0.68 / Sheen 0.36 / Sheen Roughness 0.58
 | Harmony Violet 2 | `luminanceHarmonyViolet2` | `#5A2BB8` | 시공사례 캐비닛 안쪽 |
 | — | `luminanceKvRoof` | `#00A1FF` | 인테리어 KV 지붕 (KV Blue와 같은 색, 별도 튜닝용) |
 | — | `luminanceGrey` | `#DCDCDC` | 업체 지도 바닥판 (KV Grey보다 한 톤 어둡다) |
+| Luminance Mango Orange | `luminanceMangoOrange` | `#FF752C` | 브랜드 Mango Orange의 플랫 버전 (시공사례 2 서류 태그) |
+| Luminance Mango Orange 2 | `luminanceMangoOrange2` | `#CB4611` | 위보다 짙은 주황 (시공사례 2 폴더 안쪽면) |
 
 > 곡면 파트에 frosted를 쓰면 광원 각도에 따라 초록 채널이 깎여 의도한 색과
 > 달라진다(업체찾기 돋보기 링이 `#00A1FF` 대신 `#6287F7`로 읽힌 사례).
@@ -169,6 +171,7 @@ Reflectivity 0.68 / Sheen 0.36 / Sheen Roughness 0.58
 |---|---|
 | `ribbonGray` | harmony. `HARMONY_BY_BODY[기준색]`으로 틴트 — 컬러웨이에선 `colorwayHarmony`가 기준색을 정한다 |
 | `harmony2` | harmony를 10% 어둡게 한 파생색 |
+| `harmony3` | body 그라디언트의 **진한 끝**을 78%로 어둡게 한 파생색. harmony/harmony2와 달리 body보다 어둡다 — frosted 껍데기 *안쪽*에 깔리는 파트(폴더 안쪽 라이닝, 움푹 들어간 내벽) 전용. 파스텔 harmony를 거기 쓰면 얇은 앞판이 그걸 투과시켜 바깥 톤이 하얗게 뜬다 |
 | `glass` | 투명 유리 |
 | `lensGlass` | 렌즈 유리 (돋보기·카메라) |
 | `chrome` | 크롬 |
@@ -188,6 +191,21 @@ Reflectivity 0.68 / Sheen 0.36 / Sheen Roughness 0.58
 | `frostedPink` | `#FFC1D9` |
 | `frostedGrey` | `#CFCFCF` |
 | `frostedGrey1` | `#B4B4B4` |
+
+**harmony3** — harmony 계열이 아니라 그라디언트의 진한 쪽 stop에서 유도된다
+(Grey·Grey 1은 그라디언트가 반대 방향이라 top이 진한 쪽).
+
+| 기준 변형 | harmony3 |
+|---|---|
+| `frostedBlue` | `#1470C7` |
+| `frostedGreen` | `#009B68` |
+| `frostedOrange` | `#C55002` |
+| `frostedRed` | `#C73737` |
+| `frostedViolet` | `#6540B6` |
+| `frostedDarkBlue` | `#1F53B3` |
+| `frostedPink` | `#C73056` |
+| `frostedGrey` | `#9B9B9B` |
+| `frostedGrey1` | `#5F5F5F` |
 
 #### 참고 구현 — 업체찾기(`findstore`)
 

@@ -1517,6 +1517,14 @@
           <button class="swatch"><span class="dot" style="background:#5a2bb8;"></span> Harmony Violet 2</button>
           <button class="gear" title="Settings">⚙</button>
         </div>
+        <div class="chip builtin" data-mat="luminanceMangoOrange" data-mat-type="flatColor">
+          <button class="swatch"><span class="dot" style="background:#ff752c;"></span> Luminance Mango Orange</button>
+          <button class="gear" title="Settings">⚙</button>
+        </div>
+        <div class="chip builtin" data-mat="luminanceMangoOrange2" data-mat-type="flatColor">
+          <button class="swatch"><span class="dot" style="background:#cb4611;"></span> Luminance Mango Orange 2</button>
+          <button class="gear" title="Settings">⚙</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1561,7 +1569,9 @@
     <button class="asset-chip" data-asset="findstore">업체찾기</button>
     <button class="asset-chip" data-asset="storemap">업체 지도</button>
     <button class="asset-chip" data-asset="casestudy">시공사례</button>
+    <button class="asset-chip" data-asset="casestudy2">시공사례 2</button>
     <button class="asset-chip" data-asset="apartment">아파트 사례</button>
+    <button class="asset-chip" data-asset="easymatch">간편매칭</button>
     <button class="asset-chip" data-asset="couponEnvelope5">5% 할인 쿠폰</button>
     <button class="asset-chip" data-asset="pointcoin">포인트 코인</button>
     <button class="asset-chip" data-asset="shield">방패 + 체크</button>
@@ -1681,6 +1691,7 @@ import {
   FROSTED_VARIANTS,
   HARMONY_BY_BODY,
   HARMONY2_BY_BODY,
+  HARMONY3_BY_BODY,
   BLACK_FRIDAY_PRESET,
   createFrosted,
   createBlackFriday,
@@ -1971,6 +1982,18 @@ tapeHarmonyVioletMat.userData.paletteId = 'harmonyViolet';
 const tapeHarmonyViolet2Mat = createLuminanceWhite();
 tapeHarmonyViolet2Mat.color.set('#5a2bb8');
 tapeHarmonyViolet2Mat.userData.paletteId = 'harmonyViolet2';
+// mangoOrange: 브랜드 Mango Orange(#ff752c)의 플랫 버전. luminanceGreen이
+// Jade Green에 대해 하는 역할과 같다 — frostedOrange의 그라디언트 하단
+// (#f7691d)이 아니라 브랜드 원색을 쓴다(시공사례 2의 paper2 태그).
+const tapeMangoOrangeMat = createLuminanceWhite();
+tapeMangoOrangeMat.color.set('#ff752c');
+tapeMangoOrangeMat.userData.paletteId = 'luminanceMangoOrange';
+// mangoOrange2: 위보다 짙은 주황(#cb4611). frosted 껍데기 안쪽에 깔리는 면처럼
+// 팔레트와 무관하게 한 톤 어두운 주황이 고정으로 필요한 자리에 쓴다
+// (시공사례 2 폴더 안쪽면). harmony 파생값이 아니라 디자이너 지정색이다.
+const tapeMangoOrange2Mat = createLuminanceWhite();
+tapeMangoOrange2Mat.color.set('#cb4611');
+tapeMangoOrange2Mat.userData.paletteId = 'luminanceMangoOrange2';
 const ribbonGrayMat = createRibbonGray();
 // Double-sided so flat single-face accents (e.g. confetti chips oriented
 // every which way) render from behind too. On solid ribbon/roof/tape
@@ -1989,6 +2012,17 @@ const harmony2Mat = new THREE.MeshBasicMaterial({
   toneMapped: false,
 });
 harmony2Mat.userData.paletteId = 'harmony2';
+// Harmony 3 — harmony2와 같은 방식으로 setActiveMaterial에서 재틴트되지만, 값이
+// harmony가 아니라 body 그라디언트의 진한 끝에서 유도된다(HARMONY3_BY_BODY).
+// frosted 껍데기 *안쪽*에 깔리는 파트(폴더 안쪽 라이닝, 움푹 들어간 내벽)용 단계 —
+// harmony·harmony2는 둘 다 파스텔이라 얇은 앞판을 통해 비치면 바깥 톤을 하얗게
+// 띄운다. 이건 body보다 어두워서 바깥 톤을 눌러준다.
+const harmony3Mat = new THREE.MeshBasicMaterial({
+  color: new THREE.Color('#000000'),
+  side: THREE.DoubleSide,
+  toneMapped: false,
+});
+harmony3Mat.userData.paletteId = 'harmony3';
 const glassMat     = createGlass();
 const chromeMat    = createChrome();
 // Lens-style glass — clearly readable on small camera-lens discs:
@@ -3184,6 +3218,85 @@ const ASSETS = {
       return 'body';
     },
   },
+  casestudy2: {
+    url: 'casestudy2.glb',
+    label: '시공사례 2',
+    desc: '견적서·서류가 담긴 폴더로 시공 사례 상담을 나타낼 때 쓰는 에셋',
+    keywords: ['시공사례', '견적서', '서류', '폴더', '상담', '사례'],
+    rootName: '시공사례',
+    recommended: 'frostedOrange',
+    // frosted를 쓰는 파트는 폴더 겉면 하나뿐이다. 시공사례·아파트 사례가
+    // defaultColorway: 'kv'라 거기서 넘어오면 컬러웨이가 유지되는데, 정의가
+    // 없으면 frostedGrey로 떨어져 폴더가 회색이 된다. recommended와 같은 색으로
+    // 명시해 막는다. defaultColorway는 두지 않으므로 기본 진입은 일반 모드다.
+    //
+    // kv2는 kv와 나머지 파트가 전부 같고 폴더만 Genuine Blue로 간다. 서류·태그는
+    // materialFor가 컬러웨이와 무관하게 같은 플랫을 돌려주므로 여기서는 body 색만
+    // 갈라주면 된다.
+    colorways: {
+      kv:  { __default__: 'frostedOrange' },
+      kv2: { __default__: 'frostedBlue' },
+    },
+    // 컬러웨이엔 단일 body 색이 없어 harmony 계열이 자동 유도되지 않고 기본값
+    // frostedDarkBlue로 떨어진다. 각 컬러웨이의 body 색을 따라가게 못 박는다 —
+    // kv2의 폴더 안쪽면(harmony2)이 이 값을 쓴다.
+    colorwayHarmony: { kv: 'frostedOrange', kv2: 'frostedBlue' },
+    // folder 실측 2.91×2.02×1.80 — 기존 자산의 frosted body(~300단위)와 자릿수가
+    // 달라 103배로 정규화한다(2.91×103 ≈ 300). 시공사례(case 2.6→114)와 같은 기준.
+    modelScale: 103,
+    // 톤 보정(§4-6 Step 2).
+    gradientYShift: -0.16,
+    frameScale: 1.7,
+    keepOriginalNormals: true,
+    // 소스에 같은 이름이 둘씩 있어 그대로는 못 가른다(C4D 머티리얼 셀렉션).
+    //  1) 'tag'가 paper1·paper2 아래 하나씩 — 부모 이름으로 갈라 개명한다.
+    //     (GLTFLoader가 중복 이름에 _1을 붙이므로 이름만으로는 어느 쪽인지
+    //      알 수 없다.)
+    //  2) 폴더 겉면·안쪽면이 둘 다 'folder-Mat.1'. 안쪽 selected 쪽이 정점 수가
+    //     적으므로(338 < 1918) 갈라 개명한다 — 시공사례의 case-main/-sel과 동일.
+    //  3) written 아래 글씨 두 줄은 'Cube.3'/'Cube.2'라 의미가 없다. written-N으로
+    //     바꿔 materialFor가 이름 하나로 잡게 한다.
+    rewriteNames(root) {
+      for (const pid of ['paper1', 'paper2']) {
+        const paper = root.getObjectByName(pid);
+        if (!paper) continue;
+        paper.children.forEach((c) => { if (/^tag/.test(c.name)) c.name = `tag-${pid}`; });
+      }
+
+      const written = root.getObjectByName('written');
+      if (written) written.children.forEach((c, i) => { c.name = `written-${i + 1}`; });
+
+      const fs = [];
+      root.traverse((o) => {
+        if (!o.isMesh) return;
+        if (!/^folder-mat/i.test(o.parent?.name || '')) return;
+        fs.push({ node: o.parent, verts: o.geometry.attributes.position.count });
+      });
+      fs.sort((x, y) => y.verts - x.verts);
+      fs.forEach((f, i) => { f.node.name = i === 0 ? 'folder-main' : 'folder-sel'; });
+    },
+    materialFor(name, parentName) {
+      // gltfpack이 mesh를 unnamed Group으로 감싸므로 인식 이름이 parentName에
+      // 실린다. rewriteNames가 붙인 이름으로 가른다.
+      const pn = (parentName || '').toLowerCase().replace(/_\d+$/, '');
+      // 폴더 안쪽면. 주머니 열린 부분에서만 보인다 — 앞판 노멀이 뒤집혀 있던
+      // 초기 소스에서는 앞판이 이 라이닝을 투과시켜 겉면 전체가 옅은 살구색으로
+      // 떠버렸다(0903_시공사례4에서 메쉬 수정).
+      //   · kv2 → harmony2. colorwayHarmony.kv2 = frostedBlue라 Genuine Blue의
+      //     harmony2(#91B8E4)로 틴트된다. 컬러웨이 전환은 selectMaterial이
+      //     loadAsset을 다시 태우므로 materialFor가 재실행돼 이 분기가 먹는다.
+      //   · 그 외 → 디자이너 지정 고정색. 팔레트를 바꿔도 주황으로 남는다.
+      if (pn === 'folder-sel') {
+        return activeVariantId === 'kv2' ? 'harmony2' : 'luminanceMangoOrange2'; // #91B8E4 / #CB4611
+      }
+      if (pn === 'paper1')         return 'luminanceKvGrey';      // 서류 1 #DEDEDE
+      if (pn === 'paper2')         return 'luminanceKvGrey2';     // 서류 2 #A8A8A8
+      if (/^written/.test(pn))     return 'luminanceKvGrey2';     // 서류 1 글씨 #A8A8A8
+      if (pn === 'tag-paper1')     return 'luminanceKvBlue';      // #00A1FF
+      if (pn === 'tag-paper2')     return 'luminanceMangoOrange'; // #FF752C
+      return 'body';                                              // folder-main → frosted Mango Orange
+    },
+  },
   apartment: {
     url: 'apartment.glb',
     label: '아파트 사례',
@@ -3247,6 +3360,53 @@ const ASSETS = {
       if (pn === 'building-arch')      return 'luminanceKvGrey2';  // 아치 안쪽 #A8A8A8
       // building-main → Grey, upper → Grey 1 (컬러웨이가 가른다)
       return 'body';
+    },
+  },
+  easymatch: {
+    url: 'easymatch.glb',
+    label: '간편매칭',
+    desc: '조건에 맞는 업체를 빠르게 연결해 주는 과정을 나타낼 때 쓰는 에셋',
+    keywords: ['간편매칭', '매칭', '연결', '견적', '상담', '체크'],
+    // 소스 최상위가 'isometric.1'(C4D 카메라 헬퍼, 메시 없음)과 '매칭.1' 둘이라
+    // rootName을 생략한다 — 미지정 시 gltf.scene 전체가 루트가 되고, 메시가 없는
+    // 헬퍼 노드는 bbox에 아무것도 더하지 않는다.
+    recommended: 'frostedDarkBlue',
+    // frosted를 쓰는 파트는 말풍선 하나뿐이다. 다른 에셋에서 KV를 켠 채
+    // 넘어오면 컬러웨이가 유지되는데, 정의가 없으면 frostedGrey로 떨어져 흰
+    // 덩어리가 된다(최근 사례 에셋 4종이 전부 defaultColorway: 'kv'라 자주
+    // 걸린다). kv를 recommended와 같은 색으로 명시해 막는다. defaultColorway는
+    // 두지 않으므로 기본 진입은 일반 모드다.
+    colorways: {
+      kv: { __default__: 'frostedDarkBlue' },
+    },
+    // bubble 실측 3.07×3.20×0.49 — 기존 자산의 frosted body(~300단위)와 자릿수가
+    // 달라 94배로 정규화한다(3.20×94 ≈ 301).
+    modelScale: 94,
+    // 톤 보정(§4-6 Step 2). frosted를 쓰는 파트가 말풍선 하나뿐이라 사실상
+    // 말풍선에만 걸린다.
+    gradientYShift: -0.65,
+    // 화면 크기 ∝ 1/frameScale. 1.7에선 셀의 53%만 채워 다른 에셋(63~78%)보다
+    // 작게 읽히므로 1.36으로 조인다.
+    frameScale: 1.36,
+    // bbox 중심이 프레임 중심보다 72px 위로 떠(232/376) 위아래 여백을 맞춘다.
+    yOffset: -0.06,
+    keepOriginalNormals: true,
+    // 말풍선 묶음(체크 포함)만 옮긴다. arrow와 형제 노드라 화살표는 그대로다.
+    // 월드 +X가 오브젝트 기준 우측이다. 기준은 추천 뷰 2 — 그 각도에서 화살표
+    // 끝과 말풍선 꼬리가 13px까지 붙어 거의 닿아 보이는데, +0.35에서 74px로
+    // 벌어진다(+0.7이면 136px로 구도가 헐거워진다).
+    preprocess(root) {
+      const b = root.getObjectByName('speechbubble_check');
+      if (b) b.position.x += 0.35;
+    },
+    materialFor(name, parentName) {
+      // gltfpack이 mesh를 unnamed Group으로 감싸므로 인식 이름이 parentName에
+      // 실린다(arrow / check / bubble). 소스 머티리얼도 check만 'Mat'으로
+      // 갈려 있어(나머지는 'Mat.1') 같은 경계로 나뉜다.
+      const pn = (parentName || '').toLowerCase().replace(/\./g, '').replace(/_\d+$/, '');
+      if (pn === 'check')          return 'luminance';        // 체크 #FFFFFF
+      if (/^arrow/.test(pn))       return 'luminanceKvBlue';  // 화살표 2개 #00A1FF
+      return 'body';                                           // bubble → frosted Dark Blue
     },
   },
   speechbubble: {
@@ -4840,8 +5000,11 @@ function loadAsset(assetId) {
         case 'luminanceGreen': obj.material = tapeGreenMat;       return;
         case 'luminanceHarmonyViolet': obj.material = tapeHarmonyVioletMat; return;
         case 'luminanceHarmonyViolet2': obj.material = tapeHarmonyViolet2Mat; return;
+        case 'luminanceMangoOrange': obj.material = tapeMangoOrangeMat; return;
+        case 'luminanceMangoOrange2': obj.material = tapeMangoOrange2Mat; return;
         case 'ribbonGray':     obj.material = ribbonGrayMat;  return;
         case 'harmony2':       obj.material = harmony2Mat;    return;
+        case 'harmony3':       obj.material = harmony3Mat;    return;
         case 'glass':          obj.material = glassMat;       return;
         case 'lensGlass':      obj.material = lensGlassMat;   return;
         case 'cameraLens':     obj.material = cameraLensMat;  return;
@@ -5759,6 +5922,8 @@ const editableMaterials = {
   luminanceGreen:  tapeGreenMat,
   harmonyViolet:   tapeHarmonyVioletMat,
   harmonyViolet2:  tapeHarmonyViolet2Mat,
+  luminanceMangoOrange: tapeMangoOrangeMat,
+  luminanceMangoOrange2: tapeMangoOrange2Mat,
 };
 
 // 플랫 단색 재질의 스냅샷 — snapshotMaterial은 mat[key]를 그대로 담아서
@@ -5834,6 +5999,8 @@ const INITIAL_STATE = {
   luminanceGreen:  snapshotFlatColor(tapeGreenMat),
   harmonyViolet:   snapshotFlatColor(tapeHarmonyVioletMat),
   harmonyViolet2:  snapshotFlatColor(tapeHarmonyViolet2Mat),
+  luminanceMangoOrange: snapshotFlatColor(tapeMangoOrangeMat),
+  luminanceMangoOrange2: snapshotFlatColor(tapeMangoOrange2Mat),
 };
 const state = {
   frostedBlue:     { ...INITIAL_STATE.frostedBlue },
@@ -5860,6 +6027,8 @@ const state = {
   luminanceGreen:  { ...INITIAL_STATE.luminanceGreen },
   harmonyViolet:   { ...INITIAL_STATE.harmonyViolet },
   harmonyViolet2:  { ...INITIAL_STATE.harmonyViolet2 },
+  luminanceMangoOrange: { ...INITIAL_STATE.luminanceMangoOrange },
+  luminanceMangoOrange2: { ...INITIAL_STATE.luminanceMangoOrange2 },
 };
 
 // ── Color Vari (admin-vari mode) ────────────────────────────
@@ -6009,6 +6178,7 @@ function setActiveMaterial(id) {
     const cwHarmonyKey = asset?.colorwayHarmony?.[id] || 'frostedDarkBlue';
     ribbonGrayMat.color.set(HARMONY_BY_BODY[cwHarmonyKey] ?? HARMONY_BY_BODY.frostedDarkBlue);
     if (HARMONY2_BY_BODY[cwHarmonyKey]) harmony2Mat.color.set(HARMONY2_BY_BODY[cwHarmonyKey]);
+    if (HARMONY3_BY_BODY[cwHarmonyKey]) harmony3Mat.color.set(HARMONY3_BY_BODY[cwHarmonyKey]);
   } else {
     const mat = getBodyMaterial(asset, id);
     for (const mesh of bodyMeshes) mesh.material = mat;
@@ -6068,6 +6238,8 @@ function setActiveMaterial(id) {
   }
   const harmony2 = HARMONY2_BY_BODY[id];
   if (harmony2) harmony2Mat.color.set(harmony2);
+  const harmony3 = HARMONY3_BY_BODY[id];
+  if (harmony3) harmony3Mat.color.set(harmony3);
 }
 
 let openMatKey = null;
@@ -6099,6 +6271,8 @@ function openSettingsFor(matKey, matType) {
     luminanceGreen:  'Luminance Green (Built-in)',
     harmonyViolet:   'Harmony Violet (Built-in)',
     harmonyViolet2:  'Harmony Violet 2 (Built-in)',
+    luminanceMangoOrange: 'Luminance Mango Orange (Built-in)',
+    luminanceMangoOrange2: 'Luminance Mango Orange 2 (Built-in)',
   };
   settingsTitle.textContent = labelMap[matKey] || matKey;
   renderControls(matKey, matType);
@@ -6665,6 +6839,8 @@ document.getElementById('resetPreset').addEventListener('click', () => {
              : mat.userData.paletteId === 'luminanceGreen' ? 'flatColor'
              : mat.userData.paletteId === 'harmonyViolet' ? 'flatColor'
              : mat.userData.paletteId === 'harmonyViolet2' ? 'flatColor'
+             : mat.userData.paletteId === 'luminanceMangoOrange' ? 'flatColor'
+             : mat.userData.paletteId === 'luminanceMangoOrange2' ? 'flatColor'
              : 'frosted';
   // Gradient top/bottom live on FROSTED_VARIANTS — restore them first
   // so any texture regeneration below reads the reset colors.
@@ -7031,6 +7207,8 @@ function applyVariant(key = activeVariantKey, color = activeVariantColor) {
   const bodyPresetKey = color === 'red' ? 'frostedRed' : 'frostedBlue';
   const harmony  = HARMONY_BY_BODY[bodyPresetKey];
   const harmony2 = HARMONY2_BY_BODY[bodyPresetKey];
+  const harmony3 = HARMONY3_BY_BODY[bodyPresetKey];
+  if (harmony3) harmony3Mat.color.set(harmony3);
   if (harmony)  ribbonGrayMat.color.set(harmony);
   if (harmony2) harmony2Mat.color.set(harmony2);
 }
@@ -7475,12 +7653,15 @@ if (IS_VARIANTS_MODE) {
       const slotMatId = COLOR_BINDINGS[slot.id]?.matId || 'frostedBlue';
       slot.ribbonGrayMat = ribbonGrayMat.clone();
       slot.harmony2Mat   = harmony2Mat.clone();
+      slot.harmony3Mat   = harmony3Mat.clone();
       slot.ribbonGrayMat.color.set(HARMONY_BY_BODY[slotMatId]  ?? HARMONY_BY_BODY.frostedBlue);
       slot.harmony2Mat.color.set(  HARMONY2_BY_BODY[slotMatId] ?? HARMONY2_BY_BODY.frostedBlue);
+      slot.harmony3Mat.color.set(  HARMONY3_BY_BODY[slotMatId] ?? HARMONY3_BY_BODY.frostedBlue);
       currentRoot.traverse((m) => {
         if (!m.isMesh) return;
         if (m.material === ribbonGrayMat) m.material = slot.ribbonGrayMat;
         else if (m.material === harmony2Mat) m.material = slot.harmony2Mat;
+        else if (m.material === harmony3Mat) m.material = slot.harmony3Mat;
       });
 
       const root = currentRoot;
